@@ -1,10 +1,11 @@
 from typing import Final
+import json
 
 from . import config
+from .attributes import Attributes
+from .const import *
 from ...config import PLUGIN_VERSION as GLOBAL_PLUGIN_VERSION
 from ...lib.fusionAddInUtils.general_utils import *
-from .const import *
-import json
 
 class _SettingsMeta(type):
     def __iter__(cls):
@@ -92,7 +93,7 @@ class Settings(metaclass=_SettingsMeta):
     _inputs = None
     _items = {}
 
-    # Initial default values of settings
+    #region Initial default values of settings
     # See above definitions for details
     _defaultSettings = {
         END_CODES:                  "M5\nM9\nM30",
@@ -123,13 +124,13 @@ class Settings(metaclass=_SettingsMeta):
         REPLACE_STRING:             "",
         HEADER_END_CODES:           "G20\nG21",
     }
-
+    #endregion
     @classmethod
-    def Load(cls, attr: adsk.core.Attributes):
-        if attr:
+    def Load(cls, attr: Attributes = None):
+        if attr and attr.count > 0:
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
-                if cls._items[Settings.VERSION] == GLOBAL_PLUGIN_VERSION:
+                if cls._items[Settings.VERSION] == config.SETTINGS_VERSION:
                     return  # settings are valid for this version
             except Exception:
                 pass
@@ -139,19 +140,16 @@ class Settings(metaclass=_SettingsMeta):
             # Haven't read the settings file yet
             file = None
             try:
-                file = open(cls._getPath())
-                cls._default = json.load(file)
+                with open(cls._getPath()) as file:
+                    cls._default = json.load(file)
                 # never allow delFiles or delFolder to default to True
                 cls._default[Settings.DEL_FILES] = False
                 cls._default[Settings.DEL_FOLDER] = False
-                if cls._default[Settings.VERSION] != GLOBAL_PLUGIN_VERSION:
+                if cls._default[Settings.VERSION] != config.SETTINGS_VERSION:
                     cls.Update(Settings._defaultSettings, cls._default)
             except Exception:
                 cls._default = dict(Settings._defaultSettings)
                 cls._fMustSave = True
-            finally:
-                if file:
-                    file.close()
         
         if not cls._items:
             cls._items = dict(cls._default)
@@ -174,10 +172,10 @@ class Settings(metaclass=_SettingsMeta):
             pass
 
     @classmethod
-    def Save(cls, docAttr: adsk.core.Attributes):
+    def Save(cls, attr: Attributes):
         if cls._fMustSave:
             cls.SaveDefault()
-        docAttr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._items))
+        attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._items))
             
     @classmethod
     def Update(cls, src, dst):
