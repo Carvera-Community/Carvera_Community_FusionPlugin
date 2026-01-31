@@ -474,7 +474,7 @@ class PostDialog:
 
         #region Output folder label, spans 2 columns
         input.addCommandInput(
-            init(inputs.addStringValueInput(PostDialog._OUTPUT_FOLDER_LABEL_ID, '', Strings('Output folder')), 
+            init(inputs.addStringValueInput(PostDialog._OUTPUT_FOLDER_LABEL_ID, '', Strings("Output folder")), 
                 tooltip = Strings("TOOL TIP: Output folder"),
                 tooltipDescription = Strings("TOOLTIP TEXT: Output folder"),
                 isReadOnly = True
@@ -483,7 +483,7 @@ class PostDialog:
 
         #region Output folder string input
         input.addCommandInput(
-            init(inputs.addStringValueInput(PostDialog._OUTPUT_FOLDER_ID, Strings('Output folder'), Strings('<Select program>')),
+            init(inputs.addStringValueInput(PostDialog._OUTPUT_FOLDER_ID, Strings("Output folder"), Strings("<Select program>")),
                 tooltip = Strings("TOOL TIP: Output folder"),
                 tooltipDescription = Strings("TOOLTIP TEXT: Output folder"),
                 isReadOnly = False
@@ -496,7 +496,7 @@ class PostDialog:
         #endregion
 
         #region File name string input
-        input = outputTab.children.addStringValueInput(PostDialog._FILE_NAME_ID, Strings('File name'), Strings('<Select program>'))
+        input = outputTab.children.addStringValueInput(PostDialog._FILE_NAME_ID, Strings("File name"), Strings("<Select program>"))
         input.tooltip = Strings("TOOL TIP: File name")
         input.tooltipDescription = Strings("TOOLTIP TEXT: File name")
         #endregion
@@ -549,8 +549,8 @@ class PostDialog:
 
         #region Safe Y-retraction coordinate number
         input = outputTab.children.addIntegerSpinnerCommandInput(PostDialog._Y_RETRACTION_COORDINATE_ID, Strings("Safe Y-retraction coordinate (mm)"), -150, 0, 1, Settings(Settings.Y_RETRACTION_COORDINATE))
-        input.tooltip = Strings("TOOL TIP: Safe Y-retraction coordinate")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Safe Y-retraction coordinate")
+        input.tooltip = Strings("TOOL TIP: Safe Y-retraction coordinate (mm)")
+        input.tooltipDescription = Strings("TOOLTIP TEXT: Safe Y-retraction coordinate (mm)")
         #endregion
 
         #region Operations grouping dropdown

@@ -5,6 +5,16 @@
   "TOOL TIP: NC Program to Use": "NC Program to Use",
   "TOOLTIP TEXT: NC Program to Use": "Post processing will use the settings from the selected NC Program.",
 
+  "Setup Name": "Setup Name",
+  "Origin": "Origin",
+  "X-axis": "X-axis",
+  "Rotation": "Rotation",
+  "Aligned": "Aligned",
+  "Misaligned": "Misaligned",
+  "Same": "Same",
+  "Different": "Different",
+  "(reference)": "(reference)",
+
   "Only selected setups": "Only selected setups",
   "TOOL TIP: Only selected setups": "Only Process Selected Setups",
   "TOOLTIP TEXT: Only selected setups": "Only setups selected in the browser will be processed. Note that a selected setup needs to be highlighted, not simply activated. <br>Selecting individual operations within a setup has no effect, to exclude operations they needs to be suppressed.",
@@ -30,6 +40,10 @@
 
   "Output folder": "Output folder",
   "<Select program>": "<Select program>",
+
+  "File name": "File name",
+  "TOOL TIP: File name": "File name",
+  "TOOLTIP TEXT: File name": "The name of the output G-code file(s) without extension.",
   
   "TOOL TIP: Output folder": "Output folder",
   "TOOLTIP TEXT: Output folder": "Select the folder where generated G-code files will be saved.",
@@ -42,6 +56,10 @@
   "TOOL TIP: Numbering digits": "The count of digits for numbering",
   "TOOLTIP TEXT: Numbering digits": "Format sequence numbers with the specified number of digits (e.g., 3 for 001, 002 and so on).",
 
+  "Numbering interval": "Numbering interval",
+  "TOOL TIP: Numbering interval": "The interval between numbers",
+  "TOOLTIP TEXT: Numbering interval": "Specify the interval between sequence numbers (e.g., 5 for 005, 010 and so on).",
+
   "Combine operations using same tool": "Combine operations using same tool",
   "TOOL TIP: Combine operations using same tool": "Combine consecutive operations using same tool",
   "TOOLTIP TEXT: Combine operations using same tool": "Combine operations following each other that use the same tool into a single operation.",
@@ -53,6 +71,8 @@
   "Delete output folder": "Delete output folder",
   "TOOL TIP: Delete output folder": "Delete output folder",
   "TOOLTIP TEXT: Delete output folder": "Delete the entire output folder before post processing. This deletes all files and subfolders regardless of whether or not new G-code files are written to a particular folder.<p><i><u>WARNING!</u></i> Be absolutely sure the output folder is set correctly before selecting this option. Run the command once before setting this option and verify the results are in the correct folder. An incorrect setting of the output folder with this option selected could result in unintentionally wiping out a vast number of files.",
+
+  "Misc": "Misc",
 
   "Rename Setups": "Rename Setups",
 
@@ -114,7 +134,11 @@
 
   "Retract Y on A-axis rotation": "Retract Y on A-axis rotation",
   "TOOL TIP: Retract Y on A-axis rotation": "Retract Y axis when rotating A-axis",
-  "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position but the Y axis will retract as well when rotating the A-axis between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been chosen.",
+  "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position before rotating the A-axis but the Y axis will retract as well when rotating between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been chosen.",
+
+  "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+  "TOOL TIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+  "TOOLTIP TEXT: Safe Y-retraction coordinate (mm)": "The Y coordinate to retract to when rotating the A-axis between setups. This coordinate should be set so that the tool will not collide with the stock when retracting to this position.",
 
   "Machine": "Machine",
   "TOOL TIP: Machine": "Machine",
@@ -125,6 +149,9 @@
   "TOOLTIP TEXT: Post Processor": "The post processor associated with the selected NC Program.",
 
   "G-codes that mark header end": "G-codes that mark header end",
-  "TOOL TIP: G-codes that mark header end'": "G-codes that mark header end",
-  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored."
+  "TOOL TIP: G-codes that mark header end": "G-codes that mark header end",
+  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
+
+  "Process": "Process",
+  "Close": "Close"
 }
