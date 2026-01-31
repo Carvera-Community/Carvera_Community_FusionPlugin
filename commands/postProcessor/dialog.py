@@ -467,7 +467,7 @@ class PostDialog:
         outputTab.isEnabled = False
 
         #region -- Output folder table --
-        input = outputTab.children.addTableCommandInput(PostDialog._OUTPUT_FOLDER_TABLE_ID, Strings('Output folder'), 2, '15:1')
+        input = outputTab.children.addTableCommandInput(PostDialog._OUTPUT_FOLDER_TABLE_ID, Strings('Output folder'), 2, '12:1')
         input.minimumVisibleRows = 2
         input.maximumVisibleRows = 2
         input.tablePresentationStyle = adsk.core.TablePresentationStyles.transparentBackgroundTablePresentationStyle
@@ -491,7 +491,7 @@ class PostDialog:
         #endregion
 
         #region Output folder browse button
-        input.addCommandInput(inputs.addBoolValueInput(PostDialog._OUTPUT_FOLDER_BUTTON_ID, '…', False, '', False), 1, 1)
+        input.addCommandInput(inputs.addBoolValueInput(PostDialog._OUTPUT_FOLDER_BUTTON_ID, '  …  ', False, '', False), 1, 1)
         #endregion
         #endregion
 
