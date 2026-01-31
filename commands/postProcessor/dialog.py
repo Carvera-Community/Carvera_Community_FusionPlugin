@@ -131,7 +131,7 @@ class PostDialog:
         doc: adsk.core.Document = app.activeDocument
         cam: adsk.cam.CAM = adsk.cam.CAM.cast(app.activeDocument.products.itemByProductType(Const.CAM_PRODUCT_ID))
 
-        Settings.Load(doc.attributes) # Load settings for the current document
+        Settings.Load() # Load default settings
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
         Programs.Load(cam) # Get the list of NCPrograms in the current document
 
@@ -189,9 +189,13 @@ class PostDialog:
                     return
 
 
-        app: adsk.core.Application = adsk.core.Application.get()
-        doc: adsk.core.Document = app.activeDocument
-        Settings.Save(doc.attributes)  # Save settings for the current document
+        if Programs.Current is not None:
+            Settings.Save(Programs.Current.attributes)  # Save settings for the current project
+        else:
+            app: adsk.core.Application = adsk.core.Application.get()
+            doc: adsk.core.Document = app.activeDocument
+            Settings.Save(doc.attributes)  # Save settings for the current project
+
 
         # Create a temporary folder to prepare all files in
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -799,8 +803,14 @@ class PostDialog:
             if program:
                 if(program.hasError):
                     return
+
+                if Programs.Current is not None:
+                    Settings.Save(Programs.Current.attributes)
+
                 Programs.Current = program
                 Utils.log(f'Selected NC program: {program.programName}')
+
+                Settings.Load(Programs.Current.attributes)
 
                 if Programs.Current.hasWarning:
                     app = adsk.core.Application.get()
