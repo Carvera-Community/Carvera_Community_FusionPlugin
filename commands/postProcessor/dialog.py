@@ -1,5 +1,4 @@
 from __future__ import annotations
-import math
 from pathlib import Path
 import tempfile
 import adsk.core
@@ -14,7 +13,7 @@ from .settings import Settings
 from .strings import Strings
 
 from .const import Const
-from ...lib.fusionAddInUtils.general_utils import Utils, classproperty
+from ...lib.fusionAddInUtils.general_utils import Utils
 from ...lib.fusionAddInUtils.event_utils import Events
 from . import config
 
