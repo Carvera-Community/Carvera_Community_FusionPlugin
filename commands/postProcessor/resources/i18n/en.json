@@ -1,0 +1,130 @@
+{
+  "Input Selection": "Input Selection",
+
+  "NC Program": "NC Program",
+  "TOOL TIP: NC Program to Use": "NC Program to Use",
+  "TOOLTIP TEXT: NC Program to Use": "Post processing will use the settings from the selected NC Program.",
+
+  "Only selected setups": "Only selected setups",
+  "TOOL TIP: Only selected setups": "Only Process Selected Setups",
+  "TOOLTIP TEXT: Only selected setups": "Only setups selected in the browser will be processed. Note that a selected setup needs to be highlighted, not simply activated. <br>Selecting individual operations within a setup has no effect, to exclude operations they needs to be suppressed.",
+
+  "G-code options": "G-code options",
+
+  "Tool change code": "Tool change code",
+  "TOOL TIP: Tool change code": "G-code to Precede Tool Change",
+  "TOOLTIP TEXT: Tool change code": "Allows inserting lines of code before tool changes. For example, you might want <i>M5</i> (spindle stop), <i>M9</i> (coolant stop), and/or <i>G28</i> or <i>G30</i> (return to home). The code will be placed on the line before the tool change.",
+
+  "G-codes that mark ending sequence": "G-codes that mark ending sequence",
+  "TOOL TIP: G-codes that mark ending sequence": "G-codes that mark ending sequence",
+  "TOOLTIP TEXT: G-codes that mark ending sequence": "To combine operations generated individually, the ending sequence (which should only appear once) must be found. This entry is the list of G-codes that start this ending sequence. <p>For example, <i>M30</i> (end program) would normally be here, but it may not be the first G-code of the ending sequence. <i>M5</i> (spindle stop), <i>M9</i> (coolant stop) and <i>G28</i>/<i>G30</i> (move home) are also candidates, but you should look at the code from your post processor to determine what will work in your case. Either of the G-codes you enter here will mark the start of ending sequence, whichever comes first.<p>The found sequence that follows, beginning with whichever of these codes that was found first, will be attached at the end of the resulting file(s).",
+  "Restore rapid moves": "Restore rapid moves",
+  "TOOL TIP: Restore rapid moves": "Restore rapid moves",
+  "TOOLTIP TEXT: Restore rapid moves": "Restore rapid (rapid traverse) moves where appropriate during post-processing.",
+
+  "G-code for tool change": "G-code for tool change",
+  "TOOL TIP: G-code for tool change": "G-code for tool change",
+  "TOOLTIP TEXT: G-code for tool change": "Allows inserting lines of g-code before tool changes. For example, you might want <i>M5</i> (spindle stop), <i>M9</i> (coolant stop), and/or <i>G28</i> or <i>G30</i> (return to home). The code will be inserted above the line with the tool change.",
+
+  "Output Options": "Output Options",
+
+  "Output folder": "Output folder",
+  "<Select program>": "<Select program>",
+  
+  "TOOL TIP: Output folder": "Output folder",
+  "TOOLTIP TEXT: Output folder": "Select the folder where generated G-code files will be saved.",
+
+  "Name must be numeric": "Name must be numeric",
+  "TOOL TIP: Name must be numeric": "Name must be numeric",
+  "TOOLTIP TEXT: Name must be numeric": "When enabled, program names will be required to be numeric.",
+
+  "Numbering digits": "Numbering digits",
+  "TOOL TIP: Numbering digits": "The count of digits for numbering",
+  "TOOLTIP TEXT: Numbering digits": "Format sequence numbers with the specified number of digits (e.g., 3 for 001, 002 and so on).",
+
+  "Combine operations using same tool": "Combine operations using same tool",
+  "TOOL TIP: Combine operations using same tool": "Combine consecutive operations using same tool",
+  "TOOLTIP TEXT: Combine operations using same tool": "Combine operations following each other that use the same tool into a single operation.",
+
+  "Delete existing files": "Delete existing files",
+  "TOOL TIP: Delete existing files": "Delete existing files",
+  "TOOLTIP TEXT: Delete existing files": "Delete all files in each output folder before post processing. This will help prevent accumulation of G-code files which are no longer used. <p>For example, you could decide to add sequence numbers after already post processing without them. If this option is not checked, you will have two of each file, a newer one with a sequence number and older one without. With this option checked, all previous files will be deleted so only current results will be present. <p>This option will only delete the files in folders in which new G-code files are being written. If you change the name of a folder, for example, it will not be deleted.",
+
+  "Delete output folder": "Delete output folder",
+  "TOOL TIP: Delete output folder": "Delete output folder",
+  "TOOLTIP TEXT: Delete output folder": "Delete the entire output folder before post processing. This deletes all files and subfolders regardless of whether or not new G-code files are written to a particular folder.<p><i><u>WARNING!</u></i> Be absolutely sure the output folder is set correctly before selecting this option. Run the command once before setting this option and verify the results are in the correct folder. An incorrect setting of the output folder with this option selected could result in unintentionally wiping out a vast number of files.",
+
+  "Rename Setups": "Rename Setups",
+
+  "Use Python regular expressions": "Use Python regular expressions",
+  "TOOL TIP: Use Python regular expressions": "Use Python regular expressions",
+  "TOOLTIP TEXT: Use Python regular expressions": "Enable Python-style regular expressions for search/replace operations.",
+
+  "Search for this string": "Search for this string",
+  "TOOL TIP: Search for this string": "Search for this string",
+  "TOOLTIP TEXT: Search for this string": "The literal or regex pattern to search for.",
+
+  "Replace with this string": "Replace with this string",
+  "TOOL TIP: Replace with this string": "Replace with this string",
+  "TOOLTIP TEXT: Replace with this string": "Replacement text to use when a search pattern matches.",
+
+  "Search and replace": "Search and replace",
+  "TOOL TIP: Search and replace": "Search and replace",
+  "TOOLTIP TEXT: Search and replace": "Execute search-and-replace using the above settings.",
+
+  "Advanced Settings": "Advanced Settings",
+
+  "Initial time allowance": "Initial time allowance",
+  "TOOL TIP: Initial time allowance": "Initial time allowance",
+  "TOOLTIP TEXT: Initial time allowance": "Initial time allowance (seconds) to allow for processing before retries.",
+
+  "Number of retries": "Number of retries",
+  "TOOL TIP: Number of retries": "Number of retries",
+  "TOOLTIP TEXT: Number of retries": "Number of attempts to retry failed post-processing steps.",
+
+  "Save as default settings": "Save as default settings",
+  "TOOL TIP: Save as default settings": "Save as default settings",
+  "TOOLTIP TEXT: Save as default settings": "Save current dialog settings as the default for new documents.",
+
+  "Prepend sequence number": "Prepend sequence number",
+  "File names only": "File names only",
+  "Operation steps only": "Operation steps only",
+  "File names and operation steps": "File names and operation steps",
+  "None": "None",
+  "TOOL TIP: Prepend sequence number": "Prepend numbers of file names and/or operation steps",
+  "TOOLTIP TEXT: Prepend sequence number": "Begin each file name with a sequence number. The numbering represents the order that the setups appear in the browser tree. Each folder has its own sequence numbers starting with 1.",
+
+  "Operations grouping": "Operations grouping",
+  "Single file": "Single file",
+  "Group on setup": "Group on setup",
+  "Group on setup and tool": "Group on setup and tool",
+  "None, one file per operation": "None, one file per operation",
+  "TOOL TIP: Operations grouping": "How to group the operations into output files",
+  "TOOLTIP TEXT: Operations grouping": "Choose how operations are grouped into output files.<p><i>Single file:</i> All operations are combined into a single G-code file. This option is only available if the origin of all setups are the same.<br>If the setups are rotated on the X-axis it also requires that the <i>Rotate A-Axis between setups</i> option is chosen and that the X-axes of all the chosen setups are parallel.<br><i>Group on setup:</i> Each setup is output as a separate G-code file. This option is only available if there is multiple setups that will be processed.<br><i>Group on setup and tool:</i> Operations are grouped by setup and tool, so each time the tool changes within a setup a new file is created.<br><i>None, one file per operation:</i> Each operation is output as its own G-code file.",
+
+  "The selected NC Program has the following warning:\n{warning}": "The selected NC Program has the following warning:\n{warning}",
+
+  "Flat file structure": "Flat file structure",
+  "TOOL TIP: Flatten the file structure": "Do not create subfolders for setups and operations",
+  "TOOLTIP TEXT: Flatten the file structure": "When enabled, all output files will be placed directly in the output folder without any subfolders.<p>The files will be named according to the full path of their setup and operation to avoid name conflicts, separated by an underscore (_).",
+
+  "Rotate A-Axis between setups": "Rotate A-Axis between setups",
+  "TOOL TIP: Rotate A-Axis between setups": "Rotate A-Axis between setups",
+  "TOOLTIP TEXT: Rotate A-Axis between setups": "When enabled, the A-axis will be rotated to the required position between setups that have different A-axis orientations. This is useful for 4-axis machining where the stock may need to be rotated to access different sides.</p>This option is only enabled if the selected program has a machine that has an A-axis. It allows the output to be a single file.",
+
+  "Retract Y on A-axis rotation": "Retract Y on A-axis rotation",
+  "TOOL TIP: Retract Y on A-axis rotation": "Retract Y axis when rotating A-axis",
+  "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position but the Y axis will retract as well when rotating the A-axis between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been chosen.",
+
+  "Machine": "Machine",
+  "TOOL TIP: Machine": "Machine",
+  "TOOLTIP TEXT: Machine": "The machine definition associated with the selected NC Program.",
+
+  "Post Processor": "Post Processor",
+  "TOOL TIP: Post Processor": "Post Processor",
+  "TOOLTIP TEXT: Post Processor": "The post processor associated with the selected NC Program.",
+
+  "G-codes that mark header end": "G-codes that mark header end",
+  "TOOL TIP: G-codes that mark header end'": "G-codes that mark header end",
+  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored."
+}

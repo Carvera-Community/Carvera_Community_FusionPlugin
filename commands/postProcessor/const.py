@@ -1,0 +1,23 @@
+class Const():
+    CMD_NAME = "Makera Community Post Processor"
+    CMD_DEF_ID = "Makera_Community_Post_Processor"
+    CAM_WORKSPACE_ID = "CAMEnvironment"
+    CAM_ACTIONS_PANEL_ID = "CAMActionPanel"
+    POST_PROCESS_CONTROL_ID = "IronPostProcess"
+    CAM_PRODUCT_ID = "CAMProductType"
+    ATTR_GROUP = CMD_DEF_ID
+    ATTR_NAME = "settings"
+    ATTR_COMPRESSED_NAME = "CompressedName"
+    SETTINGS_FILE_EXT = ".settings"
+    POST_LOOP_DELAY = 0.1
+    BODY_TMP_FILE = "gcodeBody"
+    OP_TMP_FILE = "8910"   # in case name must be numeric
+    RAPID_Z_GCODE = 'G00 Z{} (Changed from: "{}")\n'
+    RAPID_XY_GCODE = 'G00 {} (Changed from: "{}")\n'
+    FEED_Z_GCODE = 'G01 Z{} F{} (Changed from: "{}")\n'
+    FEED_XY_GCODE = 'G01 {} F{} (Changed from: "{}")\n'
+    FEED_XYZ_GCODE = 'G01 {} Z{} F{} (Changed from: "{}")\n'
+    ADD_FEED_GCODE = " F{} (Feed rate added)\n"
+    MOTION_GCODE_SET = {0,1,2,3,33,38,73,76,80,81,82,84,85,86,87,88,89}
+    HOME_GCODE_SET = {28, 30}
+    LINE_NUM_INC = 5

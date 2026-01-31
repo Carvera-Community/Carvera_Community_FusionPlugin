@@ -1,0 +1,4 @@
+.DS_Store
+.env
+.assistant_rules.*
+commands/postProcessor/settings.settings
