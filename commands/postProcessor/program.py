@@ -79,7 +79,7 @@ class Program:
         return self._parameters
     
     @property
-    def Attributes(self):
+    def attributes(self):
         return self._attributes
     
     @property
@@ -182,21 +182,34 @@ class Program:
 
             lineNumber = 0            
 
-            if Settings(Settings.FLAT_FILE_STRUCTURE):
-                filePath = outputFolder / f"{fileName}{self._program.postConfiguration.extension}"
-                with filePath.open("w", encoding="utf-8") as fileHandler:
-                    lineNumber = self._writeLine(fileHandler, f"({fileName})\n", lineNumber, addLineNumbers, digits)
-                    lineNumber = self._writeLine(fileHandler, f"(Generated with Makera Community Post Processor version {PLUGIN_VERSION})\n", lineNumber, addLineNumbers, digits)
+            fileExtension = self._program.postConfiguration.extension
 
-                    lineNumber = Setups.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits)
-                    lineNumber = Setups.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits)
+            if Settings(Settings.FLAT_FILE_STRUCTURE):
+                pass
+            else:
+                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
+                    filePath = outputFolder / f"{fileName}{fileExtension}"
+                    with filePath.open("w", encoding="utf-8") as fileHandler:
+                        # Add a header comment with file name and post processor version
+                        lineNumber = self._writeLine(fileHandler, f"({fileName})\n", lineNumber, addLineNumbers, digits)
+                        lineNumber = self._writeLine(fileHandler, f"(Generated with {config.CMD_NAME} version {PLUGIN_VERSION})\n", lineNumber, addLineNumbers, digits)
+
+                        lineNumber = Setups.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits)
+                        lineNumber = Setups.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits)
+                        
+                        if(Setups.hasOperationWithTail):
+                            Setups.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+                else:
+                    folder = outputFolder
+                    file = fileName
+                    if not Settings(Settings.FLAT_FILE_STRUCTURE):
+                        folder = outputFolder / self.fileName
+                        file = ''
+                    folder.mkdir(parents=True, exist_ok=True)
+                    Setups.GenerateHeader(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
+                    Setups.GenerateBody(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
                     if(Setups.hasOperationWithTail):
-                        Setups.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
-            else: # Output is possibly grouped on a lower level
-                Setups.GenerateHeader(outputFolder, lineNumber, addLineNumbers, digits, fileName, self._program.postConfiguration.extension)
-                Setups.GenerateBody(outputFolder, lineNumber, addLineNumbers, digits, fileName, self._program.postConfiguration.extension)
-                if(Setups.hasOperationWithTail):
-                    Setups.GenerateTail(outputFolder, lineNumber, addLineNumbers, digits, fileName, self._program.postConfiguration.extension)
+                        Setups.GenerateTail(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
         except Exception as exc:
             raise exc
         finally:

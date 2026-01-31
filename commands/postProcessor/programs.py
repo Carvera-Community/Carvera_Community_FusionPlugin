@@ -1,5 +1,6 @@
 from __future__ import annotations
 import time
+from typing import TYPE_CHECKING, ClassVar, Optional
 
 import adsk.cam
 
@@ -19,9 +20,12 @@ class _ProgramsMeta(type):
         return super().__setattr__(name, value)
     
 class Programs(metaclass=_ProgramsMeta):
-    _current: Program = None
+    _current: Optional[Program] = None
     _items: list[Program] = []
     _cam: adsk.cam.CAM = None
+    if TYPE_CHECKING:
+        # Help type checkers/IDE infer the type of Programs.Current (runtime uses @classproperty)
+        Current: ClassVar[Optional["Program"]]
 
     @classmethod
     def Load(cls, cam: adsk.cam.CAM):
@@ -31,12 +35,12 @@ class Programs(metaclass=_ProgramsMeta):
         Setups.Load(cam.setups)
 
     @classproperty
-    def Current(cls) -> Program:
+    def Current(cls) -> Optional["Program"]:
         """Returns the current NCProgram."""
         return cls._current
     
     @Current.setter
-    def Current(cls, program: Program):
+    def Current(cls, program: Optional["Program"]):
         """Sets the current NCProgram."""
         cls._current = program
 

@@ -213,7 +213,7 @@ class Operation:
     @overload
     def GenerateHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
 
-    # If GenerateHeader is called with folder + name + ext it means that 
+    # If GenerateHeader is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     def GenerateHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
@@ -272,7 +272,7 @@ class Operation:
     @overload
     def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool) -> int: ...
 
-    # If GenerateBody is called with folder + name + ext it means that 
+    # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool, fileName: str, fileExtension: str) -> int: ...
@@ -337,7 +337,7 @@ class Operation:
     @overload
     def GenerateTail(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
 
-    # If GenerateTail is called with folder + name + ext it means that 
+    # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     def GenerateTail(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...

@@ -206,7 +206,7 @@ class Setup:
     @overload
     def GenerateHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
 
-    # If generate is called with folder + name + ext it means that 
+    # If generate is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     def GenerateHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
@@ -247,7 +247,7 @@ class Setup:
     @overload
     def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool) -> int: ...
 
-    # If GenerateBody is called with folder + name + ext it means that 
+    # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool, fileName: str, fileExtension: str) -> int: ...
@@ -258,21 +258,14 @@ class Setup:
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
+        if isinstance(arg, io.TextIOBase):
             fileHandler: TextIO = arg
             return self._operations.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, removeARotations)
         
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                self._generate_to_file(fh)
-            return -1
-
+        # case 2: given folder there is a structure to create
+        if isinstance(arg, Path):
+            # This is probably a good place to split on tool change..?
+            return self._operations.GenerateBody(arg, lineNumber, addLineNumbers, digits, removeARotations, fileName, fileExtension)
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
     #endregion
 
@@ -284,7 +277,7 @@ class Setup:
     @overload
     def GenerateTail(self, fileHandler: TextIO, addLineNumbers: bool, digits: int) -> int: ...
 
-    # If GenerateTail is called with folder + name + ext it means that 
+    # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     def GenerateTail(self, folderPath: Path, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
@@ -304,15 +297,11 @@ class Setup:
                 
         # case 2: given folder + name + ext
         if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                self._generate_to_file(fh)
-            return p
+            # This is probably a good place to split on tool change..?
+            if not self._operations.hasTail:
+                return lineNumber
+            return self._operations.GenerateTail(arg, lineNumber, addLineNumbers, digits, fileName, fileExtension)
 
-        raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")
+        raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")  
     #endregion
 

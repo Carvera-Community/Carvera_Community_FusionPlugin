@@ -80,7 +80,7 @@ class Setups(metaclass=_SetupsMeta):
     @classmethod
     def GenerateHeader(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
 
-    # If generate is called with folder + name + ext it means that 
+    # If generate is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     @classmethod
@@ -99,23 +99,25 @@ class Setups(metaclass=_SetupsMeta):
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
+        if isinstance(arg, io.TextIOBase):
             fileHandler: TextIO = arg
             for setup in cls.selected:
                 lineNumber = setup.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits, briefHeader)
                 if not briefHeader: briefHeader = setup.headerGenerated
             return lineNumber
 
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                cls._generate_to_file(fh)
-            return lineNumber
+        # case 2: given folder there is a structure that needs to be created
+        if isinstance(arg, Path):
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
+                for setup in cls.selected:
+                    folder: Path = arg
+                    fileName = f"{fileName}_{setup.name}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setup.name
+                    setupFile = folder / f"{fileName}{fileExtension}"
+                    # Use the same code path as above to write to file (so should merge the code paths)
+                    with setupFile.open("a", encoding="utf-8") as fileHandler:
+                        lineNumber = setup.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits, briefHeader)
+                        if not briefHeader: briefHeader = setup.headerGenerated
+                return lineNumber
 
         raise TypeError("Call GenerateHeader(fileHandler) or GenerateHeader(folderPath, fileName, fileExtension)")
     #endregion
@@ -129,7 +131,7 @@ class Setups(metaclass=_SetupsMeta):
     @classmethod
     def GenerateBody(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
 
-    # If GenerateBody is called with folder + name + ext it means that 
+    # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     @classmethod
@@ -146,12 +148,12 @@ class Setups(metaclass=_SetupsMeta):
             lineNumber += Settings(Settings.NUMBERING_INTERVAL)
             return lineNumber
 
+        firstSetup = None
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
         if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
             fileHandler: TextIO = arg
-            firstSetup = None
             for setup in cls.selected:
                 if firstSetup is None:
                     firstSetup = setup
@@ -168,16 +170,19 @@ class Setups(metaclass=_SetupsMeta):
                 lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup)
             return lineNumber
         
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                cls._generate_to_file(fh)
-            return lineNumber
+        # case 2: given folder means that a structure needs to be created
+        if isinstance(arg, Path):
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
+                for setup in cls.selected:
+                    if firstSetup is None:
+                        firstSetup = setup
+                    folder: Path = arg
+                    fileName = f"{fileName}_{setup.name}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setup.name
+                    setupFile = folder / f"{fileName}{fileExtension}"
+                    # Use the same code path as above to write to file (so should merge the code paths)
+                    with setupFile.open("a", encoding="utf-8") as fileHandler:
+                        lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup)
+                return lineNumber
 
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
 
@@ -192,7 +197,7 @@ class Setups(metaclass=_SetupsMeta):
     @classmethod
     def GenerateTail(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int): ...
 
-    # If GenerateTail is called with folder + name + ext it means that 
+    # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
     @classmethod
@@ -205,23 +210,24 @@ class Setups(metaclass=_SetupsMeta):
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
+        if isinstance(arg, io.TextIOBase):
             fileHandler: TextIO = arg
             setup = next((setup for setup in reversed(cls.selected) if setup.hasOperationWithTail and not setup.isSuppressed), None)
             if setup is not None:
                 lineNumber = setup.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
             return
 
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                cls._generate_to_file(fh)
-            return
+        # case 2: given path means that there is a structure that needs to be made
+        if isinstance(arg, Path):
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
+                for setup in cls.selected:
+                    folder: Path = arg
+                    fileName = f"{fileName}_{setup.name}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setup.name
+                    setupFile = folder / f"{fileName}{fileExtension}"
+                    # Use the same code path as above to write to file (so should merge the code paths)
+                    with setupFile.open("a", encoding="utf-8") as fileHandler:
+                        lineNumber = setup.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+                return lineNumber
 
         raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")
     #endregion
