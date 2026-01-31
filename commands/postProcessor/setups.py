@@ -33,7 +33,7 @@ class Setups(metaclass=_SetupsMeta):
 
     @classmethod
     def Load(cls, setups: adsk.cam.Setups):
-        noneSelected = not next((setup.isSelected and not setup.isSuppressed for setup in setups), False)
+        noneSelected = not any((setup.isSelected and not setup.isSuppressed for setup in setups))
         cls._items: List[Setup] = [Setup(setup, noneSelected) for setup in setups if not setup.isSuppressed]
 
     @classmethod
