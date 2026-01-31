@@ -1,9 +1,19 @@
 {
-  "Input selection": "Inmatningsval",
+  "Input Selection": "Inmatningsval",
 
   "NC Program": "NC-program",
   "TOOL TIP: NC Program to Use": "Välj NC-program att använda",
   "TOOLTIP TEXT: NC Program to Use": "Postbearbetning använder inställningarna från det valda NC-programmet.",
+
+  "Setup Name": "Setup Name",
+  "Origin": "Origin",
+  "X-axis": "X-axis",
+  "Rotation": "Rotation",
+  "Aligned": "Aligned",
+  "Misaligned": "Misaligned",
+  "Same": "Same",
+  "Different": "Different",
+  "(reference)": "(reference)",
 
   "Only selected setups": "Endast valda uppsättningar",
   "TOOL TIP: Only selected setups": "Bara valda uppsättningar",
@@ -30,6 +40,11 @@
 
   "Output folder": "Resultatsökväg",
   "<Select program>": "<Välj program>",
+
+  "File name": "File name",
+  "TOOL TIP: File name": "File name",
+  "TOOLTIP TEXT: File name": "The name of the output G-code file(s) without extension.",
+  
   "TOOL TIP: Output folder": "Mapp för utdata",
   "TOOLTIP TEXT: Output folder": "Välj mappen där genererade G-kodfiler ska sparas.",
 
@@ -40,6 +55,10 @@
   "Numbering digits": "Antal siffror i numrering",
   "TOOL TIP: Numbering digits": "Antal siffror för numrering",
   "TOOLTIP TEXT: Numbering digits": "Formatera sekvensnummer med angivet antal siffror (t.ex. 3 → 001, 002...).",
+
+  "Numbering interval": "Numbering interval",
+  "TOOL TIP: Numbering interval": "The interval between numbers",
+  "TOOLTIP TEXT: Numbering interval": "Specify the interval between sequence numbers (e.g., 5 for 005, 010 and so on).",
 
   "Combine operations using same tool": "Slå ihop operationer med samma verktyg",
   "TOOL TIP: Combine operations using same tool": "Slå ihop operationer med samma verktyg",
@@ -52,6 +71,8 @@
   "Delete output folder": "Radera utmatningsmappen",
   "TOOL TIP: Delete output folder": "Radera utdata-mappen",
   "TOOLTIP TEXT: Delete output folder": "Raderar hela utdata-mappen (filer och undermappar). VAR FÖRSIKTIG — kontrollera inställningen noggrant innan användning.",
+
+  "Misc": "Misc",
 
   "Rename Setups": "Byt namn på uppsättningar",
 
@@ -94,6 +115,10 @@
   "TOOLTIP TEXT: Prepend sequence number": "Börja varje filnamn med ett sekvensnummer. Numreringen följer ordningen i webbläsarträdet; varje mapp har egna nummer från 1.",
 
   "Operations grouping": "Gruppering av operationer",
+  "Single file": "Single file",
+  "Group on setup": "Group on setup",
+  "Group on setup and tool": "Group on setup and tool",
+  "None, one file per operation": "None, one file per operation",
   "TOOL TIP: Operations grouping": "Hur operationer grupperas",
   "TOOLTIP TEXT: Operations grouping": "Välj hur operationer grupperas i utdatafiler. <p><i>En fil:</i> Alla operationer kombineras till en fil. <br><i>Gruppera per setup:</i> Varje setup blir en separat fil. <br><i>Gruppera per setup och verktyg:</i> Varje verktygsbyte skapar en ny fil. <br><i>Ingen, en fil per operation:</i> Varje operation blir en egen fil.",
 
@@ -111,11 +136,22 @@
   "TOOL TIP: Retract Y on A-axis rotation": "Dra tillbaka Y-axeln vid A-axelrotation",
   "TOOLTIP TEXT: Retract Y on A-axis rotation": "När aktiverat dras även Y-axeln tillbaka till säker position vid A-axelrotation för att undvika kollision om fixturen inte är rund.",
 
+  "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+  "TOOL TIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+  "TOOLTIP TEXT: Safe Y-retraction coordinate (mm)": "The Y coordinate to retract to when rotating the A-axis between setups. This coordinate should be set so that the tool will not collide with the stock when retracting to this position.",
+
   "Machine": "Maskin",
   "TOOL TIP: Machine": "Maskin",
   "TOOLTIP TEXT: Machine": "Maskindefinitionen kopplad till det valda NC-programmet.",
 
   "Post Processor": "Postprocessor",
   "TOOL TIP: Post Processor": "Postprocessor",
-  "TOOLTIP TEXT: Post Processor": "Postprocessorn kopplad till det valda NC-programmet."
+  "TOOLTIP TEXT: Post Processor": "Postprocessorn kopplad till det valda NC-programmet.",
+
+  "G-codes that mark header end": "G-codes that mark header end",
+  "TOOL TIP: G-codes that mark header end": "G-codes that mark header end",
+  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
+
+  "Process": "Process",
+  "Close": "Close"
 }
