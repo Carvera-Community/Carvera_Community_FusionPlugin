@@ -898,7 +898,9 @@ class PostDialog:
 
     @staticmethod
     def onOutputFolderChanged(input: adsk.core.StringValueCommandInput):
-        Settings.Set(Settings.OUTPUT_FOLDER, input.value)
+        newFolder = Path(input.value.strip())
+        if newFolder != Programs.Current.GetOutputFolder():
+            Programs.Current.SetOutputFolder(newFolder)
 
     @staticmethod
     def onOutputFolderButtonChanged(button: adsk.core.BoolValueCommandInput):
@@ -912,7 +914,7 @@ class PostDialog:
             return
         folder = dialog.folder
         if folder:
-            Settings.Set(Settings.OUTPUT_FOLDER, folder)
+            Programs.Current.SetOutputFolder(folder)
             outputFolderInput: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._OUTPUT_FOLDER_ID)
             outputFolderInput.value = folder
 
@@ -980,7 +982,7 @@ class PostDialog:
 
     @staticmethod
     def onFileNameChanged(input: adsk.core.StringValueCommandInput):
-        Programs.Current.setFileName(input.value)
+        Programs.Current.SetFileName(input.value)
 
     @staticmethod
     def onSaveChanged(checkbox: adsk.core.BoolValueCommandInput):
