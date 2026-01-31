@@ -1,7 +1,10 @@
 import adsk.core
 
+class _AttributesMeta(type):
+    def __iter__(cls):
+        return iter(cls._attributes)
 
-class Attributes:
+class Attributes(metaclass=_AttributesMeta):
     def __init__(self, attributes: adsk.core.Attributes):
         self._attributes = attributes
 
@@ -20,3 +23,11 @@ class Attributes:
             return attr.value
         return None
     
+    def itemByName(self, group, name):
+        """Returns the attribute item associated with the Fusion NCProgram"""
+        return self._attributes.itemByName(group, name)
+    
+    @property
+    def count(self):
+        """Returns the number of attributes associated with the Fusion NCProgram"""
+        return self._attributes.count
