@@ -557,10 +557,10 @@ class PostDialog:
         input = outputTab.children.addDropDownCommandInput(PostDialog._OPERATIONS_GROUPING_ID, Strings("Operations grouping"), adsk.core.DropDownStyles.TextListDropDownStyle)
         input.tooltip = Strings("TOOL TIP: Operations grouping")
         input.tooltipDescription = Strings("TOOLTIP TEXT: Operations grouping")
-        input.listItems.add(Strings("Single file"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
-        input.listItems.add(Strings("Group on setup"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
-        input.listItems.add(Strings("Group on setup and tool"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
-        input.listItems.add(Strings("None, one file per operation"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
+        # input.listItems.add(Strings("Single file"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
+        # input.listItems.add(Strings("Group on setup"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
+        # input.listItems.add(Strings("Group on setup and tool"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
+        # input.listItems.add(Strings("None, one file per operation"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
 
         #endregion
 
@@ -738,18 +738,18 @@ class PostDialog:
             if firstSetup is None:
                 if isSelected:
                     firstSetup = setup
-                origin.value = Strings('(reference)') if isSelected else '-'
-                xNormalInput.value = Strings('(reference)') if isSelected else '-'
-                aRotation.value = Strings('(reference)') if isSelected else '-'
+                origin.value = Strings("(reference)") if isSelected else '-'
+                xNormalInput.value = Strings("(reference)") if isSelected else '-'
+                aRotation.value = Strings("(reference)") if isSelected else '-'
                 continue
 
             equalOrigin = setup.origin.isEqualTo(firstSetup.origin)
             parallelXAxis = setup.xNormal.isParallelTo(firstSetup.xNormal)
 
             origin.value = '' if firstSetup is None else \
-                Strings('Same') if equalOrigin else Strings('Different')
+                Strings("Same") if equalOrigin else Strings("Different")
             xNormalInput.value = '' if firstSetup is None else \
-                Strings('Aligned') if parallelXAxis else Strings('Misaligned') 
+                Strings("Aligned") if parallelXAxis else Strings("Misaligned") 
             aRotation.value = '' if firstSetup is None or not parallelXAxis else \
                 f"{round(setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)*1000)/1000}°"
 
