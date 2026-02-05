@@ -156,7 +156,7 @@ class Program:
         name = self.Parameters.Get(Parameters.NAME)
 
         try:
-            Setups.Process(tmpPath)
+            Setups.Parse(tmpPath)
         finally:
             self.SetOutputFolder(outputFolder)
             self.Parameters.Set(Parameters.FILE_NAME, fileName)

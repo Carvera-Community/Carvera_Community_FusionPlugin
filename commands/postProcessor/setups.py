@@ -37,9 +37,9 @@ class Setups(metaclass=_SetupsMeta):
         cls._items: List[Setup] = [Setup(setup, noneSelected) for setup in setups if not setup.isSuppressed]
 
     @classmethod
-    def Process(cls, tmpPath: Path):
-        for setup in cls._items:
-            setup.Process(tmpPath)
+    def Parse(cls, tmpPath: Path):
+        for setup in cls.selected:
+            setup.Parse(tmpPath)
         return
     
     @classmethod
@@ -114,7 +114,7 @@ class Setups(metaclass=_SetupsMeta):
                     fileName = f"{fileName}_{setup.name}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setup.name
                     setupFile = folder / f"{fileName}{fileExtension}"
                     # Use the same code path as above to write to file (so should merge the code paths)
-                    with setupFile.open("a", encoding="utf-8") as fileHandler:
+                    with setupFile.open("w", encoding="utf-8") as fileHandler:
                         lineNumber = setup.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits, briefHeader)
                         if not briefHeader: briefHeader = setup.headerGenerated
                 return lineNumber
@@ -149,39 +149,40 @@ class Setups(metaclass=_SetupsMeta):
             return lineNumber
 
         firstSetup = None
+        rotationAngle = 0
+        currentRotationAngle = None
+
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
         if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
             fileHandler: TextIO = arg
             for setup in cls.selected:
+                if Settings(Settings.ROTATE_A_AXIS):
+                    angle = 0 if firstSetup is None else setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)
+                    rotationAngle = None if angle == currentRotationAngle else angle
+                    currentRotationAngle = angle
+                    
+                lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup, rotationAngle = rotationAngle, preserveRotation = firstSetup is None)
                 if firstSetup is None:
                     firstSetup = setup
-                elif Settings(Settings.ROTATE_A_AXIS):
-                    # If A-axis rotation is required between setups, insert the rotation code.
-                    rotationAngle = -firstSetup.GetRotationAroundXAxisRelativeToDeg(setup)
-                    if abs(rotationAngle) > 0.01:
-                        lineNumber = _writeLine(cls, fileHandler, "(Rotating between setups)", lineNumber, addLineNumbers, digits)
-                        if Settings(Settings.SAFE_Y_RETRACTION):
-                            lineNumber = _writeLine(cls, fileHandler, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction=Settings(Settings.Y_RETRACTION_COORDINATE)), lineNumber, addLineNumbers, digits)
-                        else:
-                            lineNumber = _writeLine(cls, fileHandler, "G90 G53 G0 Z-3", lineNumber, addLineNumbers, digits)
-                        lineNumber = _writeLine(cls, fileHandler, "G90 G54 G0 A{:.3f}".format(rotationAngle), lineNumber, addLineNumbers, digits)
-                lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup)
             return lineNumber
         
         # case 2: given folder means that a structure needs to be created
         if isinstance(arg, Path):
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
                 for setup in cls.selected:
-                    if firstSetup is None:
-                        firstSetup = setup
+                    if Settings(Settings.ROTATE_A_AXIS): # Calculate the needed A-axis rotation for this setup compared to the first setup
+                        angle = 0 if firstSetup is None else setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)
+                        rotationAngle = None if angle == currentRotationAngle else angle
+                        currentRotationAngle = angle
                     folder: Path = arg
                     fileName = f"{fileName}_{setup.name}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setup.name
                     setupFile = folder / f"{fileName}{fileExtension}"
-                    # Use the same code path as above to write to file (so should merge the code paths)
                     with setupFile.open("a", encoding="utf-8") as fileHandler:
-                        lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup)
+                        lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup, rotationAngle = rotationAngle, preserveRotation = firstSetup is None)
+                    if firstSetup is None:
+                        firstSetup = setup
                 return lineNumber
 
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
@@ -212,15 +213,16 @@ class Setups(metaclass=_SetupsMeta):
         # should be created.
         if isinstance(arg, io.TextIOBase):
             fileHandler: TextIO = arg
-            setup = next((setup for setup in reversed(cls.selected) if setup.hasOperationWithTail and not setup.isSuppressed), None)
+            setup = next((setup for setup in cls.selected if setup.hasTail and not setup.isSuppressed), None)
             if setup is not None:
                 lineNumber = setup.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
             return
 
         # case 2: given path means that there is a structure that needs to be made
-        if isinstance(arg, Path):
+        if isinstance(arg, Path):            
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                for setup in cls.selected:
+                setup = next((setup for setup in cls.selected if setup.hasTail), None)
+                if setup is not None:
                     folder: Path = arg
                     fileName = f"{fileName}_{setup.name}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setup.name
                     setupFile = folder / f"{fileName}{fileExtension}"

@@ -177,7 +177,7 @@ class Setup:
         if self._setup.name != newName:
             self._setup.name = newName
     
-    def Process(self, tmpPath: Path):
+    def Parse(self, tmpPath: Path):
         from .programs import Programs
 
         if self._operations is None or self.isSuppressed:
@@ -189,7 +189,7 @@ class Setup:
         # Make sure that the setup has all its toolpaths generated
         Programs.CheckAndGenerateToolpath(self._setup)
 
-        self._operations.Process(tmpPath)
+        self._operations.Parse(tmpPath)
 
     def SetOutputFileName(self, fileName):
         self._outputFileName = fileName
@@ -245,31 +245,36 @@ class Setup:
     # If GenerateBody is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool) -> int: ...
+    def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool, fileName: str, fileExtension: str) -> int: ...
+    def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # Runtime implementation of Generate
-    def GenerateBody(self, arg, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def GenerateBody(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
-        if isinstance(arg, io.TextIOBase):
-            fileHandler: TextIO = arg
-            return self._operations.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, removeARotations)
+        if isinstance(pathOrFile, io.TextIOBase):
+            fileHandler: TextIO = pathOrFile
+            return self._operations.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
         
         # case 2: given folder there is a structure to create
-        if isinstance(arg, Path):
+        if isinstance(pathOrFile, Path):
             # This is probably a good place to split on tool change..?
-            return self._operations.GenerateBody(arg, lineNumber, addLineNumbers, digits, removeARotations, fileName, fileExtension)
+            return self._operations.GenerateBody(pathOrFile, lineNumber, addLineNumbers, digits, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
     #endregion
 
     #region GenerateTail 
+
+    @property
+    def hasTail(self):
+        return self._operations is not None and self._operations.hasTail
+    
     # Type signatures for tools (mypy/IDE) hints
 
     # If GenerateTail is called with a fileHandler it means that the output

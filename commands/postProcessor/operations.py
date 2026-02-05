@@ -1,16 +1,18 @@
 import io
 from pathlib import Path
 from typing import List, List, Optional, TextIO, overload
+
+import adsk
 from .settings import Settings
 from .operation import Operation
 
 
 class Operations:
-    def __init__(self, operations):
+    def __init__(self, operations: List[adsk.cam.Operation]):
         self._outputFileName: str = None
         self._operations = list[Operation]()
         self._operationWithTail: Operation = None
-        self._headerGenerated = False
+        self._headerGenerated: bool = False
 
         i = 0
         operation = None
@@ -55,9 +57,10 @@ class Operations:
     def GetToolNumber(operation):
         return operation.tool.parameters.itemByName("tool_number").value.value
 
-    def Process(self, tmpPath: Path):
+    def Parse(self, tmpPath: Path):
         for operation in self._operations:
-            operation.Process(tmpPath)
+            operation.Parse(tmpPath)
+        self._operationWithTail = next((op for op in self._operations if op.hasTail), None)
 
     def SetOutputFileName(self, fileName):
         self._outputFileName = fileName
@@ -99,7 +102,7 @@ class Operations:
                 else:
                     lineNumber = operation.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits, self._headerGenerated)
                     if not self._headerGenerated: self._headerGenerated = operation.headerGenerated
-                    if operation.hasTail: self._operationWithTail = operation # Just keep the last operation with a tail to end the whole file
+                    if operation.hasTail and self._operationWithTail is None: self._operationWithTail = operation # Just keep the last operation with a tail to end the whole file
             return lineNumber
                 
         # case 2: given folder + name + ext
@@ -120,48 +123,47 @@ class Operations:
     # If GenerateBody is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool) -> int: ...
+    def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool, fileName: str, fileExtension: str) -> int: ...
+    def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # Runtime implementation of GenerateBody
-    def GenerateBody(self, arg, lineNumber: int, addLineNumbers: bool, digits: int, removeARotations: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def GenerateBody(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
 
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
-            fileHandler: TextIO = arg
+        if isinstance(pathOrFile, io.TextIOBase) and fileName is None and fileExtension is None:
+            fileHandler: TextIO = pathOrFile
             i = 0
             for operation in self._operations:
-                    if operation.hasBody:
-                        lineNumber = operation.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, removeARotations)
-                    if operation.hasTail:
-                        # Just keep the last operation with a tail to 
-                        # end the whole file
-                        self._operationWithTail = operation 
-                    i += 1
+                if operation.hasBody:
+                    lineNumber = operation.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                    rotationAngle = None # Only apply rotation to the first operation if specified, then reset to None so that subsequent operations are not rotated
+                    preserveRotation = False # Only preserve rotation for the first operation if specified, then reset to False so that subsequent operations do not preserve rotation
+                i += 1
             return lineNumber
                 
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
+        # case 2: given folder + name + ext means that we should create files for each operation in the given folder
+        if isinstance(pathOrFile, Path) and fileName is not None and fileExtension is not None:
+            folder: Path = pathOrFile
             # Lets not make a folder per operation...
             # if not Settings(Settings.FLAT_FILE_STRUCTURE):
             #     folder = arg / operation.name
             folder.mkdir(parents=True, exist_ok=True)
-            if Settings(Settings.FLAT_FILE_STRUCTURE):
-                filename = f"{fileName}_{operation.name}{fileExtension}"
-            else:
-                filename = f"{fileName}{fileExtension}"
-            # öppna och skriv via samma inre funktion
-            operationFile = folder / filename
-            with operationFile.open("w", encoding="utf-8") as fileHandler:
-                lineNumber = operation.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, removeARotations)
+            for operation in self._operations:
+                if Settings(Settings.FLAT_FILE_STRUCTURE):
+                    filename = f"{fileName}_{operation.name}{fileExtension}"
+                else: # We should be in a folder named after the setup, create the operation file directly.
+                    filename = f"{fileName}{fileExtension}"
+                operationFile = folder / filename
+                with operationFile.open("w", encoding="utf-8") as fileHandler:
+                    lineNumber = operation.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                    rotationAngle = None # Only apply rotation to the first operation if specified, then reset to None so that subsequent operations are not rotated
             
 
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
