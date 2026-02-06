@@ -99,6 +99,7 @@ class Setups(metaclass=_SetupsMeta):
             # For a single file output, there is only one header.
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
                 if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, fileName, firstSetup.name, fileExtension)
+                lineNumber = firstSetup.WriteSetupName(fileHandler, addLineNumbers, lineNumber, digits)
                 lineNumber = firstSetup.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
 
             for setup in cls.selected:
@@ -161,9 +162,12 @@ class Setups(metaclass=_SetupsMeta):
         if isinstance(pathOrFile, io.TextIOBase) and fileName is None and fileExtension is None:
             fileHandlerParam: TextIO = pathOrFile
             fileHandler: TextIO = fileHandlerParam
-
         try:
             for setup in cls.selected:
+                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
+                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                    lineNumber = setup.WriteSetupName(fileHandler, addLineNumbers, lineNumber, digits)
+
                 if Settings(Settings.ROTATE_A_AXIS):
                     angle = 0 if firstSetup is None else setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)
                     rotationAngle = None if angle == currentRotationAngle else angle

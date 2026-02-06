@@ -195,8 +195,10 @@ class Setup(Line):
     def SetOutputFileName(self, fileName):
         self._outputFileName = fileName
 
+    def WriteSetupName(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        return Setup._writeLine(fileHandler, f"({self._setup.name})", lineNumber, addLineNumbers, digits)
+
     def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
-        Setup._writeLine(fileHandler, f"({self._setup.name})", lineNumber, addLineNumbers, digits)
         return self._operations.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
 
     def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
