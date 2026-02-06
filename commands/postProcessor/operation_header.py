@@ -13,8 +13,9 @@ class OperationHeader():
             row = 0
 
             while len(line) != 0:
+                # It's the temporary file name, so ignore it as the 
+                # real name will be written later
                 if line == f"({self._tempFilePath.stem})\n": 
-                    fileHandler.write(f" - ignored header: {line}")
                     line = operationFile.readline()
                     row += 1
                     continue
