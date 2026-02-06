@@ -8,15 +8,15 @@ class SetupsTail():
     #region GenerateTail code
     @overload
     @classmethod
-    def GenerateTail(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int): ...
+    def WriteTail(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int): ...
 
     @overload
     @classmethod
-    def GenerateTail(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str): ...
+    def WriteTail(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str): ...
 
     # Runtime implementation of Generate
     @classmethod
-    def GenerateTail(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None):
+    def WriteTail(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None):
 
         fileHandlerParam: Optional[TextIO] = None
 
@@ -32,13 +32,13 @@ class SetupsTail():
                     return lineNumber
 
                 if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
-                lineNumber = setup.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+                lineNumber = setup.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
 
             # One tail per setup
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
                 for setup in cls.selected:
                     if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
-                    lineNumber = setup.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+                    lineNumber = setup.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
 
 
             return lineNumber

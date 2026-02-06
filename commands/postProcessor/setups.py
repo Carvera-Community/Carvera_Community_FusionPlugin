@@ -25,13 +25,8 @@ class _SetupsMeta(type):
     
 class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
     
-    _outputFileName: str = None
     _items: List[Setup] = []
     _headerGenerated: bool = False
-
-    @classmethod
-    def SetOutputFileName(cls, fileName):
-        cls._outputFileName = fileName
 
     @classmethod
     def Load(cls, setups: adsk.cam.Setups):

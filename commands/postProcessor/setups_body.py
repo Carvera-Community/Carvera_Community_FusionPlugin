@@ -8,14 +8,14 @@ from .setup import Setup
 class SetupsBody():
     @overload
     @classmethod
-    def GenerateBody(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteBody(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
 
     @overload
     @classmethod
-    def GenerateBody(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteBody(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
 
     @classmethod
-    def GenerateBody(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteBody(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         fileHandlerParam: Optional[TextIO] = None
         firstSetup: Optional[Setup] = None
@@ -41,7 +41,7 @@ class SetupsBody():
                     preserveRotation = True # We don't want to do any changes to the native rotation code
 
                 if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
-                lineNumber = setup.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                lineNumber = setup.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
 
                 if firstSetup is None:
                     firstSetup = setup

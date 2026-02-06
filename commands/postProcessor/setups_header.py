@@ -17,14 +17,14 @@ class SetupsHeader(Line):
     # Type signatures for tools hints
     @overload
     @classmethod
-    def GenerateHeader(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteHeader(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
 
     @overload
     @classmethod
-    def GenerateHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
 
     @classmethod
-    def GenerateHeader(cls, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteHeader(cls, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         fileHandlerParam: Optional[TextIO] = None
 

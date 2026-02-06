@@ -105,7 +105,7 @@ class Operations:
             i = 0
             for operation in self._operations:
                 if operation.hasBody:
-                    lineNumber = operation.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                    lineNumber = operation.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
                     rotationAngle = None # Only apply rotation to the first operation if specified, then reset to None so that subsequent operations are not rotated
                     preserveRotation = False # Only preserve rotation for the first operation if specified, then reset to False so that subsequent operations do not preserve rotation
                 i += 1
@@ -125,7 +125,7 @@ class Operations:
                     filename = f"{fileName}{fileExtension}"
                 operationFile = folder / filename
                 with operationFile.open("w", encoding="utf-8") as fileHandler:
-                    lineNumber = operation.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                    lineNumber = operation.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
                     rotationAngle = None # Only apply rotation to the first operation if specified, then reset to None so that subsequent operations are not rotated
             
 

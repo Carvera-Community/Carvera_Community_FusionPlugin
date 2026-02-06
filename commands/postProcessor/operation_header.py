@@ -57,15 +57,15 @@ class OperationHeader():
     # If GenerateHeader is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def GenerateHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
+    def WriteHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
 
     # If GenerateHeader is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def GenerateHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
+    def WriteHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of Generate
-    def GenerateHeader(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteHeader(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         fileOpened = False
         # If given a Path, create the folder structure and the file to write to

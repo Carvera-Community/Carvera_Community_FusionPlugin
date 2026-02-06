@@ -172,11 +172,8 @@ class Program():
             if not outputFolder.exists():
                 outputFolder.mkdir(parents=True)
 
-            # TODO: Handle file naming here
             fileName = self.fileName
-
             lineNumber = 0            
-
             fileExtension = self._program.postConfiguration.extension
 
             if Settings(Settings.FLAT_FILE_STRUCTURE):
@@ -185,11 +182,11 @@ class Program():
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
                     filePath = outputFolder / f"{fileName}{fileExtension}"
                     with filePath.open("w", encoding="utf-8") as fileHandler:
-                        lineNumber = Setups.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits)
-                        lineNumber = Setups.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits)
+                        lineNumber = Setups.WriteHeader(fileHandler, lineNumber, addLineNumbers, digits)
+                        lineNumber = Setups.WriteBody(fileHandler, lineNumber, addLineNumbers, digits)
                         
                         if(Setups.hasOperationWithTail):
-                            Setups.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+                            Setups.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
                 else:
                     folder = outputFolder
                     file = fileName
@@ -197,10 +194,10 @@ class Program():
                         folder = outputFolder / self.fileName
                         file = ''
                     folder.mkdir(parents=True, exist_ok=True)
-                    Setups.GenerateHeader(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
-                    Setups.GenerateBody(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
+                    Setups.WriteHeader(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
+                    Setups.WriteBody(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
                     if(Setups.hasOperationWithTail):
-                        Setups.GenerateTail(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
+                        Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
         except Exception as exc:
             raise exc
         finally:
