@@ -1,17 +1,12 @@
 from __future__ import annotations
 import os
-import shutil
-from typing import Optional, TextIO, overload
 import adsk
-import adsk.core
 import adsk.cam
 from pathlib import Path
 
-from . import config 
-from ...config import PLUGIN_VERSION
+
 from .strings import Strings
 from .attributes import Attributes
-from .const import Const
 from .setups import Setups
 from .settings import Settings
 from .parameters import Parameters
@@ -32,7 +27,7 @@ def CountOutputFolderFiles(folder, limit, fileExt):
     return None
 
 
-class Program:
+class Program():
     def __init__(self, program: adsk.cam.NCProgram):
         self._program: adsk.cam.NCProgram = program
         self._outputFolder: Path = None
@@ -190,10 +185,6 @@ class Program:
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
                     filePath = outputFolder / f"{fileName}{fileExtension}"
                     with filePath.open("w", encoding="utf-8") as fileHandler:
-                        # Add a header comment with file name and post processor version
-                        lineNumber = self._writeLine(fileHandler, f"({fileName})\n", lineNumber, addLineNumbers, digits)
-                        lineNumber = self._writeLine(fileHandler, f"(Generated with {config.CMD_NAME} version {PLUGIN_VERSION})\n", lineNumber, addLineNumbers, digits)
-
                         lineNumber = Setups.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits)
                         lineNumber = Setups.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits)
                         
@@ -216,14 +207,6 @@ class Program:
             self.SetOutputFolder(outputFolder)
             self.Parameters.Set(Parameters.FILE_NAME, fileName)
             self.Parameters.Set(Parameters.NAME, name)
-
-    def _writeLine(self, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
-        lineNumber += Settings(Settings.SEQUENCE_INCREMENT)
-        if addLineNumbers:
-            fileHandler.write(f"N{str(lineNumber).rjust(digits, '0')} " + line)
-        else:
-            fileHandler.write(line)
-        return lineNumber
 
     def DisableOpenInEditor(self):
         """Convenience method for disabling "Open in Editor" option"""
