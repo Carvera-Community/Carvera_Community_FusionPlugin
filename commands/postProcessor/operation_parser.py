@@ -1,7 +1,9 @@
 from pathlib import Path
+
+from .line import Line
 from .settings import Settings
 
-class OperationParser():
+class OperationParser(Line):
 
     def _parseFile(self, filePath: Path):
         #region Header example
@@ -52,12 +54,12 @@ class OperationParser():
         return # No tail found, so probably a handmade operation
 
     def _parseHeaderLine(self, line: str, lineNumber: int, inHeader: bool) -> tuple[bool, bool]:
-        toolComment = self._TOOL_COMMENT_REG.search(line)
+        toolComment = OperationParser._TOOL_COMMENT_REG.search(line)
         if toolComment: # We have found the tool comment line
             self._toolCommentLine = lineNumber
             return True, inHeader
         else:
-            headerMatch = self._BODY_RE.match(line)
+            headerMatch = OperationParser._BODY_RE.match(line)
             if headerMatch:
                 if headerMatch.group("G") is not None:
                     # Found a g-code, check if it is in the list of
@@ -93,12 +95,12 @@ class OperationParser():
             return (not inHeader, inHeader)
         
     def _parseBodyLine(self, line: str, lineNumber: int):
-        bodyMatch = self._BODY_RE.match(line)
+        bodyMatch = OperationParser._BODY_RE.match(line)
         if bodyMatch:
             if bodyMatch.group("G") is not None:
                 gCode = int(bodyMatch.group("G"))
                 if gCode == 0:
-                    lineMatch = self._PARSE_LINE_RE.match(line)
+                    lineMatch = OperationParser._PARSE_LINE_RE.match(line)
                     # We're only interested in the first rotation move
                     if not self.hasRotation and lineMatch and lineMatch.group("G") is not None and lineMatch.group("A") is not None:
                         aCode = float(lineMatch.group("A"))
