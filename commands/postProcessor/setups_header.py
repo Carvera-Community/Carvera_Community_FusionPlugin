@@ -21,10 +21,10 @@ class SetupsHeader(Line):
 
     @overload
     @classmethod
-    def WriteHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int: ...
 
     @classmethod
-    def WriteHeader(cls, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteHeader(cls, pathOrFile: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: Optional[str] = None) -> int:
 
         fileHandlerParam: Optional[TextIO] = None
 
@@ -40,27 +40,27 @@ class SetupsHeader(Line):
 
             # For a single file output, there is only one header.
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, fileName, firstSetup.name, fileExtension)
+                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, '', firstSetup.name, fileExtension)
                 lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, firstSetup)
 
             for setup in cls.selected:
                 # One header per setup
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, fileName, setup.name, fileExtension)
+                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, '', setup.name, fileExtension)
                     lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, setup)
 
                 # Put the tool comments in the header file we're working on at the moment
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
                 lineNumber = setup.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
 
                 # If grouping by setup, also write the header end in the same file after the tool comments
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
                     lineNumber = setup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
 
             # If writing to a single file, write the header end after all tool comments have been written for all setups
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, firstSetup.name, fileExtension)
+                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', firstSetup.name, fileExtension)
                 lineNumber = firstSetup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
 
             return lineNumber

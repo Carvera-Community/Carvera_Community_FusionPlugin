@@ -178,8 +178,9 @@ class Program():
 
             if Settings(Settings.FLAT_FILE_STRUCTURE):
                 pass
-            else:
+            else: # Output with folder structure
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
+                    outputFolder.mkdir(parents=True, exist_ok=True)
                     filePath = outputFolder / f"{fileName}{fileExtension}"
                     with filePath.open("w", encoding="utf-8") as fileHandler:
                         lineNumber = Setups.WriteHeader(fileHandler, lineNumber, addLineNumbers, digits)
@@ -187,17 +188,18 @@ class Program():
                         
                         if(Setups.hasOperationWithTail):
                             Setups.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
-                else:
-                    folder = outputFolder
-                    file = fileName
-                    if not Settings(Settings.FLAT_FILE_STRUCTURE):
-                        folder = outputFolder / self.fileName
-                        file = ''
+
+                elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
+                    folder = outputFolder / self.fileName
                     folder.mkdir(parents=True, exist_ok=True)
-                    Setups.WriteHeader(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
-                    Setups.WriteBody(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
+                    Setups.WriteHeader(folder, lineNumber, addLineNumbers, digits, fileExtension)
+                    Setups.WriteBody(folder, lineNumber, addLineNumbers, digits, fileExtension)
                     if(Setups.hasOperationWithTail):
-                        Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, file, fileExtension)
+                        Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, fileExtension)
+
+                elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
+                    pass
+                
         except Exception as exc:
             raise exc
         finally:

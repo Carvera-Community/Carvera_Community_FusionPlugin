@@ -16,9 +16,10 @@ class SetupsTail():
 
     # Runtime implementation of Generate
     @classmethod
-    def WriteTail(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None):
+    def WriteTail(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileExtension: Optional[str] = None):
 
         fileHandlerParam: Optional[TextIO] = None
+        fileHandler: Optional[TextIO] = None
 
         if isinstance(pathOrFile, io.TextIOBase):
             fileHandlerParam: TextIO = pathOrFile
@@ -31,13 +32,13 @@ class SetupsTail():
                 if setup is None:
                     return lineNumber
 
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
                 lineNumber = setup.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
 
             # One tail per setup
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
                 for setup in cls.selected:
-                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
                     lineNumber = setup.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
 
 

@@ -12,10 +12,10 @@ class SetupsBody():
 
     @overload
     @classmethod
-    def WriteBody(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteBody(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int: ...
 
     @classmethod
-    def WriteBody(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteBody(cls, pathOrFile, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileExtension: Optional[str] = None) -> int:
 
         fileHandlerParam: Optional[TextIO] = None
         firstSetup: Optional[Setup] = None
@@ -23,13 +23,14 @@ class SetupsBody():
         currentRotationAngle: float = None
         preserveRotation: bool = False
 
-        if isinstance(pathOrFile, io.TextIOBase) and fileName is None and fileExtension is None:
+        if isinstance(pathOrFile, io.TextIOBase):
             fileHandlerParam: TextIO = pathOrFile
             fileHandler: TextIO = fileHandlerParam
+
         try:
             for setup in cls.selected:
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
                     lineNumber = setup.WriteSetupName(fileHandler, addLineNumbers, lineNumber, digits)
 
                 if Settings(Settings.ROTATE_A_AXIS):
@@ -40,7 +41,7 @@ class SetupsBody():
                 else:
                     preserveRotation = True # We don't want to do any changes to the native rotation code
 
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, fileName, setup.name, fileExtension)
+                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
                 lineNumber = setup.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, setup != firstSetup, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
 
                 if firstSetup is None:
