@@ -1,0 +1,67 @@
+
+import re
+from typing import Final, TextIO
+
+from .settings import Settings
+
+class Line():
+
+    _BODY_RE: Final = re.compile(r""
+        r"(?P<N>N[0-9]+ *)?" # line number
+        r"(?P<line>"         # line w/o number
+        r"(M(?P<M>[0-9]+) *)?" # M-code
+        r"(G(?P<G>[0-9]+) *)?" # G-code
+        r"(T(?P<T>[0-9]+))?" # Tool
+        r".+)",              # to end of line
+        re.IGNORECASE | re.DOTALL)
+
+    @classmethod
+    def _writeLine(cls, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
+        """
+        Writes the line to the fileHandler and terminates it with a newline (\\n), adding line numbers if needed and returns the new line number
+        
+        :param cls: Description
+        :param fileHandler: Description
+        :type fileHandler: TextIO
+        :param line: Description
+        :type line: str
+        :param lineNumber: Description
+        :type lineNumber: int
+        :param addLineNumbers: Description
+        :type addLineNumbers: bool
+        :param digits: Description
+        :type digits: int
+        :return: Description
+        :rtype: int
+        """
+        return cls._write(fileHandler, line + "\n", lineNumber, addLineNumbers, digits)
+
+    @classmethod
+    def _write(cls, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
+        """
+        Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
+        
+        :param cls: Description
+        :param fileHandler: Description
+        :type fileHandler: TextIO
+        :param line: Description
+        :type line: str
+        :param lineNumber: Description
+        :type lineNumber: int
+        :param addLineNumbers: Description
+        :type addLineNumbers: bool
+        :param digits: Description
+        :type digits: int
+        :return: Description
+        :rtype: int
+        """
+        # Check if the line is numbered
+        match = cls._BODY_RE.match(line)
+        if match and match.group("N") is not None:
+            # If there should be line numbers, replace existing otherwise remove them
+            line = re.sub(r"^N[0-9]+", f"N{str(lineNumber).rjust(digits, '0')}" if addLineNumbers else "", line, count=1)
+        elif addLineNumbers:
+            lineNumber += Settings(Settings.SEQUENCE_INCREMENT)
+            line = f"N{str(lineNumber).rjust(digits, '0')} " + line
+        fileHandler.write(line)
+        return lineNumber

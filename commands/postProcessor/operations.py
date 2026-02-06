@@ -9,10 +9,8 @@ from .operation import Operation
 
 class Operations:
     def __init__(self, operations: List[adsk.cam.Operation]):
-        self._outputFileName: str = None
         self._operations = list[Operation]()
         self._operationWithTail: Operation = None
-        self._headerGenerated: bool = False
 
         i = 0
         operation = None
@@ -62,66 +60,31 @@ class Operations:
             operation.Parse(tmpPath)
         self._operationWithTail = next((op for op in self._operations if op.hasTail), None)
 
-    def SetOutputFileName(self, fileName):
-        self._outputFileName = fileName
+    def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        firstOperation =  next((operation for operation in self._operations if operation.hasTool), None)
+        if firstOperation is not None:
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
+                pass # TODO
+            else:
+                lineNumber = firstOperation.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
+        return lineNumber
 
-    @property
-    def hasTail(self):
-        return self._operationWithTail is not None
+    def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        for operation in self._operations:
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
+                pass # TODO
+            else:
+                lineNumber = operation.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
+        return lineNumber
 
-    @property
-    def headerGenerated(self):
-        return self._headerGenerated
+    def WriteHeaderEnd(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        if self._operationWithTail is not None:
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
+                pass # TODO
+            else:
+                lineNumber = self._operationWithTail.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+        return lineNumber
 
-    # Type signatures for tools (mypy/IDE) hints
-
-    # If GenerateHeader is called with a fileHandler it means that the output
-    # will only be one file
-    @overload
-    def GenerateHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
-
-    # If GenerateHeader is called with folder it means that 
-    # multiple files will be generated on lower levels of the hierarchy
-    @overload
-    def GenerateHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
-
-    # Runtime implementation of GenerateHeader
-    def GenerateHeader(self, arg, lineNumber: int, addLineNumbers: bool, digits: bool, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
-
-        self._headerGenerated = briefHeader
-
-        # case 1: given an open file (TextIO) means that everything 
-        # should be written to it and no directory structure
-        # should be created.
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
-            fileHandler: TextIO = arg
-
-            for operation in self._operations:
-                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
-                    pass # TODO
-                else:
-                    lineNumber = operation.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits, self._headerGenerated)
-                    if not self._headerGenerated: self._headerGenerated = operation.headerGenerated
-                    if operation.hasTail and self._operationWithTail is None: self._operationWithTail = operation # Just keep the last operation with a tail to end the whole file
-            return lineNumber
-                
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                self._generate_to_file(fh, addLineNumbers, digits)
-            return p
-
-        raise TypeError("Call GenerateHeader(fileHandler) or GenerateHeader(folderPath, fileName, fileExtension)")
-
-    # Type signatures for tools (mypy/IDE) hints
-
-    # If GenerateBody is called with a fileHandler it means that the output
-    # will only be one file
     @overload
     def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
@@ -167,6 +130,10 @@ class Operations:
             
 
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
+
+    @property
+    def hasTail(self):
+        return self._operationWithTail is not None
 
     # Type signatures for tools (mypy/IDE) hints
 

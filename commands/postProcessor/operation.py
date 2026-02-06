@@ -7,22 +7,16 @@ from typing import TYPE_CHECKING, Final, Optional, TextIO, overload
 import uuid
 import uuid
 
+import adsk
+from .line import Line
+
 if TYPE_CHECKING:
     from .operations import Operations
 
 from .settings import Settings
 from .parameters import Parameters
 
-class Operation:
-    _BODY_RE: Final = re.compile(r""
-        r"(?P<N>N[0-9]+ *)?" # line number
-        r"(?P<line>"         # line w/o number
-        r"(M(?P<M>[0-9]+) *)?" # M-code
-        r"(G(?P<G>[0-9]+) *)?" # G-code
-        r"(T(?P<T>[0-9]+))?" # Tool
-        r".+)",              # to end of line
-        re.IGNORECASE | re.DOTALL)
-    
+class Operation(Line):    
     # _PARSE_LINE_RE: Final = re.compile(r""
     #         r"(G(?P<G>[0-9]+(\.[0-9]*)?)[^XYZF]*)?"
     #         r"(?P<XY>((X-?[0-9]+(\.[0-9]*)?)[^XYZF]*)?"
@@ -51,14 +45,19 @@ class Operation:
         # As there can be multiple operations without tools they are 
         # grouped with the previous operation (or next if it is the 
         # first operation missing a tool)
-        self._operationsList = [] 
+        self._operationsList = list[adsk.cam.Operation]()    
+        
         self._operationWithTool = None
         self._tempFilePath: Path = None
         self._allowBlankLines = False
         self._headerGenerated = False
-        self._rotationLine = 0
 
-    def Append(self, operation, hasTool):
+        self._headerEndLine = -1
+        self._bodyStartLine = -1
+        self._rotationLine = -1
+        self._tailStartLine = -1
+
+    def Append(self, operation: adsk.cam.Operation, hasTool: bool):
         self._operationsList.append(operation)
         if hasTool:
             self._operationWithTool = operation
@@ -89,7 +88,7 @@ class Operation:
     
     @property
     def hasRotation(self) -> bool:
-        return self._rotationLine != 0
+        return self._rotationLine != -1
 
     @property
     def headerGenerated(self) -> bool:
@@ -168,31 +167,43 @@ class Operation:
         toolComment = self._TOOL_COMMENT_REG.search(line)
         if toolComment: # We have found the tool comment line
             self._toolCommentLine = lineNumber
+            return True, inHeader
         else:
             headerMatch = self._BODY_RE.match(line)
             if headerMatch:
                 if headerMatch.group("G") is not None:
-                    # Found a g-code, check if it is
-                    # in the list of header end codes
+                    # Found a g-code, check if it is in the list of
+                    # header end codes
                     if f"G{headerMatch.group('G')}" in Settings.Get(Settings.HEADER_END_CODES):
                         # Found the end of the header
                         self._headerEndLine = lineNumber
-                        inHeader = True
-                elif headerMatch.group("M") is not None:
-                    # Found an m-code, check if it is
-                    # in the list of header end codes
+                        return (True, True)
+
+                if headerMatch.group("M") is not None:
+                    # Found an m-code, check if it is in the list of
+                    # header end codes
                     if f"M{headerMatch.group('M')}" in Settings.Get(Settings.HEADER_END_CODES):
                         # Found the end of the header
                         self._headerEndLine = lineNumber
-                        inHeader = True
-                elif inHeader or headerMatch.group("T") is not None:
-                    # Definitely found the body as this is
-                    # either a tool change line or a line
-                    # not in header end codes, so we're done
-                    self._bodyStartLine = lineNumber
-                    return (False, inHeader)
-        return (True, inHeader)
+                        return (True, True)
 
+                if headerMatch.group("T") is not None:
+                    # Definitely found the body as this is either a 
+                    # tool change line or a line not in header end 
+                    # codes (which matched earlier), so we're done
+                    self._bodyStartLine = lineNumber
+                    if self._headerEndLine == -1: 
+                        self._headerEndLine = lineNumber - 1 # Definite end of header
+                    return (False, False)
+                if headerMatch.group("line") is not None \
+                    and headerMatch.group("line") == f"({self.name})\n":
+                        # This is a comment line with the operation name, ignore it
+                        # but use it as a possible end of the header.
+                        self._headerEndLine = lineNumber -1
+                        return (True, inHeader)
+                
+            return (not inHeader, inHeader)
+        
     def _parseBodyLine(self, line: str, lineNumber: int):
         bodyMatch = self._BODY_RE.match(line)
         if bodyMatch:
@@ -206,7 +217,7 @@ class Operation:
                         if aCode == 0.0:
                             # Found A-axis rotation move
                             self._rotationLine = lineNumber
-            if bodyMatch.group("T") is not None:
+            if bodyMatch.group("T") is not None and self._bodyStartLine == -1:
                 # found body start
                 self._bodyStartLine = lineNumber
             elif bodyMatch.group("M") is not None:
@@ -218,6 +229,54 @@ class Operation:
         return False
 
     #region GenerateHeader
+
+    # Crude implementation, optimally it should be one file open
+    # and iterate over it. Room for improvement.
+    def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        with self._tempFilePath.open("r") as operationFile:
+            
+            line = operationFile.readline()
+            row = 0
+
+            while len(line) != 0:
+                if line == f"({self._tempFilePath.stem})\n": 
+                    fileHandler.write(f" - ignored header: {line}")
+                    line = operationFile.readline()
+                    row += 1
+                    continue
+                elif row == self._toolCommentLine:
+                    return lineNumber
+                lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                line = operationFile.readline()
+                row += 1
+
+        return lineNumber
+
+    def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        with self._tempFilePath.open("r") as operationFile:
+            line = operationFile.readline()
+            row = 0
+            while len(line) != 0:
+                if row == self._toolCommentLine:
+                    lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                    return lineNumber
+                line = operationFile.readline()
+                row += 1
+
+        return lineNumber
+
+    def WriteHeaderEnd(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        with self._tempFilePath.open("r") as operationFile:
+            line = operationFile.readline()
+            row = 0
+            while len(line) != 0:
+                if row > self._toolCommentLine and row <= self._headerEndLine:
+                    lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                line = operationFile.readline()
+                row += 1
+
+        return lineNumber
+
     # Type signatures for tools (mypy/IDE) hints
 
     # If GenerateHeader is called with a fileHandler it means that the output
@@ -231,52 +290,33 @@ class Operation:
     def GenerateHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of Generate
-    def GenerateHeader(self, arg, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def GenerateHeader(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
-        # case 1: given an open file (TextIO) means that everything 
-        # should be written to it and no directory structure
-        # should be created.
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
-            fileHandler: TextIO = arg
+        fileOpened = False
+        # If given a Path, create the folder structure and the file to write to
+        try:
+            if isinstance(pathOrFile, Path):
+                folder: Path = pathOrFile
+                folder.mkdir(parents=True, exist_ok=True)
+                filename = f"{fileName}{fileExtension}"
+                headerFile = folder / filename
+                fileHandler = headerFile.open("w", encoding="utf-8")
+                fileOpened = True
 
-            with self._tempFilePath.open("r") as operationFile:
-                line = operationFile.readline()
-                row = 0
-                while len(line) != 0:
-                    # skip temporary file name line
-                    if line == f"({self._tempFilePath.stem})\n": 
-                        #fileHandler.write(f" - ignored header: {line}")
-                        line = operationFile.readline()
-                        row += 1
-                        continue
-                    if row == self._toolCommentLine:
-                        lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
-                        if briefHeader: # We're done with the header here
-                            break
-                    elif row <= self._headerEndLine and not briefHeader:
-                        lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
-                    #elif row < self._bodyStartLine:
-                        #fileHandler.write(f" - ignored header: {line}")
-                    else:
-                        break
+            if isinstance(pathOrFile, io.TextIOBase):
+                fileHandler: TextIO = pathOrFile
 
-                    line = operationFile.readline()
-                    row += 1
-                self._headerGenerated = True
+            if not briefHeader:
+                self.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
+            self.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
+            if not briefHeader:
+                self.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+            self._headerGenerated = True
             return lineNumber
-                
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                self._generate_to_file(fh)
-            return p
 
-        raise TypeError("Call GenerateHeader(fileHandler) or GenerateHeader(folderPath, fileName, fileExtension)")
+        finally:
+            if fileOpened:
+                fileHandler.close()                
     #endregion
 
     #region GenerateBody
@@ -350,56 +390,6 @@ class Operation:
 
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
     #endregion
-
-    def _writeLine(self, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
-        """
-        Writes the line to the fileHandler and terminates it with a newline (\\n), adding line numbers if needed and returns the new line number
-        
-        :param self: Description
-        :param fileHandler: Description
-        :type fileHandler: TextIO
-        :param line: Description
-        :type line: str
-        :param lineNumber: Description
-        :type lineNumber: int
-        :param addLineNumbers: Description
-        :type addLineNumbers: bool
-        :param digits: Description
-        :type digits: int
-        :return: Description
-        :rtype: int
-        """
-        return self._write(fileHandler, line + "\n", lineNumber, addLineNumbers, digits)
-
-    # Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
-    def _write(self, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
-        """
-        Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
-        
-        :param self: Description
-        :param fileHandler: Description
-        :type fileHandler: TextIO
-        :param line: Description
-        :type line: str
-        :param lineNumber: Description
-        :type lineNumber: int
-        :param addLineNumbers: Description
-        :type addLineNumbers: bool
-        :param digits: Description
-        :type digits: int
-        :return: Description
-        :rtype: int
-        """
-        # Check if the line is numbered
-        match = self._BODY_RE.match(line)
-        if match and match.group("N") is not None:
-            # If there should be line numbers, replace existing otherwise remove them
-            line = re.sub(r"^N[0-9]+", f"N{str(lineNumber).rjust(digits, '0')}" if addLineNumbers else "", line, count=1)
-        elif addLineNumbers:
-            lineNumber += Settings(Settings.SEQUENCE_INCREMENT)
-            line = f"N{str(lineNumber).rjust(digits, '0')} " + line
-        fileHandler.write(line)
-        return lineNumber
 
     #region GenerateTail
     # Type signatures for tools (mypy/IDE) hints

@@ -7,11 +7,12 @@ from typing import Optional, TextIO, Union, overload
 
 import adsk.cam
 
+from .line import Line
 from .settings import Settings
 from .operations import Operations
 from ...lib.fusionAddInUtils.general_utils import Utils
 
-class Setup:
+class Setup(Line):
     def __init__(self, setup: adsk.cam.Setup, markSelected: bool = False):
         self._setup = setup
         self._isSelected = False if self._setup is None else markSelected or self._setup.isSelected
@@ -194,50 +195,15 @@ class Setup:
     def SetOutputFileName(self, fileName):
         self._outputFileName = fileName
 
-    @property
-    def headerGenerated(self) -> bool:
-        return self._headerGenerated
+    def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        Setup._writeLine(fileHandler, f"({self._setup.name})", lineNumber, addLineNumbers, digits)
+        return self._operations.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
 
-    #region GenerateHeader
-    # Type signatures for tools (mypy/IDE) hints
+    def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        return self._operations.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
 
-    # If Generate is called with a fileHandler it means that the output
-    # will only be one file
-    @overload
-    def GenerateHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
-
-    # If generate is called with folder it means that 
-    # multiple files will be generated on lower levels of the hierarchy
-    @overload
-    def GenerateHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
-    
-    # Runtime implementation of Generate
-    def GenerateHeader(self, arg, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
-
-        self._headerGenerated = briefHeader
-
-        # case 1: given an open file (TextIO) means that everything 
-        # should be written to it and no directory structure
-        # should be created.
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
-            fileHandler: TextIO = arg
-            lineNumber = self._operations.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits, self._headerGenerated)
-            if not self._headerGenerated: self._headerGenerated = self._operations.headerGenerated
-            return lineNumber
-        
-        # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
-            folder: Path = arg
-            folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{fileName}{fileExtension}"
-            p = folder / filename
-            # öppna och skriv via samma inre funktion
-            with p.open("w", encoding="utf-8") as fh:
-                self._generate_to_file(fh, addLineNumbers, digits)
-            return -1
-
-        raise TypeError("Call GenerateHeader(fileHandler) or GenerateHeader(folderPath, fileName, fileExtension)")
-    #endregion
+    def WriteHeaderEnd(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+        return self._operations.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
 
     #region GenerateBody
     # Type signatures for tools (mypy/IDE) hints

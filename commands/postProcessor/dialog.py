@@ -292,6 +292,9 @@ class PostDialog:
         elif changedInput.id == PostDialog._FILE_NAME_ID:
             PostDialog.onFileNameChanged(changedInput)
 
+        elif changedInput.id == PostDialog._HEADER_CODES_ID:
+            PostDialog.onHeaderCodesChanged(changedInput)
+
         elif changedInput.id.startswith('setupSelected_'):
             PostDialog.onSetupSelectedChanged(changedInput)
         
@@ -1040,4 +1043,8 @@ class PostDialog:
             Utils.log(f'Updating setup selection from dialog: {setup.name} selected={checkbox.value}')
             setup.select(checkbox.value)
             PostDialog._updateDialog(checkbox.parentCommand)
+    
+    @staticmethod
+    def onHeaderCodesChanged(textbox: adsk.core.TextBoxCommandInput):
+        Settings.Set(Settings.HEADER_END_CODES, textbox.text)
     #endregion
