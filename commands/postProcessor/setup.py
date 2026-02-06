@@ -269,17 +269,23 @@ class Setup(Line):
             return self._operations.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
                 
         # case 2: given folder + name + ext
-        if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
+        elif isinstance(arg, Path) and fileName is not None and fileExtension is not None:
             # This is probably a good place to split on tool change..?
             if not self._operations.hasTail:
                 return lineNumber
             return self._operations.WriteTail(arg, lineNumber, addLineNumbers, digits, fileName, fileExtension)
-
-        raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")  
+        else:
+            raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")  
     #endregion
 
-    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int:
-        folderPath = folderPath / Utils.sanitizeFilename(self._setup.name, preserveExtension = False)
-        folderPath.mkdir(parents=True, exist_ok=True)
-        return self._operations.WriteOperations(folderPath, lineNumber, addLineNumbers, digits, fileExtension)
-
+    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int:
+        if Settings(Settings.FLAT_FILE_STRUCTURE):
+            fileName = ("{fileName}_{setupName}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}") \
+                .format(
+                    fileName = fileName, 
+                    setupName = Utils.sanitizeFilename(self.name, preserveExtension = False))
+            folder = folderPath 
+        else:
+            folder = folderPath / Utils.sanitizeFilename(self.name, preserveExtension = False)
+        folder.mkdir(parents=True, exist_ok=True)
+        return self._operations.WriteOperations(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)

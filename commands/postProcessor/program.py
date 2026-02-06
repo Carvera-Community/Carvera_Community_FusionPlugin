@@ -176,31 +176,34 @@ class Program():
             lineNumber = 0            
             fileExtension = self._program.postConfiguration.extension
 
-            if Settings(Settings.FLAT_FILE_STRUCTURE):
-                pass
-            else: # Output with folder structure
-                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                    outputFolder.mkdir(parents=True, exist_ok=True)
-                    filePath = outputFolder / f"{fileName}{fileExtension}"
-                    with filePath.open("w", encoding="utf-8") as fileHandler:
-                        lineNumber = Setups.WriteHeader(fileHandler, lineNumber, addLineNumbers, digits)
-                        lineNumber = Setups.WriteBody(fileHandler, lineNumber, addLineNumbers, digits)
-                        
-                        if(Setups.hasOperationWithTail):
-                            Setups.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
-
-                elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                    folder = outputFolder / self.fileName
-                    folder.mkdir(parents=True, exist_ok=True)
-                    Setups.WriteHeader(folder, lineNumber, addLineNumbers, digits, fileExtension)
-                    Setups.WriteBody(folder, lineNumber, addLineNumbers, digits, fileExtension)
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
+                outputFolder.mkdir(parents=True, exist_ok=True)
+                filePath = outputFolder / f"{fileName}{fileExtension}"
+                with filePath.open("w", encoding="utf-8") as fileHandler:
+                    lineNumber = Setups.WriteHeader(fileHandler, lineNumber, addLineNumbers, digits)
+                    lineNumber = Setups.WriteBody(fileHandler, lineNumber, addLineNumbers, digits)
+                    
                     if(Setups.hasOperationWithTail):
-                        Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, fileExtension)
+                        Setups.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
+            else: # Output with folder structure
+                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
+                    if Settings(Settings.FLAT_FILE_STRUCTURE):
+                        folder = outputFolder
+                    else:
+                        folder = outputFolder / self.fileName
+                        folder.mkdir(parents=True, exist_ok=True)
+                    Setups.WriteHeader(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+                    Setups.WriteBody(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+                    if(Setups.hasOperationWithTail):
+                        Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
 
                 elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
-                    folder = outputFolder / self.fileName
-                    folder.mkdir(parents=True, exist_ok=True)
-                    Setups.WriteOperations(folder, lineNumber, addLineNumbers, digits, fileExtension)
+                    if Settings(Settings.FLAT_FILE_STRUCTURE):
+                        folder = outputFolder
+                    else:
+                        folder = outputFolder / self.fileName
+                        folder.mkdir(parents=True, exist_ok=True)
+                    Setups.WriteOperations(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
 
         except Exception as exc:
             raise exc

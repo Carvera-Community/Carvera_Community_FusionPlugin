@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
-from typing import Optional, TextIO, overload
+from typing import Optional, TextIO, Union, overload
+
+from ...lib.fusionAddInUtils.general_utils import Utils
 
 from .config import CMD_NAME
 from ...config import PLUGIN_VERSION
@@ -21,16 +23,21 @@ class SetupsHeader(Line):
 
     @overload
     @classmethod
-    def WriteHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int: ...
+    def WriteHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int: ...
 
     @classmethod
-    def WriteHeader(cls, pathOrFile: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: Optional[str] = None) -> int:
+    def WriteHeader(cls, pathOrFile: Union[Path, TextIO], lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         fileHandlerParam: Optional[TextIO] = None
 
+        # We got a file handler, so write directly to it.
         if isinstance(pathOrFile, io.TextIOBase):
             fileHandlerParam: TextIO = pathOrFile
             fileHandler: TextIO = fileHandlerParam
+        elif isinstance(pathOrFile, Path):
+            pathParam: Path = pathOrFile
+        else:
+            raise TypeError("First argument must be either a file handler or a folder path.")
 
         try:
             firstSetup = next((setup for setup in cls.selected), None)
@@ -40,28 +47,24 @@ class SetupsHeader(Line):
 
             # For a single file output, there is only one header.
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, '', firstSetup.name, fileExtension)
                 lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, firstSetup)
-
-            for setup in cls.selected:
-                # One header per setup
-                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathOrFile, '', setup.name, fileExtension)
-                    lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, setup)
-
-                # Put the tool comments in the header file we're working on at the moment
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
-                lineNumber = setup.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
-
-                # If grouping by setup, also write the header end in the same file after the tool comments
-                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                    if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', setup.name, fileExtension)
-                    lineNumber = setup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
-
-            # If writing to a single file, write the header end after all tool comments have been written for all setups
-            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                if fileHandlerParam is None: fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathOrFile, '', firstSetup.name, fileExtension)
+                for setup in cls.selected:
+                    lineNumber = setup.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
                 lineNumber = firstSetup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+            else: # For multiple files, write a header for each setup
+                for setup in cls.selected:
+                    if Settings(Settings.FLAT_FILE_STRUCTURE):
+                        path = pathParam
+                    else:
+                        path = pathParam / Utils.sanitizeFilename(setup.name, preserveExtension = False)
+                        path.mkdir(parents=True, exist_ok=True)
+
+                    if fileHandlerParam is None: # Create local file handler
+                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, path, fileName, setup.name, fileExtension)
+
+                    lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, setup)
+                    lineNumber = setup.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
+                    lineNumber = setup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
 
             return lineNumber
 

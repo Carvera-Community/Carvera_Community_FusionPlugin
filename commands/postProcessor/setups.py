@@ -75,8 +75,12 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
 
     @classmethod
     def _getFileHandler(cls, mode: FileModes, path: Path, fileName: str, setupName: str, fileExtension: str) -> TextIO:
-        fileName = f"{fileName}_{setupName}" if Settings(Settings.FLAT_FILE_STRUCTURE) else setupName
-        setupFile = path / f"{fileName}{fileExtension}"
+        fileName = ("{fileName}_{setupName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}{fileExtension}") \
+            .format(
+                fileName = fileName, 
+                setupName = Utils.sanitizeFilename(setupName, preserveExtension = False), 
+                fileExtension = fileExtension)
+        setupFile = path / fileName
         return setupFile.open(mode, encoding="utf-8")
 
     @classmethod
@@ -101,7 +105,7 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
         return len(cls.selected)
     
     @classmethod
-    def WriteOperations(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int:
+    def WriteOperations(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int:
         for setup in cls.selected:
-            lineNumber = setup.WriteOperations(folderPath, lineNumber, addLineNumbers, digits, fileExtension)
+            lineNumber = setup.WriteOperations(folderPath, lineNumber, addLineNumbers, digits, fileName, fileExtension)
         return lineNumber

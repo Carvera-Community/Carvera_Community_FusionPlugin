@@ -180,10 +180,14 @@ class Operations(Line):
 
         raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")
 
-    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int:
+    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int:
         for operation in self._operations:
-            filename = f"{Utils.sanitizeFilename(operation.name, preserveExtension = False)}{fileExtension}"
-            operationFile = folderPath / filename
+            fileName = ("{fileName}_{operationName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{operationName}{fileExtension}") \
+                .format(
+                    fileName = fileName, 
+                    operationName = Utils.sanitizeFilename(operation.name, preserveExtension = False), 
+                    fileExtension = fileExtension)
+            operationFile = folderPath / fileName
             with operationFile.open("w", encoding="utf-8") as fileHandler:
                 lineNumber = Operations._writeLine(fileHandler, f"({operationFile.stem})", lineNumber, addLineNumbers, digits)
                 lineNumber = operation.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
