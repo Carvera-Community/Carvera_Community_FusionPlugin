@@ -99,3 +99,9 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
     @classproperty
     def Count(cls) -> int:
         return len(cls.selected)
+    
+    @classmethod
+    def WriteOperations(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int:
+        for setup in cls.selected:
+            lineNumber = setup.WriteOperations(folderPath, lineNumber, addLineNumbers, digits, fileExtension)
+        return lineNumber

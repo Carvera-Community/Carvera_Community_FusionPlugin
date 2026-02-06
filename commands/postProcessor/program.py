@@ -198,8 +198,10 @@ class Program():
                         Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, fileExtension)
 
                 elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
-                    pass
-                
+                    folder = outputFolder / self.fileName
+                    folder.mkdir(parents=True, exist_ok=True)
+                    Setups.WriteOperations(folder, lineNumber, addLineNumbers, digits, fileExtension)
+
         except Exception as exc:
             raise exc
         finally:

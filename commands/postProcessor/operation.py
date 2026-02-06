@@ -73,12 +73,6 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
     def headerGenerated(self) -> bool:
         return self._headerGenerated
 
-    def SetOutputFolder(self, folder: Path):
-        self._outputFilePath = folder
-
-    def SetOutputFileName(self, fileName):
-        self._outputFileName = fileName
-
     def Parse(self, tmpPath: Path):
         from .programs import Programs
 

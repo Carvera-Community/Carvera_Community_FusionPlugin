@@ -3,11 +3,13 @@ from pathlib import Path
 from typing import List, List, Optional, TextIO, overload
 
 import adsk
+from .line import Line
+from ...lib.fusionAddInUtils import Utils
 from .settings import Settings
 from .operation import Operation
 
 
-class Operations:
+class Operations(Line):
     def __init__(self, operations: List[adsk.cam.Operation]):
         self._operations = list[Operation]()
         self._operationWithTail: Operation = None
@@ -86,15 +88,15 @@ class Operations:
         return lineNumber
 
     @overload
-    def GenerateBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
+    def WriteBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def GenerateBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
+    def WriteBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # Runtime implementation of GenerateBody
-    def GenerateBody(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
+    def WriteBody(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
@@ -140,15 +142,15 @@ class Operations:
     # If GenerateTail is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def GenerateTail(self, fileHandler: TextIO, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteTail(self, fileHandler: TextIO, addLineNumbers: bool, digits: int) -> int: ...
 
     # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def GenerateTail(self, folderPath: Path, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteTail(self, folderPath: Path, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of GenerateTail
-    def GenerateTail(self, arg, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteTail(self, arg, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         if self._operationWithTail is None:
             return lineNumber
@@ -162,7 +164,7 @@ class Operations:
             fileHandler: TextIO = arg
                 
             # Attach the tail of the last operation that has a tail
-            lineNumber = self._operationWithTail.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+            lineNumber = self._operationWithTail.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
             return lineNumber
                 
         # case 2: given folder + name + ext
@@ -177,3 +179,16 @@ class Operations:
             return p
 
         raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")
+
+    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int:
+        for operation in self._operations:
+            filename = f"{Utils.sanitizeFilename(operation.name, preserveExtension = False)}{fileExtension}"
+            operationFile = folderPath / filename
+            with operationFile.open("w", encoding="utf-8") as fileHandler:
+                lineNumber = Operations._writeLine(fileHandler, f"({operationFile.stem})", lineNumber, addLineNumbers, digits)
+                lineNumber = operation.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = operation.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = operation.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = operation.WriteBody(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = operation.WriteTail(fileHandler, addLineNumbers, lineNumber, digits)
+        return lineNumber
