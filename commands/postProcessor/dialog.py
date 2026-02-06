@@ -326,50 +326,6 @@ class PostDialog:
         PostDialog._local_handlers = []  # clear out the local handlers list
 
     @staticmethod
-    def _sanitize(s: str, *, allow_unicode: bool = True, max_length: int | None = None) -> str:
-        import keyword
-        import re
-        import unicodedata
-
-        """Return a valid Python identifier based on s."""
-        # Normalize unicode
-        form = "NFKC" if allow_unicode else "NFKD"
-        s = unicodedata.normalize(form, s)
-        if not allow_unicode:
-            s = s.encode("ascii", "ignore").decode("ascii")
-
-        # Replace whitespace with underscore
-        s = re.sub(r"\s+", "_", s)
-
-        # Replace any non-identifier char with underscore
-        if allow_unicode:
-            s = re.sub(r"[^\w]", "_", s, flags=re.U)
-        else:
-            s = re.sub(r"[^A-Za-z0-9_]", "_", s)
-
-        # Collapse multiple underscores and strip edges
-        s = re.sub(r"_+", "_", s).strip("_")
-
-        # Ensure not empty, not starting with digit, not a keyword
-        if not s:
-            s = "_"
-        if s[0].isdigit():
-            s = "_" + s
-        if keyword.iskeyword(s):
-            s = s + "_"
-
-        # Optional length limit (keeps rules)
-        if max_length is not None:
-            s = s[:max_length]
-            if not s[0].isalpha() and s[0] != "_":
-                s = "_" + s
-            if keyword.iskeyword(s):
-                s = s + "_"
-
-        return s
-
-
-    @staticmethod
     def createDialog(command: adsk.core.Command):
 
         command.setDialogMinimumSize(465, 580)
@@ -446,24 +402,24 @@ class PostDialog:
         for setup in Setups:
             row += 1
             input.addCommandInput(
-                inputs.addBoolValueInput(PostDialog._sanitize(f"setupSelected_{setup.name}"), '', True, '', setup.isSelected),row,0)
+                inputs.addBoolValueInput(Utils.sanitizeVariableName(f"setupSelected_{setup.name}"), '', True, '', setup.isSelected),row,0)
             input.addCommandInput(
-                init(inputs.addStringValueInput(PostDialog._sanitize(f"setupName_{setup.name}"), '', setup.name),
+                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupName_{setup.name}"), '', setup.name),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,1)
             input.addCommandInput(
-                init(inputs.addStringValueInput(PostDialog._sanitize(f"setupOrigin_{setup.name}"), '', ''),
+                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupOrigin_{setup.name}"), '', ''),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,2)
             input.addCommandInput(
-                init(inputs.addStringValueInput(PostDialog._sanitize(f"setupXNormal_{setup.name}"), '', ''),
+                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupXNormal_{setup.name}"), '', ''),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,3)
             input.addCommandInput(
-                init(inputs.addStringValueInput(PostDialog._sanitize(f"setupARotation_{setup.name}"), '', ''),
+                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupARotation_{setup.name}"), '', ''),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,4)
@@ -775,10 +731,10 @@ class PostDialog:
         for setup in Setups:
             isSelected = setup.isSelected
 
-            inputName = inputs.itemById(PostDialog._sanitize(f"setupName_{setup.name}"))
-            origin = inputs.itemById(PostDialog._sanitize(f"setupOrigin_{setup.name}"))
-            xNormalInput = inputs.itemById(PostDialog._sanitize(f"setupXNormal_{setup.name}"))
-            aRotation = inputs.itemById(PostDialog._sanitize(f"setupARotation_{setup.name}"))
+            inputName = inputs.itemById(Utils.sanitizeVariableName(f"setupName_{setup.name}"))
+            origin = inputs.itemById(Utils.sanitizeVariableName(f"setupOrigin_{setup.name}"))
+            xNormalInput = inputs.itemById(Utils.sanitizeVariableName(f"setupXNormal_{setup.name}"))
+            aRotation = inputs.itemById(Utils.sanitizeVariableName(f"setupARotation_{setup.name}"))
             
             inputName.isEnabled = isSelected
             origin.isEnabled = isSelected
