@@ -228,12 +228,12 @@ class Setup(Line):
         # should be created.
         if isinstance(pathOrFile, io.TextIOBase):
             fileHandler: TextIO = pathOrFile
-            return self._operations.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
+            return self._operations.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
         
         # case 2: given folder there is a structure to create
         if isinstance(pathOrFile, Path):
             # This is probably a good place to split on tool change..?
-            return self._operations.GenerateBody(pathOrFile, lineNumber, addLineNumbers, digits, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
+            return self._operations.WriteBody(pathOrFile, lineNumber, addLineNumbers, digits, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
     #endregion
 
@@ -266,15 +266,20 @@ class Setup(Line):
             fileHandler: TextIO = arg
             if not self._operations.hasTail:
                 return lineNumber
-            return self._operations.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
+            return self._operations.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
                 
         # case 2: given folder + name + ext
         if isinstance(arg, Path) and fileName is not None and fileExtension is not None:
             # This is probably a good place to split on tool change..?
             if not self._operations.hasTail:
                 return lineNumber
-            return self._operations.GenerateTail(arg, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+            return self._operations.WriteTail(arg, lineNumber, addLineNumbers, digits, fileName, fileExtension)
 
         raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")  
     #endregion
+
+    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileExtension: str) -> int:
+        folderPath = folderPath / Utils.sanitizeFilename(self._setup.name, preserveExtension = False)
+        folderPath.mkdir(parents=True, exist_ok=True)
+        return self._operations.WriteOperations(folderPath, lineNumber, addLineNumbers, digits, fileExtension)
 
