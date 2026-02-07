@@ -68,6 +68,9 @@ class OperationParser(Line):
                         # Found the end of the header
                         self._headerEndLine = lineNumber
                         return (True, True)
+                    elif inHeader: # Found a g-code that isn't in the header end codes, so we're in the body.
+                        self._bodyStartLine = lineNumber
+                        return (False, inHeader) 
 
                 if headerMatch.group("M") is not None:
                     # Found an m-code, check if it is in the list of
@@ -76,6 +79,9 @@ class OperationParser(Line):
                         # Found the end of the header
                         self._headerEndLine = lineNumber
                         return (True, True)
+                    elif inHeader: # Found an m-code that isn't in the header end codes, so we're done with the header.
+                        self._bodyStartLine = lineNumber
+                        return (False, inHeader) 
 
                 if headerMatch.group("T") is not None:
                     # Definitely found the body as this is either a 
@@ -84,7 +90,8 @@ class OperationParser(Line):
                     self._bodyStartLine = lineNumber
                     if self._headerEndLine == -1: 
                         self._headerEndLine = lineNumber - 1 # Definite end of header
-                    return (False, False)
+                    return (False, inHeader)
+                
                 if headerMatch.group("line") is not None \
                     and headerMatch.group("line") == f"({self.name})\n":
                         # This is a comment line with the operation name, ignore it

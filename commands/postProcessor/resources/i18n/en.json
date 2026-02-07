@@ -28,6 +28,11 @@
   "G-codes that mark ending sequence": "G-codes that mark ending sequence",
   "TOOL TIP: G-codes that mark ending sequence": "G-codes that mark ending sequence",
   "TOOLTIP TEXT: G-codes that mark ending sequence": "To combine operations generated individually, the ending sequence (which should only appear once) must be found. This entry is the list of G-codes that start this ending sequence. <p>For example, <i>M30</i> (end program) would normally be here, but it may not be the first G-code of the ending sequence. <i>M5</i> (spindle stop), <i>M9</i> (coolant stop) and <i>G28</i>/<i>G30</i> (move home) are also candidates, but you should look at the code from your post processor to determine what will work in your case. Either of the G-codes you enter here will mark the start of ending sequence, whichever comes first.<p>The found sequence that follows, beginning with whichever of these codes that was found first, will be attached at the end of the resulting file(s).",
+
+  "G-codes that mark header end": "G-codes that mark header end",
+  "TOOL TIP: G-codes that mark header end": "G-codes that mark header end",
+  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code or the first G or M code that is not in this list, whichever comes first.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
+
   "Restore rapid moves": "Restore rapid moves",
   "TOOL TIP: Restore rapid moves": "Restore rapid moves",
   "TOOLTIP TEXT: Restore rapid moves": "Restore rapid (rapid traverse) moves where appropriate during post-processing.",
@@ -147,10 +152,6 @@
   "Post Processor": "Post Processor",
   "TOOL TIP: Post Processor": "Post Processor",
   "TOOLTIP TEXT: Post Processor": "The post processor associated with the selected NC Program.",
-
-  "G-codes that mark header end": "G-codes that mark header end",
-  "TOOL TIP: G-codes that mark header end": "G-codes that mark header end",
-  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
 
   "Process": "Process",
   "Close": "Close"
