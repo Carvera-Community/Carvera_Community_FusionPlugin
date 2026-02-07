@@ -19,14 +19,13 @@ class SetupsHeader(Line):
     # Type signatures for tools hints
     @overload
     @classmethod
-    def WriteHeader(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteHeader(cls, fileHandler: TextIO, lineNumber: int) -> int: ...
 
     @overload
     @classmethod
-    def WriteHeader(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int: ...
-
+    def WriteHeader(cls, folderPath: Path, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int: ...
     @classmethod
-    def WriteHeader(cls, pathOrFile: Union[Path, TextIO], lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteHeader(cls, pathOrFile: Union[Path, TextIO], lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         fileHandlerParam: Optional[TextIO] = None
 
@@ -47,24 +46,18 @@ class SetupsHeader(Line):
 
             # For a single file output, there is only one header.
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, firstSetup)
+                lineNumber = cls._writeHeaderStart(fileHandler, firstSetup)
                 for setup in cls.selected:
-                    lineNumber = setup.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
-                lineNumber = firstSetup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+                    lineNumber = setup.WriteToolComment(fileHandler, lineNumber)
+                lineNumber = firstSetup.WriteHeaderEnd(fileHandler, lineNumber)
             else: # For multiple files, write a header for each setup
                 for setup in cls.selected:
-                    if Settings(Settings.FLAT_FILE_STRUCTURE):
-                        path = pathParam
-                    else:
-                        path = pathParam / Utils.sanitizeFilename(setup.name, preserveExtension = False)
-                        path.mkdir(parents=True, exist_ok=True)
-
                     if fileHandlerParam is None: # Create local file handler
-                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, path, fileName, setup.name, fileExtension)
+                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup.name, fileExtension)
 
-                    lineNumber = cls._writeHeader(fileHandler, lineNumber, addLineNumbers, digits, setup)
-                    lineNumber = setup.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
-                    lineNumber = setup.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+                    lineNumber = cls._writeHeaderStart(fileHandler, setup)
+                    lineNumber = setup.WriteToolComment(fileHandler, lineNumber)
+                    lineNumber = setup.WriteHeaderEnd(fileHandler, lineNumber)
 
             return lineNumber
 
@@ -73,9 +66,9 @@ class SetupsHeader(Line):
                 fileHandler.close()
 
     @classmethod
-    def _writeHeader(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, setup: Setup) -> int:
+    def _writeHeaderStart(cls, fileHandler: TextIO, setup: Setup) -> int:
         path = Path(fileHandler.name)
-        lineNumber = cls._writeLine(fileHandler, f"({path.stem})", lineNumber, addLineNumbers, digits)
-        lineNumber = cls._writeLine(fileHandler, f"(Generated with {CMD_NAME} version {PLUGIN_VERSION})", lineNumber, addLineNumbers, digits)
-        lineNumber = setup.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
+        lineNumber = cls._writeLine(fileHandler, f"({path.stem})", 0) # Always start at 0 in a new header file
+        lineNumber = cls._writeLine(fileHandler, f"(Generated with {CMD_NAME} version {PLUGIN_VERSION})", lineNumber)
+        lineNumber = setup.WriteHeaderStart(fileHandler, lineNumber)
         return lineNumber

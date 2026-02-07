@@ -10,15 +10,15 @@ class SetupsTail():
     #region GenerateTail code
     @overload
     @classmethod
-    def WriteTail(cls, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int): ...
+    def WriteTail(cls, fileHandler: TextIO, lineNumber: int): ...
 
     @overload
     @classmethod
-    def WriteTail(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str): ...
+    def WriteTail(cls, folderPath: Path, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None): ...
 
     # Runtime implementation of Generate
     @classmethod
-    def WriteTail(cls, pathOrFile: Union[Path, TextIO], lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None):
+    def WriteTail(cls, pathOrFile: Union[Path, TextIO], lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None):
 
         fileHandlerParam: Optional[TextIO] = None
         fileHandler: Optional[TextIO] = None
@@ -38,20 +38,14 @@ class SetupsTail():
                 if setup is None:
                     return lineNumber
 
-                lineNumber = setup.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
+                lineNumber = setup.WriteTail(fileHandler, lineNumber)
             
             else: # One tail per setup
                 for setup in cls.selected:
-                    if Settings(Settings.FLAT_FILE_STRUCTURE): 
-                        path = pathParam
-                    else:
-                        path = pathParam / Utils.sanitizeFilename(setup.name, preserveExtension = False)
-                        path.mkdir(parents=True, exist_ok=True)
-
                     if fileHandlerParam is None: # Create local file handler
-                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, path, fileName, setup.name, fileExtension)
+                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup.name, fileExtension)
 
-                    lineNumber = setup.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
+                    lineNumber = setup.WriteTail(fileHandler, lineNumber)
 
             return lineNumber
         finally:

@@ -105,7 +105,19 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
         return len(cls.selected)
     
     @classmethod
-    def WriteOperations(cls, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int:
+    def WriteOperations(cls, folderPath: Path, fileName: str, fileExtension: str) -> int:
+        firstSetup = None
+        rotationAngle = None
+        currentRotationAngle = 0
         for setup in cls.selected:
-            lineNumber = setup.WriteOperations(folderPath, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+            if Settings(Settings.ROTATE_A_AXIS): # Calculate the rotation between the setups
+                angle = 0 if firstSetup is None else setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)
+                rotationAngle = None if angle == currentRotationAngle else angle
+                currentRotationAngle = angle
+                preserveRotation = firstSetup is None # Always use the rotation code of the first setup.
+            else:
+                preserveRotation = True # We don't want to do any changes to the native rotation code
+            firstSetup = firstSetup or setup
+
+            lineNumber = setup.WriteOperations(folderPath, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
         return lineNumber

@@ -10,15 +10,15 @@ class OperationTail():
     # If GenerateTail is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def WriteTail(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteTail(self, fileHandler: TextIO, lineNumber: int) -> int: ...
 
     # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def WriteTail(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteTail(self, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of Generate
-    def WriteTail(self, arg, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteTail(self, arg, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and not creating a new file
@@ -31,9 +31,9 @@ class OperationTail():
                     if row == self._tailStartLine: # Add an extra line marking where this operation tail starts
                         if(self._allowBlankLines):
                             fileHandler.write("\n") # ensure blank line before operation tail
-                        lineNumber = self._writeLine(fileHandler, f"({self.name} Tail)", lineNumber, addLineNumbers, digits)
+                        lineNumber = self._writeLine(fileHandler, f"({self.name} Tail)", lineNumber)
                     if row >= self._tailStartLine:
-                        lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                        lineNumber = self._write(fileHandler, line, lineNumber)
                     line = operationFile.readline()
                     row += 1
             return lineNumber

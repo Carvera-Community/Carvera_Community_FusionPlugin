@@ -62,41 +62,41 @@ class Operations(Line):
             operation.Parse(tmpPath)
         self._operationWithTail = next((op for op in self._operations if op.hasTail), None)
 
-    def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+    def WriteHeaderStart(self, fileHandler: TextIO, lineNumber: int) -> int:
         firstOperation =  next((operation for operation in self._operations if operation.hasTool), None)
         if firstOperation is not None:
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
                 pass # TODO
             else:
-                lineNumber = firstOperation.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = firstOperation.WriteHeaderStart(fileHandler, lineNumber)
         return lineNumber
 
-    def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+    def WriteToolComment(self, fileHandler: TextIO, lineNumber: int) -> int:
         for operation in self._operations:
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
                 pass # TODO
             else:
-                lineNumber = operation.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = operation.WriteToolComment(fileHandler, lineNumber)
         return lineNumber
 
-    def WriteHeaderEnd(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+    def WriteHeaderEnd(self, fileHandler: TextIO, lineNumber: int) -> int:
         if self._operationWithTail is not None:
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
                 pass # TODO
             else:
-                lineNumber = self._operationWithTail.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = self._operationWithTail.WriteHeaderEnd(fileHandler, lineNumber)
         return lineNumber
 
     @overload
-    def WriteBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
+    def WriteBody(self, fileHandler: TextIO, lineNumber: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def WriteBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
+    def WriteBody(self, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # Runtime implementation of GenerateBody
-    def WriteBody(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
+    def WriteBody(self, pathOrFile, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
@@ -107,7 +107,7 @@ class Operations(Line):
             i = 0
             for operation in self._operations:
                 if operation.hasBody:
-                    lineNumber = operation.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                    lineNumber = operation.WriteBody(fileHandler, lineNumber, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
                     rotationAngle = None # Only apply rotation to the first operation if specified, then reset to None so that subsequent operations are not rotated
                     preserveRotation = False # Only preserve rotation for the first operation if specified, then reset to False so that subsequent operations do not preserve rotation
                 i += 1
@@ -127,7 +127,7 @@ class Operations(Line):
                     filename = f"{fileName}{fileExtension}"
                 operationFile = folder / filename
                 with operationFile.open("w", encoding="utf-8") as fileHandler:
-                    lineNumber = operation.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                    lineNumber = operation.WriteBody(fileHandler, lineNumber, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
                     rotationAngle = None # Only apply rotation to the first operation if specified, then reset to None so that subsequent operations are not rotated
             
 
@@ -142,15 +142,15 @@ class Operations(Line):
     # If GenerateTail is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def WriteTail(self, fileHandler: TextIO, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteTail(self, fileHandler: TextIO, lineNumber: int) -> int: ...
 
     # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def WriteTail(self, folderPath: Path, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteTail(self, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of GenerateTail
-    def WriteTail(self, arg, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteTail(self, arg, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         if self._operationWithTail is None:
             return lineNumber
@@ -164,7 +164,7 @@ class Operations(Line):
             fileHandler: TextIO = arg
                 
             # Attach the tail of the last operation that has a tail
-            lineNumber = self._operationWithTail.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
+            lineNumber = self._operationWithTail.WriteTail(fileHandler, lineNumber)
             return lineNumber
                 
         # case 2: given folder + name + ext
@@ -180,7 +180,7 @@ class Operations(Line):
 
         raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")
 
-    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int:
+    def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
         for operation in self._operations:
             fileName = ("{fileName}_{operationName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{operationName}{fileExtension}") \
                 .format(
@@ -189,10 +189,11 @@ class Operations(Line):
                     fileExtension = fileExtension)
             operationFile = folderPath / fileName
             with operationFile.open("w", encoding="utf-8") as fileHandler:
-                lineNumber = Operations._writeLine(fileHandler, f"({operationFile.stem})", lineNumber, addLineNumbers, digits)
-                lineNumber = operation.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
-                lineNumber = operation.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
-                lineNumber = operation.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
-                lineNumber = operation.WriteBody(fileHandler, addLineNumbers, lineNumber, digits)
-                lineNumber = operation.WriteTail(fileHandler, addLineNumbers, lineNumber, digits)
+                lineNumber = 0 # Writing operations separately, so line numbers start at 0 for each file
+                lineNumber = Operations._writeLine(fileHandler, f"({operationFile.stem})", lineNumber)
+                lineNumber = operation.WriteHeaderStart(fileHandler, lineNumber)
+                lineNumber = operation.WriteToolComment(fileHandler, lineNumber)
+                lineNumber = operation.WriteHeaderEnd(fileHandler, lineNumber)
+                lineNumber = operation.WriteBody(fileHandler, lineNumber, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
+                lineNumber = operation.WriteTail(fileHandler, lineNumber)
         return lineNumber

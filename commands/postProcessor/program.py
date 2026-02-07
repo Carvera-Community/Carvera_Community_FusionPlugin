@@ -165,8 +165,6 @@ class Program():
         outputFolder = self.GetOutputFolder()
         fileName = self.fileName
         name = self.Parameters.Get(Parameters.NAME)
-        addLineNumbers = Settings(Settings.SEQUENCE) in [Settings.Sequences.STEP, Settings.Sequences.FILE_AND_STEP]
-        digits = Settings.Get(Settings.NAME_DIGITS)
 
         try:
             if not outputFolder.exists():
@@ -180,11 +178,11 @@ class Program():
                 outputFolder.mkdir(parents=True, exist_ok=True)
                 filePath = outputFolder / f"{fileName}{fileExtension}"
                 with filePath.open("w", encoding="utf-8") as fileHandler:
-                    lineNumber = Setups.WriteHeader(fileHandler, lineNumber, addLineNumbers, digits)
-                    lineNumber = Setups.WriteBody(fileHandler, lineNumber, addLineNumbers, digits)
+                    lineNumber = Setups.WriteHeader(fileHandler, lineNumber)
+                    lineNumber = Setups.WriteBody(fileHandler, lineNumber)
                     
                     if(Setups.hasOperationWithTail):
-                        Setups.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
+                        Setups.WriteTail(fileHandler, lineNumber)
             else: # Output with folder structure
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
                     if Settings(Settings.FLAT_FILE_STRUCTURE):
@@ -192,10 +190,10 @@ class Program():
                     else:
                         folder = outputFolder / self.fileName
                         folder.mkdir(parents=True, exist_ok=True)
-                    Setups.WriteHeader(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
-                    Setups.WriteBody(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+                    lineNumber = Setups.WriteHeader(folder, lineNumber, fileName, fileExtension)
+                    lineNumber = Setups.WriteBody(folder, lineNumber, fileName, fileExtension)
                     if(Setups.hasOperationWithTail):
-                        Setups.WriteTail(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+                        Setups.WriteTail(folder, lineNumber, fileName, fileExtension)
 
                 elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
                     if Settings(Settings.FLAT_FILE_STRUCTURE):
@@ -203,7 +201,7 @@ class Program():
                     else:
                         folder = outputFolder / self.fileName
                         folder.mkdir(parents=True, exist_ok=True)
-                    Setups.WriteOperations(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+                    Setups.WriteOperations(folder, fileName, fileExtension)
 
         except Exception as exc:
             raise exc

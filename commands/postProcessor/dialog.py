@@ -563,10 +563,6 @@ class PostDialog:
         input = outputTab.children.addDropDownCommandInput(PostDialog._OPERATIONS_GROUPING_ID, Strings("Operations grouping"), adsk.core.DropDownStyles.TextListDropDownStyle)
         input.tooltip = Strings("TOOL TIP: Operations grouping")
         input.tooltipDescription = Strings("TOOLTIP TEXT: Operations grouping")
-        # input.listItems.add(Strings("Single file"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
-        # input.listItems.add(Strings("Group on setup"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
-        # input.listItems.add(Strings("Group on setup and tool"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
-        # input.listItems.add(Strings("None, one file per operation"), input.listItems.count == Settings(Settings.OPERATIONS_GROUPING))
 
         #endregion
 

@@ -1,4 +1,3 @@
-from typing import Final
 import json
 
 
@@ -34,7 +33,6 @@ class Settings(SettingsConstants, metaclass=_SettingsMeta):
         SettingsConstants.DEL_FOLDER:                 False,
         SettingsConstants.OUTPUT_FOLDER:              "",
         SettingsConstants.SEQUENCE:                   SettingsConstants.Sequences.NONE,
-        SettingsConstants.SEQUENCE_INCREMENT:         5,
         SettingsConstants.NUMERIC_NAME:               False,  
         SettingsConstants.NAME_DIGITS:                1,
         SettingsConstants.NUMBERING_INTERVAL:         5,

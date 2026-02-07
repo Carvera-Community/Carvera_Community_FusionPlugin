@@ -11,30 +11,32 @@ class SettingsConstants:
     DEL_FOLDER:                 Final[str] = 'delFolder'
     # The name of the output folder
     OUTPUT_FOLDER:              Final[str] = 'outputFolder'
+    
     # If sequence numbers should be used in file names/folders/operation steps
     SEQUENCE:                   Final[str] = 'sequence'
-    # How much each sequence should be incremented each time
-    SEQUENCE_INCREMENT:         Final[str] = 'sequenceIncrement'
-    # If the name should be numeric
-    NUMERIC_NAME:               Final[str] = 'numericName'
     # Number of digits to use in sequence names
     NAME_DIGITS:                Final[str] = 'nameDigits'
     # The interval that the numbering should increment by
     NUMBERING_INTERVAL:         Final[str] = 'numberingInterval'
+
+    # If the name should be numeric
+    NUMERIC_NAME:               Final[str] = 'numericName'
+
+
     # If setups should be split into separate files
     OPERATIONS_GROUPING:        Final[str] = 'operationsGrouping'
     # If operations with the same tool should be combined
     COMBINE_TOOL:               Final[str] = 'combineTool'
+
     # Settings file version
     VERSION:                    Final[str] = 'version'
     # Plugin version
     PLUGIN_VERSION:             Final[str] = 'pluginVersion'
+
     # Currently selected NC Program
     NC_PROGRAM:                 Final[str] = 'ncProgram'
     # Currently selected language
     LANGUAGE:                   Final[str] = 'language'
-    # G-code to Precede Tool Change
-    TOOL_CHANGE:                Final[str] = 'toolChange'
     # If fast Z moves should be used
     RESTORE_RAPID_MOVES:        Final[str] = 'restoreRapidMoves'
     # Initial delay for retrying post processing
@@ -42,6 +44,7 @@ class SettingsConstants:
     # Number of retries for post processing
     POST_RETRIES:               Final[str] = 'postRetries'
     # If A-axis should be rotated between setups
+
     ROTATE_A_AXIS:              Final[str] = 'rotateAAxis'
     # If Y-axis should be retracted while A-axis rotates
     SAFE_Y_RETRACTION:          Final[str] = 'safeYRetraction'
@@ -49,13 +52,18 @@ class SettingsConstants:
     # Note that it is a negative value as 0 is at the top of the bed
     Y_RETRACTION_COORDINATE:    Final[str] = 'yRetractionCoordinate'
     # If the folder structure should be flattened into the filenames
+
     FLAT_FILE_STRUCTURE:        Final[str] = 'flatFileStructure'
     # Use regular expressions for renaming setups
+
     USE_REGEX:                  Final[str] = 'useRegex'
     # The string to be found when renaming setups
     FIND_STRING:                Final[str] = 'findString'
     # The string to replace the found string when renaming setups
     REPLACE_STRING:             Final[str] = 'replaceString'
+
+    # G-code to Precede Tool Change
+    TOOL_CHANGE:                Final[str] = 'toolChange'
     # G-codes that ends the header section
     HEADER_END_CODES:           Final[str] = 'headerEndCodes'
     #endregion

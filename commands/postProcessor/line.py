@@ -30,7 +30,7 @@ class Line():
     _COMMENT_REG: Final = re.compile(r"^(?:\s*)\((.*)\)(?:\s*)$")
 
     @classmethod
-    def _writeLine(cls, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
+    def _writeLine(cls, fileHandler: TextIO, line: str, lineNumber: int) -> int:
         """
         Writes the line to the fileHandler and terminates it with a newline (\\n), adding line numbers if needed and returns the new line number
         
@@ -41,17 +41,13 @@ class Line():
         :type line: str
         :param lineNumber: Description
         :type lineNumber: int
-        :param addLineNumbers: Description
-        :type addLineNumbers: bool
-        :param digits: Description
-        :type digits: int
         :return: Description
         :rtype: int
         """
-        return cls._write(fileHandler, line + "\n", lineNumber, addLineNumbers, digits)
+        return cls._write(fileHandler, line + "\n", lineNumber)
 
     @classmethod
-    def _write(cls, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
+    def _write(cls, fileHandler: TextIO, line: str, lineNumber: int) -> int:
         """
         Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
         
@@ -62,20 +58,18 @@ class Line():
         :type line: str
         :param lineNumber: Description
         :type lineNumber: int
-        :param addLineNumbers: Description
-        :type addLineNumbers: bool
-        :param digits: Description
-        :type digits: int
         :return: Description
         :rtype: int
         """
         # Check if the line is numbered
+        addLineNumbers = Settings(Settings.SEQUENCE) in (Settings.Sequences.STEP, Settings.Sequences.FILE_AND_STEP)
+        digits = Settings(Settings.NAME_DIGITS) if addLineNumbers else 0
         match = cls._BODY_RE.match(line)
-        if match and match.group("N") is not None:
-            # If there should be line numbers, replace existing otherwise remove them
+        if match and match.group("N") is not None: # line is numbered
+            # Replace or remove the line number            
             line = re.sub(r"^N[0-9]+", f"N{str(lineNumber).rjust(digits, '0')}" if addLineNumbers else "", line, count=1)
-        elif addLineNumbers:
-            lineNumber += Settings(Settings.SEQUENCE_INCREMENT)
+        elif addLineNumbers: # Line is not numbered, add it
+            lineNumber += Settings(Settings.NUMBERING_INTERVAL)
             line = f"N{str(lineNumber).rjust(digits, '0')} " + line
         fileHandler.write(line)
         return lineNumber

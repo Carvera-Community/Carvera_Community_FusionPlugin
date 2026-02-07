@@ -195,17 +195,17 @@ class Setup(Line):
     def SetOutputFileName(self, fileName):
         self._outputFileName = fileName
 
-    def WriteSetupName(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
-        return Setup._writeLine(fileHandler, f"({self._setup.name})", lineNumber, addLineNumbers, digits)
+    def WriteSetupName(self, fileHandler: TextIO, lineNumber: int) -> int:
+        return Setup._writeLine(fileHandler, f"({self._setup.name})", lineNumber)
 
-    def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
-        return self._operations.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
+    def WriteHeaderStart(self, fileHandler: TextIO, lineNumber: int) -> int:
+        return self._operations.WriteHeaderStart(fileHandler, lineNumber)
 
-    def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
-        return self._operations.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
-
-    def WriteHeaderEnd(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
-        return self._operations.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+    def WriteToolComment(self, fileHandler: TextIO, lineNumber: int) -> int:
+        return self._operations.WriteToolComment(fileHandler, lineNumber)
+    
+    def WriteHeaderEnd(self, fileHandler: TextIO, lineNumber: int) -> int:
+        return self._operations.WriteHeaderEnd(fileHandler, lineNumber)
 
     #region GenerateBody
     # Type signatures for tools (mypy/IDE) hints
@@ -213,27 +213,27 @@ class Setup(Line):
     # If GenerateBody is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def WriteBody(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
+    def WriteBody(self, fileHandler: TextIO, lineNumber: int, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # If GenerateBody is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def WriteBody(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
+    def WriteBody(self, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int: ...
 
     # Runtime implementation of Generate
-    def WriteBody(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
+    def WriteBody(self, pathOrFile, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
         # should be created.
         if isinstance(pathOrFile, io.TextIOBase):
             fileHandler: TextIO = pathOrFile
-            return self._operations.WriteBody(fileHandler, lineNumber, addLineNumbers, digits, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
+            return self._operations.WriteBody(fileHandler, lineNumber, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
         
         # case 2: given folder there is a structure to create
         if isinstance(pathOrFile, Path):
             # This is probably a good place to split on tool change..?
-            return self._operations.WriteBody(pathOrFile, lineNumber, addLineNumbers, digits, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
+            return self._operations.WriteBody(pathOrFile, lineNumber, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation=preserveRotation)
         raise TypeError("Call GenerateBody(fileHandler) or GenerateBody(folderPath, fileName, fileExtension)")
     #endregion
 
@@ -248,15 +248,15 @@ class Setup(Line):
     # If GenerateTail is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def WriteTail(self, fileHandler: TextIO, addLineNumbers: bool, digits: int) -> int: ...
+    def WriteTail(self, fileHandler: TextIO) -> int: ...
 
     # If GenerateTail is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def WriteTail(self, folderPath: Path, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int: ...
+    def WriteTail(self, folderPath: Path, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of GenerateTail
-    def WriteTail(self, arg, lineNumber: int, addLineNumbers: Optional[bool] = None, digits: Optional[int] = None, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteTail(self, arg, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         # case 1: given an open file (TextIO) means that everything 
         # should be written to it and no directory structure
@@ -266,19 +266,19 @@ class Setup(Line):
             fileHandler: TextIO = arg
             if not self._operations.hasTail:
                 return lineNumber
-            return self._operations.WriteTail(fileHandler, lineNumber, addLineNumbers, digits)
+            return self._operations.WriteTail(fileHandler, lineNumber)
                 
         # case 2: given folder + name + ext
         elif isinstance(arg, Path) and fileName is not None and fileExtension is not None:
             # This is probably a good place to split on tool change..?
             if not self._operations.hasTail:
                 return lineNumber
-            return self._operations.WriteTail(arg, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+            return self._operations.WriteTail(arg, lineNumber, fileName, fileExtension)
         else:
             raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")  
     #endregion
 
-    def WriteOperations(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, fileName: str, fileExtension: str) -> int:
+    def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
         if Settings(Settings.FLAT_FILE_STRUCTURE):
             fileName = ("{fileName}_{setupName}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}") \
                 .format(
@@ -288,4 +288,4 @@ class Setup(Line):
         else:
             folder = folderPath / Utils.sanitizeFilename(self.name, preserveExtension = False)
         folder.mkdir(parents=True, exist_ok=True)
-        return self._operations.WriteOperations(folder, lineNumber, addLineNumbers, digits, fileName, fileExtension)
+        return self._operations.WriteOperations(folder, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation = preserveRotation)

@@ -6,7 +6,7 @@ from typing import Optional, TextIO, overload
 class OperationHeader():
     # Crude implementation, optimally it should be one file open
     # and iterate over it. Room for improvement.
-    def WriteHeaderStart(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+    def WriteHeaderStart(self, fileHandler: TextIO, lineNumber: int) -> int:
         with self._tempFilePath.open("r") as operationFile:
             
             line = operationFile.readline()
@@ -21,32 +21,32 @@ class OperationHeader():
                     continue
                 elif row == self._toolCommentLine:
                     return lineNumber
-                lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                lineNumber = self._write(fileHandler, line, lineNumber)
                 line = operationFile.readline()
                 row += 1
 
         return lineNumber
 
-    def WriteToolComment(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+    def WriteToolComment(self, fileHandler: TextIO, lineNumber: int) -> int:
         with self._tempFilePath.open("r") as operationFile:
             line = operationFile.readline()
             row = 0
             while len(line) != 0:
                 if row == self._toolCommentLine:
-                    lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                    lineNumber = self._write(fileHandler, line, lineNumber)
                     return lineNumber
                 line = operationFile.readline()
                 row += 1
 
         return lineNumber
 
-    def WriteHeaderEnd(self, fileHandler: TextIO, addLineNumbers: bool, lineNumber: int, digits: int) -> int:
+    def WriteHeaderEnd(self, fileHandler: TextIO, lineNumber: int) -> int:
         with self._tempFilePath.open("r") as operationFile:
             line = operationFile.readline()
             row = 0
             while len(line) != 0:
                 if row > self._toolCommentLine and row <= self._headerEndLine:
-                    lineNumber = self._write(fileHandler, line, lineNumber, addLineNumbers, digits)
+                    lineNumber = self._write(fileHandler, line, lineNumber)
                 line = operationFile.readline()
                 row += 1
 
@@ -57,15 +57,15 @@ class OperationHeader():
     # If GenerateHeader is called with a fileHandler it means that the output
     # will only be one file
     @overload
-    def WriteHeader(self, fileHandler: TextIO, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool) -> int: ...
+    def WriteHeader(self, fileHandler: TextIO, lineNumber: int, briefHeader: bool) -> int: ...
 
     # If GenerateHeader is called with folder it means that 
     # multiple files will be generated on lower levels of the hierarchy
     @overload
-    def WriteHeader(self, folderPath: Path, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
+    def WriteHeader(self, folderPath: Path, lineNumber: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
 
     # Runtime implementation of Generate
-    def WriteHeader(self, pathOrFile, lineNumber: int, addLineNumbers: bool, digits: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
+    def WriteHeader(self, pathOrFile, lineNumber: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
 
         fileOpened = False
         # If given a Path, create the folder structure and the file to write to
@@ -82,10 +82,10 @@ class OperationHeader():
                 fileHandler: TextIO = pathOrFile
 
             if not briefHeader:
-                self.WriteHeaderStart(fileHandler, addLineNumbers, lineNumber, digits)
-            self.WriteToolComment(fileHandler, addLineNumbers, lineNumber, digits)
+                self.WriteHeaderStart(fileHandler, lineNumber)
+            self.WriteToolComment(fileHandler, lineNumber)
             if not briefHeader:
-                self.WriteHeaderEnd(fileHandler, addLineNumbers, lineNumber, digits)
+                self.WriteHeaderEnd(fileHandler, lineNumber)
             self._headerGenerated = True
             return lineNumber
 
