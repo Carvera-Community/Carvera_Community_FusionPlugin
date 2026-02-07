@@ -190,6 +190,25 @@ class Utils():
                 ext = "." + ext
 
         return s + ext
+    
+    def maxFilenameLength(path: str = ".") -> int:
+        import os, sys
+        if os.name == "nt":
+            import ctypes, ctypes.wintypes
+            root = os.path.abspath(path)
+            root = os.path.splitdrive(root)[0] + "\\"
+            GetVolumeInformationW = ctypes.windll.kernel32.GetVolumeInformationW
+            max_comp = ctypes.wintypes.DWORD(0)
+            res = GetVolumeInformationW(root, None, 0, None, None, ctypes.byref(max_comp), None, 0)
+            if not res:
+                raise OSError("GetVolumeInformationW failed")
+            return int(max_comp.value)
+        else:
+            try:
+                return int(os.pathconf(path, "PC_NAME_MAX"))
+            except (AttributeError, OSError):
+                # fallback common value
+                return 255
 
 class classproperty:
     def __init__(self, f):

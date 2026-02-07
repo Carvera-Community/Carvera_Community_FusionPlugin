@@ -31,7 +31,7 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
     @classmethod
     def Load(cls, setups: adsk.cam.Setups):
         noneSelected = not any((setup.isSelected and not setup.isSuppressed for setup in setups))
-        cls._items: List[Setup] = [Setup(setup, noneSelected) for setup in setups if not setup.isSuppressed]
+        cls._items: List[Setup] = [Setup(setup, index, noneSelected) for index, setup in enumerate(setups)]
 
     @classmethod
     def Parse(cls, tmpPath: Path):
@@ -74,13 +74,17 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
         APPEND = 'a'
 
     @classmethod
-    def _getFileHandler(cls, mode: FileModes, path: Path, fileName: str, setupName: str, fileExtension: str) -> TextIO:
-        fileName = ("{fileName}_{setupName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}{fileExtension}") \
+    def _getFileHandler(cls, mode: FileModes, path: Path, fileName: str, setup: Setup, fileExtension: str) -> TextIO:
+
+        outputName = ("{fileName}_{setupName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}{fileExtension}") \
             .format(
                 fileName = fileName, 
-                setupName = Utils.sanitizeFilename(setupName, preserveExtension = False), 
+                setupName = Utils.sanitizeFilename(setup.name, preserveExtension = False), 
                 fileExtension = fileExtension)
-        setupFile = path / fileName
+        outputName = "{index}_{fileName}".format(
+            fileName = outputName, 
+            index=setup.index + 1) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
+        setupFile = path / outputName
         return setupFile.open(mode, encoding="utf-8")
 
     @classmethod

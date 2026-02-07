@@ -43,7 +43,7 @@ class SetupsTail():
             else: # One tail per setup
                 for setup in cls.selected:
                     if fileHandlerParam is None: # Create local file handler
-                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup.name, fileExtension)
+                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup, fileExtension)
 
                     lineNumber = setup.WriteTail(fileHandler, lineNumber)
 

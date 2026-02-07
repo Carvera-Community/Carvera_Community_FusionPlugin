@@ -1,22 +1,17 @@
-import io
 from pathlib import Path
-import re
-import tempfile
 import time
-from typing import TYPE_CHECKING, Final, Optional, TextIO, overload
-import uuid
+from typing import Optional
 import uuid
 
 import adsk
-
-if TYPE_CHECKING:
-    from .operations import Operations
+from ...lib.fusionAddInUtils.general_utils import Utils
 
 from .operation_parser import OperationParser
 from .operation_header import OperationHeader
 from .operation_body import OperationBody
 from .operation_tail import OperationTail
 from .parameters import Parameters
+from .strings import Strings
 
 class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):    
     def __init__(self):
@@ -24,34 +19,46 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
         # As there can be multiple operations without tools they are 
         # grouped with the previous operation (or next if it is the 
         # first operation missing a tool)
-        self._operationsList = list[adsk.cam.Operation]()    
+        self._operationsDict: dict[int, adsk.cam.Operation] = {}  
         
-        self._operationWithTool = None
+        self._operationWithTool: int = -1
         self._tempFilePath: Path = None
-        self._allowBlankLines = False
-        self._headerGenerated = False
+        self._allowBlankLines: bool = False
+        self._headerGenerated: bool = False
 
-        self._headerEndLine = -1
-        self._bodyStartLine = -1
-        self._rotationLine = -1
-        self._tailStartLine = -1
+        self._headerEndLine: int = -1
+        self._bodyStartLine: int = -1
+        self._rotationLine: int = -1
+        self._tailStartLine: int = -1
 
-    def Append(self, operation: adsk.cam.Operation, hasTool: bool):
-        self._operationsList.append(operation)
+    def Append(self, operation: adsk.cam.Operation, index, hasTool: bool):
+        self._operationsDict[index] = operation
         if hasTool:
-            self._operationWithTool = operation
+            self._operationWithTool = index
 
     @property
-    def toolId(self):
-        return Operations.GetToolNumber(self._operationWithTool) if self.hasTool else None
+    def index(self) -> int:
+        return self._index
 
     @property
-    def hasTool(self):
-        return self._operationWithTool is not None and self._operationWithTool.hasToolpath
+    def toolId(self) -> Optional[int]:
+        return Operation.GetToolNumber(self._operationsDict[self._operationWithTool]) if self.hasTool else None
 
     @property
-    def name(self):
-        return self._operationWithTool.name if self._operationWithTool is not None else "NoToolOperation"
+    def hasTool(self) -> bool:
+        return self._operationWithTool is not -1 and self._operationsDict[self._operationWithTool].hasToolpath
+    @property
+    def name(self) -> str:
+        names = "-".join(operation.name for operation in self._operationsDict.values())
+        if len(names) > Utils.maxFilenameLength() - 10:
+            return Strings("Combined Operations ({operationsCount})".format(operationsCount=len(self._operationsDict)))
+        return names
+#        return self._operationsList[0].name if len(self._operationsList) == 1 else "Combined Operations ({count})".format(count=len(self._operationsList))
+#        return self._operationWithTool.name if self._operationWithTool is not None else "NoToolOperation"
+
+    @property
+    def firstIndex(self) -> int:
+        return min(self._operationsDict.keys())
 
     @property
     def tempFilePath(self) -> Path:
@@ -72,6 +79,11 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
     @property
     def headerGenerated(self) -> bool:
         return self._headerGenerated
+    
+    @staticmethod
+    def GetToolNumber(operation):
+        return operation.tool.parameters.itemByName("tool_number").value.value
+
 
     def Parse(self, tmpPath: Path):
         from .programs import Programs
@@ -82,8 +94,9 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
         Programs.Current.SetOutputFolder(self._tempFilePath.parent)
         Programs.Current.Parameters.Set(Parameters.FILE_NAME, self._tempFilePath.stem)
         Programs.Current.Parameters.Set(Parameters.NAME, self._tempFilePath.stem)
-        if not Programs.Current.PostProcess(self._operationsList):
+        if not Programs.Current.PostProcess(list(self._operationsDict.values())):
             raise Exception(f"Operation {self.name} post processing failed.")
+        # TODO: check for the file to exist instead of just waiting an arbitrary amount of time
         time.sleep(0.1) # files missing sometimes unless we slow down (??)
 
         self._parseFile(self._tempFilePath)

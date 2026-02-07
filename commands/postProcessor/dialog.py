@@ -64,6 +64,7 @@ class PostDialog:
     _FILE_NAME_ID = 'fileName'
     _HEADER_CODES_ID = 'headerEndCodes'
     _WCS_NOT_ALIGNED_ID = 'WCSNotAligned'
+    _SELECT_ALL_SETUPS_ID = 'selectAllSetups'
     #endregion
 
     # Executed when add-in is started.
@@ -212,9 +213,6 @@ class PostDialog:
     # allowing you to modify values of other inputs based on that change.
     @staticmethod
     def commandInputChanged(args: adsk.core.InputChangedEventArgs):
-        if PostDialog.mouseDown:
-            return 
-        
         changedInput = args.input
 
         if changedInput.id == PostDialog._PROGRAM_DROPDOWN_ID:
@@ -294,6 +292,9 @@ class PostDialog:
 
         elif changedInput.id == PostDialog._HEADER_CODES_ID:
             PostDialog.onHeaderCodesChanged(changedInput)
+
+        elif changedInput.id == PostDialog._SELECT_ALL_SETUPS_ID:
+            PostDialog.onSelectAllSetupsChanged(changedInput)
 
         elif changedInput.id.startswith('setupSelected_'):
             PostDialog.onSetupSelectedChanged(changedInput)
@@ -382,6 +383,10 @@ class PostDialog:
         row = 0
         # Add header row
         input.addCommandInput(
+                init(inputs.addBoolValueInput(PostDialog._SELECT_ALL_SETUPS_ID, '', True, '', False),
+                     value = False
+            ),row,0)
+        input.addCommandInput(
                 init(inputs.addStringValueInput('', '', Strings('Setup Name')),
                 isReadOnly = True
             ),row,1)
@@ -402,24 +407,24 @@ class PostDialog:
         for setup in Setups:
             row += 1
             input.addCommandInput(
-                inputs.addBoolValueInput(Utils.sanitizeVariableName(f"setupSelected_{setup.name}"), '', True, '', setup.isSelected),row,0)
+                inputs.addBoolValueInput(f"setupSelected_{setup.index}", '', True, '', setup.isSelected),row,0)
             input.addCommandInput(
-                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupName_{setup.name}"), '', setup.name),
+                init(inputs.addStringValueInput(f"setupName_{setup.index}", '', setup.name),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,1)
             input.addCommandInput(
-                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupOrigin_{setup.name}"), '', ''),
+                init(inputs.addStringValueInput(f"setupOrigin_{setup.index}", '', ''),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,2)
             input.addCommandInput(
-                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupXNormal_{setup.name}"), '', ''),
+                init(inputs.addStringValueInput(f"setupXNormal_{setup.index}", '', ''),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,3)
             input.addCommandInput(
-                init(inputs.addStringValueInput(Utils.sanitizeVariableName(f"setupARotation_{setup.name}"), '', ''),
+                init(inputs.addStringValueInput(f"setupARotation_{setup.index}", '', ''),
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,4)
@@ -651,30 +656,23 @@ class PostDialog:
 
         #region Hook up events
         Events.add(command.execute, PostDialog.command_execute, local_handlers=PostDialog._local_handlers)
-        Events.add(command.mouseDown, PostDialog.commandMouseDown, local_handlers=PostDialog._local_handlers)
-        Events.add(command.mouseUp, PostDialog.commandMouseUp, local_handlers=PostDialog._local_handlers)
         Events.add(command.inputChanged, PostDialog.commandInputChanged, local_handlers=PostDialog._local_handlers)
         # Events.add(command.executePreview, PostProcessorDialog.command_preview, local_handlers=PostProcessorDialog._local_handlers)
         Events.add(command.validateInputs, PostDialog.command_validate_input, local_handlers=PostDialog._local_handlers)
         Events.add(command.destroy, PostDialog.command_destroy, local_handlers=PostDialog._local_handlers)
         #endregion
 
+
+        programDropdown: adsk.core.DropDownCommandInput = inputs.itemById(PostDialog._PROGRAM_DROPDOWN_ID)
+        selectedItem = next((listItem for listItem in programDropdown.listItems if listItem.name == Settings(Settings.NC_PROGRAM)), None)
+        if selectedItem != None and not selectedItem.isSelected:
+            selectedItem.isSelected = True
+
         # Finally, update the dialog based on current choices and settings
         PostDialog._updateDialog(command)
 
-    mouseDown = False
     @classmethod
-    def commandMouseDown(cls, args: adsk.core.MouseEventArgs):
-        PostDialog.mouseDown = True
-        Utils.log(f'{config.CMD_NAME} Mouse Down Event')
-
-    @classmethod
-    def commandMouseUp(cls, args: adsk.core.MouseEventArgs):
-        PostDialog.mouseDown = False
-        Utils.log(f'{config.CMD_NAME} Mouse Down Up')
-
-    @classmethod
-    def _updateOperationsGroupingDropdown(cls, command):
+    def _updateOperationsGroupingDropdown(cls, command: adsk.core.Command):
         inputs = command.commandInputs
         rotateAAxisCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._ROTATE_A_AXIS_ID)
 
@@ -718,36 +716,48 @@ class PostDialog:
             groupOnSetup.isSelected = True
 
     @classmethod
-    def _updateSetupsTable(cls, command):
+    def _updateSetupsTable(cls, command: adsk.core.Command):
         inputs = command.commandInputs
         rotateAAxisCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._ROTATE_A_AXIS_ID)
         rotateAAxisCheckbox.isEnabled = False if Programs.Current is None else Programs.Current.machineHasAAxis
 
         firstSetup: Setup = None
         for setup in Setups:
-            isSelected = setup.isSelected
 
-            inputName = inputs.itemById(Utils.sanitizeVariableName(f"setupName_{setup.name}"))
-            origin = inputs.itemById(Utils.sanitizeVariableName(f"setupOrigin_{setup.name}"))
-            xNormalInput = inputs.itemById(Utils.sanitizeVariableName(f"setupXNormal_{setup.name}"))
-            aRotation = inputs.itemById(Utils.sanitizeVariableName(f"setupARotation_{setup.name}"))
-            
-            inputName.isEnabled = isSelected
-            origin.isEnabled = isSelected
-            xNormalInput.isEnabled = isSelected
-            aRotation.isEnabled = isSelected
+            inputCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(f"setupSelected_{setup.index}")
+            inputName: adsk.core.TextBoxCommandInput = inputs.itemById(f"setupName_{setup.index}")
+            origin: adsk.core.TextBoxCommandInput = inputs.itemById(f"setupOrigin_{setup.index}")
+            xNormalInput: adsk.core.TextBoxCommandInput = inputs.itemById(f"setupXNormal_{setup.index}")
+            aRotation: adsk.core.TextBoxCommandInput = inputs.itemById(f"setupARotation_{setup.index}")
+
+            inputCheckbox.value = setup.isSelected
 
             if firstSetup is None:
-                if isSelected:
+                inputCheckbox.isEnabled = True
+            else:
+                equalOrigin = setup.origin.isEqualTo(firstSetup.origin)
+                parallelXAxis = setup.xNormal.isParallelTo(firstSetup.xNormal)
+                inputCheckbox.isEnabled = equalOrigin and parallelXAxis
+                if not inputCheckbox.isEnabled:
+                    inputCheckbox.value = False
+                    setup.select(False)
+
+            #inputCheckbox.isEnabled = setup.hasMachine
+            inputName.isEnabled = setup.isSelected
+            origin.isEnabled = setup.isSelected
+            xNormalInput.isEnabled = setup.isSelected
+            aRotation.isEnabled = setup.isSelected
+
+
+            if firstSetup is None:
+                if setup.isSelected:
                     firstSetup = setup
-                origin.value = Strings("(reference)") if isSelected else '-'
-                xNormalInput.value = Strings("(reference)") if isSelected else '-'
-                aRotation.value = Strings("(reference)") if isSelected else '-'
+                    origin.value = xNormalInput.value = aRotation.value = Strings("(reference)")
+                else:
+                    origin.value = xNormalInput.value = aRotation.value = '-'
                 continue
 
-            equalOrigin = setup.origin.isEqualTo(firstSetup.origin)
-            parallelXAxis = setup.xNormal.isParallelTo(firstSetup.xNormal)
-
+            
             origin.value = '' if firstSetup is None else \
                 Strings("Same") if equalOrigin else Strings("Different")
             xNormalInput.value = '' if firstSetup is None else \
@@ -756,7 +766,7 @@ class PostDialog:
                 f"{round(setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)*1000)/1000}°"
 
     @classmethod
-    def _updateFlatFileStructure(cls, command):
+    def _updateFlatFileStructure(cls, command: adsk.core.Command):
         inputs = command.commandInputs
         operationsGroupingDropdown: adsk.core.DropDownCommandInput = inputs.itemById(PostDialog._OPERATIONS_GROUPING_ID)
         flatFileStructureCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._FLAT_FILE_STRUCTURE_ID)
@@ -765,7 +775,7 @@ class PostDialog:
         flatFileStructureCheckbox.isEnabled = operationsGroupingDropdown.selectedItem is not None and operationsGroupingDropdown.selectedItem.name != Strings("Single file") 
     
     @classmethod
-    def _updateYRetractionCoordinate(cls, command):
+    def _updateYRetractionCoordinate(cls, command: adsk.core.Command):
         inputs = command.commandInputs
         rotateAAxisCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._ROTATE_A_AXIS_ID)
         safeYRetractionCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._SAFE_Y_RETRACTION_ID)
@@ -774,7 +784,7 @@ class PostDialog:
         yRetractionCoordinateSpinner.isEnabled = Programs.Current is not None and Programs.Current.machineHasAAxis and rotateAAxisCheckbox.value and safeYRetractionCheckbox.value
 
     @classmethod
-    def _updateSafeYRetraction(cls, command):
+    def _updateSafeYRetraction(cls, command: adsk.core.Command):
         inputs = command.commandInputs
         rotateAAxisCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._ROTATE_A_AXIS_ID)
         safeYRetractionCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(PostDialog._SAFE_Y_RETRACTION_ID)
@@ -782,27 +792,65 @@ class PostDialog:
         safeYRetractionCheckbox.isEnabled = Programs.Current is not None and Programs.Current.machineHasAAxis and rotateAAxisCheckbox.value
 
     @classmethod
-    def _updateDialog(cls, command):
+    def _updateDialog(cls, command: adsk.core.Command):
         PostDialog._updateOperationsGroupingDropdown(command)
         PostDialog._updateSetupsTable(command)
         PostDialog._updateFlatFileStructure(command)
         PostDialog._updateYRetractionCoordinate(command)
         PostDialog._updateSafeYRetraction(command)
+        PostDialog._updateTabs(command)
+
+    @classmethod
+    def _updateInputTab(cls, command: adsk.core.Command):
+        inputs = command.commandInputs
+
+        if Programs.Current is None:
+            return
+
+        machineText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._MACHINE_ID)
+        machineText.isEnabled = True
+        machineText.value = Programs.Current.machineName
+
+        postProcessorText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._POST_PROCESSOR_ID)
+        postProcessorText.isEnabled = True
+        postProcessorText.value = Programs.Current.postProcessorDescription
+
+    @classmethod
+    def _updateTabs(cls, command: adsk.core.Command):
+        inputs = command.commandInputs
+
+        if Programs.Current is None:
+            return
+
+        PostDialog._updateInputTab(command)
+
+        inputs.itemById(PostDialog._GCODE_OPTIONS_GROUP_ID).isEnabled = True
+        inputs.itemById(PostDialog._OUTPUT_GROUP_ID).isEnabled = True
+
+        inputs.itemById(PostDialog._SAVE_ID).isEnabled = True
+
+        outputPathText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._OUTPUT_FOLDER_ID)
+        outputPathText.value = Programs.Current.Parameters.Get(Parameters.OUTPUT_FOLDER)
+
+        fileNameText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._FILE_NAME_ID)
+        fileNameText.value = Programs.Current.fileName
+
 
     #region on...Changed handlers
     @staticmethod
     def onProgramChanged(dropdown: adsk.core.DropDownCommandInput):
 
-        inputs = dropdown.parentCommand.commandInputs
+        command = dropdown.parentCommand
+        inputs = command.commandInputs
 
         selectedItem = dropdown.selectedItem
         if selectedItem:
-            programName = selectedItem.name
-            program = next((prog for prog in Programs if prog.programName == programName), None)
+            program = next((prog for prog in Programs if prog.programName == selectedItem.name), None)
             if program:
                 if(program.hasError):
                     return
 
+                # Save settings of the previously selected program before switching to the new one
                 if Programs.Current is not None:
                     Settings.Save(Programs.Current.attributes)
 
@@ -818,33 +866,14 @@ class PostDialog:
                                                     Const.CMD_NAME,
                                                     adsk.core.MessageBoxButtonTypes.OKButtonType)
 
-                inputs = inputs.command.commandInputs
-                # Input Selection tab
-                inputs.itemById(PostDialog._MACHINE_ID).isEnabled = True
-                inputs.itemById(PostDialog._POST_PROCESSOR_ID).isEnabled = True
 
-                inputs.itemById(PostDialog._GCODE_OPTIONS_GROUP_ID).isEnabled = True
-                inputs.itemById(PostDialog._OUTPUT_GROUP_ID).isEnabled = True
+                Settings(Settings.NC_PROGRAM, program.programName)
 
-                inputs.itemById(PostDialog._SAVE_ID).isEnabled = True
-
-                outputPathText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._OUTPUT_FOLDER_ID)
-                outputPathText.value = Programs.Current.Parameters.Get(Parameters.OUTPUT_FOLDER)
-
-                machineText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._MACHINE_ID)
-                machineText.value = Programs.Current.machineName
-
-                postProcessorText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._POST_PROCESSOR_ID)
-                postProcessorText.value = Programs.Current.postProcessorDescription
-
-                fileNameText: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._FILE_NAME_ID)
-                fileNameText.value = Programs.Current.fileName
-
-                PostDialog._updateDialog(dropdown.parentCommand)
+                PostDialog._updateDialog(command)
 
     @staticmethod
     def onRotateAAxisChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.ROTATE_A_AXIS, checkbox.value)
+        Settings(Settings.ROTATE_A_AXIS, checkbox.value)
             
         if(checkbox.value):
             app = adsk.core.Application.get()
@@ -873,11 +902,11 @@ class PostDialog:
 
     @staticmethod
     def onPrependSequenceChanged(dropdown: adsk.core.CommandInput):
-        Settings.Set(Settings.SEQUENCE, dropdown.selectedItem.index)
+        Settings(Settings.SEQUENCE, dropdown.selectedItem.index)
 
         inputs = dropdown.parentCommand.commandInputs
         digitsInput: adsk.core.IntegerSpinnerCommandInput = inputs.itemById(PostDialog._DIGITS_COUNT_ID)
-        Settings.Set(Settings.SEQUENCE, dropdown.selectedItem.index)
+        Settings(Settings.SEQUENCE, dropdown.selectedItem.index)
         if dropdown.selectedItem.name == Strings("None"):
             digitsInput.isEnabled = False
         else:
@@ -885,15 +914,15 @@ class PostDialog:
 
     @staticmethod
     def onRestoreRapidMovesChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.RESTORE_RAPID_MOVES, checkbox.value)
+        Settings(Settings.RESTORE_RAPID_MOVES, checkbox.value)
 
     @staticmethod
     def onToolChangeChanged(textbox: adsk.core.TextBoxCommandInput):
-        Settings.Set(Settings.TOOL_CHANGE, textbox.text)
+        Settings(Settings.TOOL_CHANGE, textbox.text)
 
     @staticmethod
     def onEndCodesChanged(textbox: adsk.core.TextBoxCommandInput):
-        Settings.Set(Settings.END_CODES, textbox.text)
+        Settings(Settings.END_CODES, textbox.text)
 
     @staticmethod
     def onOutputFolderChanged(input: adsk.core.StringValueCommandInput):
@@ -913,71 +942,71 @@ class PostDialog:
             return
         folder = dialog.folder
         if folder:
-            Programs.Current.SetOutputFolder(folder)
+            Programs.Current.SetOutputFolder(Path(folder))
             outputFolderInput: adsk.core.StringValueCommandInput = inputs.itemById(PostDialog._OUTPUT_FOLDER_ID)
             outputFolderInput.value = folder
 
     @staticmethod
     def onNumericNameChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.NUMERIC_NAME, checkbox.value)
+        Settings(Settings.NUMERIC_NAME, checkbox.value)
 
     @staticmethod
     def onDigitsCountChanged(spinner: adsk.core.IntegerSpinnerCommandInput):
-        Settings.Set(Settings.NAME_DIGITS, spinner.value)
+        Settings(Settings.NAME_DIGITS, spinner.value)
 
     @staticmethod
     def onCombineToolsChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.COMBINE_TOOL, checkbox.value)
+        Settings(Settings.COMBINE_TOOL, checkbox.value)
 
     @staticmethod
     def onSafeYRetractionChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.SAFE_Y_RETRACTION, checkbox.value)
+        Settings(Settings.SAFE_Y_RETRACTION, checkbox.value)
         PostDialog._updateYRetractionCoordinate(checkbox.parentCommand)
 
     @staticmethod
     def onYRetractionCoordinateChanged(spinner: adsk.core.IntegerSpinnerCommandInput):
-        Settings.Set(Settings.Y_RETRACTION_COORDINATE, spinner.value)
+        Settings(Settings.Y_RETRACTION_COORDINATE, spinner.value)
 
     @staticmethod
     def onOperationsGroupingChanged(dropdown: adsk.core.DropDownCommandInput):
-        Settings.Set(Settings.OPERATIONS_GROUPING, dropdown.selectedItem.index)
+        Settings(Settings.OPERATIONS_GROUPING, dropdown.selectedItem.index)
         PostDialog._updateFlatFileStructure(dropdown.parentCommand)
 
     @staticmethod
     def onFlatFileStructureChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.FLAT_FILE_STRUCTURE, checkbox.value)
+        Settings(Settings.FLAT_FILE_STRUCTURE, checkbox.value)
 
     @staticmethod
     def onDeleteExistingFilesChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.DEL_FILES, checkbox.value)
+        Settings(Settings.DEL_FILES, checkbox.value)
     
     @staticmethod
     def onDeleteOutputFolderChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.DEL_FOLDER, checkbox.value)
+        Settings(Settings.DEL_FOLDER, checkbox.value)
 
     @staticmethod
     def onUseRegexChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.USE_REGEX, checkbox.value)
+        Settings(Settings.USE_REGEX, checkbox.value)
     
     @staticmethod
     def onFindStringChanged(input: adsk.core.StringValueCommandInput):
-        Settings.Set(Settings.FIND_STRING, input.value)
+        Settings(Settings.FIND_STRING, input.value)
 
     @staticmethod
     def onReplaceStringChanged(input: adsk.core.StringValueCommandInput):
-        Settings.Set(Settings.REPLACE_STRING, input.value)
+        Settings(Settings.REPLACE_STRING, input.value)
 
     @staticmethod
     def onReplaceChanged(checkbox: adsk.core.BoolValueCommandInput):
-        Settings.Set(Settings.REPLACE, checkbox.value)
+        Settings(Settings.REPLACE, checkbox.value)
 
     @staticmethod
     def onInitialDelayChanged(spinner: adsk.core.FloatSpinnerCommandInput):
-        Settings.Set(Settings.INITIAL_DELAY, spinner.value)
+        Settings(Settings.INITIAL_DELAY, spinner.value)
 
     @staticmethod
     def onPostRetriesChanged(spinner: adsk.core.IntegerSpinnerCommandInput):
-        Settings.Set(Settings.POST_RETRIES, spinner.value)
+        Settings(Settings.POST_RETRIES, spinner.value)
 
     @staticmethod
     def onFileNameChanged(input: adsk.core.StringValueCommandInput):
@@ -989,8 +1018,8 @@ class PostDialog:
     
     @staticmethod
     def onSetupSelectedChanged(checkbox: adsk.core.BoolValueCommandInput):
-        setupName = checkbox.id.replace("setupSelected_", "")
-        setup = next((s for s in Setups if s.name == setupName), None)
+        setupIndex = int(checkbox.id.replace("setupSelected_", ""))
+        setup = next((s for s in Setups if s.index == setupIndex), None)
         if setup and setup.isSelected != checkbox.value:
             Utils.log(f'Updating setup selection from dialog: {setup.name} selected={checkbox.value}')
             setup.select(checkbox.value)
@@ -998,5 +1027,11 @@ class PostDialog:
     
     @staticmethod
     def onHeaderCodesChanged(textbox: adsk.core.TextBoxCommandInput):
-        Settings.Set(Settings.HEADER_END_CODES, textbox.text)
+        Settings(Settings.HEADER_END_CODES, textbox.text)
+
+    @staticmethod
+    def onSelectAllSetupsChanged(checkbox: adsk.core.BoolValueCommandInput):
+        for setup in Setups:
+            setup.select(checkbox.value)
+        PostDialog._updateDialog(checkbox.parentCommand)
     #endregion

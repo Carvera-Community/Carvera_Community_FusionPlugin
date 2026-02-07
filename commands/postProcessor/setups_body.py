@@ -46,7 +46,7 @@ class SetupsBody():
                     lineNumber = setup.WriteSetupName(fileHandler, lineNumber)
                 else:
                     if fileHandlerParam is None: # Create local file handler
-                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup.name, fileExtension)
+                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup, fileExtension)
 
                 lineNumber = setup.WriteBody(fileHandler, lineNumber, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
 

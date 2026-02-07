@@ -9,11 +9,17 @@ from ...lib.fusionAddInUtils.general_utils import *
 
 from .settings_const import SettingsConstants
 
+_UNSET = object()
+
 class _SettingsMeta(type):
+    
     def __iter__(cls):
         return iter(cls._items)
     
-    def __call__(cls, key, /):
+    def __call__(cls, key, /, value = _UNSET):
+        if value is _UNSET:
+            return cls.Get(key)
+        cls.Set(key, value)
         return cls.Get(key)
 
 class Settings(SettingsConstants, metaclass=_SettingsMeta):

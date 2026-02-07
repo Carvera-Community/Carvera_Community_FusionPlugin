@@ -33,6 +33,7 @@ class SetupsHeader(Line):
         if isinstance(pathOrFile, io.TextIOBase):
             fileHandlerParam: TextIO = pathOrFile
             fileHandler: TextIO = fileHandlerParam
+        # We got a path
         elif isinstance(pathOrFile, Path):
             pathParam: Path = pathOrFile
         else:
@@ -53,7 +54,7 @@ class SetupsHeader(Line):
             else: # For multiple files, write a header for each setup
                 for setup in cls.selected:
                     if fileHandlerParam is None: # Create local file handler
-                        fileHandler = cls._getFileHandler(cls.FileModes.APPEND, pathParam, fileName, setup.name, fileExtension)
+                        fileHandler = cls._getFileHandler(cls.FileModes.WRITE, pathParam, fileName, setup, fileExtension)
 
                     lineNumber = cls._writeHeaderStart(fileHandler, setup)
                     lineNumber = setup.WriteToolComment(fileHandler, lineNumber)

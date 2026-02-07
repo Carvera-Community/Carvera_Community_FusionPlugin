@@ -26,7 +26,7 @@ class Operations(Line):
             # Also optionally group together operations with the same tool number
 
             operation = Operation()
-            operation.Append(operations[i], operations[i].hasToolpath) # add first operation
+            operation.Append(operations[i], i, operations[i].hasToolpath) # add first operation
             i += 1
             while i < len(operations):
                 if(operations[i].isSuppressed):
@@ -35,13 +35,13 @@ class Operations(Line):
                 # Append to current group if:
                 # - operation has no toolpath, or
                 # - current group has no tool yet (we haven't encountered a toolpath), or
-                # - we're combining tools and this op uses the same tool as the group
+                # - we're combining tools and this op uses the same tool as the current group
                 # otherwise finish current group and start a new one
                 if (not operations[i].hasToolpath) \
                     or (not operation.hasTool) \
                     or (Settings.Get(Settings.COMBINE_TOOL) \
-                        and Operations.GetToolNumber(operations[i]) == operation.toolId):
-                    operation.Append(operations[i], operations[i].hasToolpath)
+                        and Operation.GetToolNumber(operations[i]) == operation.toolId):
+                    operation.Append(operations[i], i, operations[i].hasToolpath)
                     i += 1
                 else:
                     # different tool (or not combining) -> finish current group
@@ -52,10 +52,6 @@ class Operations(Line):
                 
     def SetOutputFolder(self, folder):
         self._outputFolder = folder
-
-    @staticmethod
-    def GetToolNumber(operation):
-        return operation.tool.parameters.itemByName("tool_number").value.value
 
     def Parse(self, tmpPath: Path):
         for operation in self._operations:
@@ -182,12 +178,15 @@ class Operations(Line):
 
     def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
         for operation in self._operations:
-            fileName = ("{fileName}_{operationName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{operationName}{fileExtension}") \
+            outputName = ("{fileName}_{operationName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{operationName}{fileExtension}") \
                 .format(
                     fileName = fileName, 
                     operationName = Utils.sanitizeFilename(operation.name, preserveExtension = False), 
                     fileExtension = fileExtension)
-            operationFile = folderPath / fileName
+            outputName = "{index}_{fileName}".format(
+                fileName = outputName, 
+                index=operation.firstIndex + 1) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
+            operationFile = folderPath / outputName
             with operationFile.open("w", encoding="utf-8") as fileHandler:
                 lineNumber = 0 # Writing operations separately, so line numbers start at 0 for each file
                 lineNumber = Operations._writeLine(fileHandler, f"({operationFile.stem})", lineNumber)

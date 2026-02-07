@@ -114,13 +114,13 @@ class Program():
         oldOutputFolder = self.GetOutputFolder()
 
         #region --- Flyttas till Generate ---
-        # if not Settings.Get(Settings.DEL_FILES):
-        #     Settings.Set(Settings.DEL_FOLDER, False) # Only remove folders if files will be removed too
+        # if not Settings(Settings.DEL_FILES):
+        #     Settings(Settings.DEL_FOLDER, False) # Only remove folders if files will be removed too
 
         # if Settings.Get(Settings.DEL_FOLDER):
         #     strMsg = CountOutputFolderFiles(self._outputFolder, Setups.Count(), self.fileExtension)
         #     if strMsg:
-        #         Settings.Set(Settings.DEL_FOLDER, False)
+        #         Settings(Settings.DEL_FOLDER, False)
         #         strMsg = (
         #             "The output folder contains {}. "
         #             "It will not be deleted. You may wish to make sure you selected "
@@ -174,6 +174,7 @@ class Program():
             lineNumber = 0            
             fileExtension = self._program.postConfiguration.extension
 
+            # Single file output
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
                 outputFolder.mkdir(parents=True, exist_ok=True)
                 filePath = outputFolder / f"{fileName}{fileExtension}"
@@ -183,7 +184,8 @@ class Program():
                     
                     if(Setups.hasOperationWithTail):
                         Setups.WriteTail(fileHandler, lineNumber)
-            else: # Output with folder structure
+
+            else: # Output with folder/file name structure
                 if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
                     if Settings(Settings.FLAT_FILE_STRUCTURE):
                         folder = outputFolder
@@ -265,8 +267,8 @@ class Program():
         # and save it both to the Program attributes and user settings
         # compressedName = (Path('~') / outputFolder.relative_to(Path.home())).as_posix()
         #self.Attributes.add(Const.ATTR_GROUP, Const.ATTR_COMPRESSED_NAME, compressedName)
-        #Settings.Set(Settings.OUTPUT_FOLDER, compressedName)
-        Settings.Set(Settings.OUTPUT_FOLDER, outputFolder.as_posix())
+        #Settings(Settings.OUTPUT_FOLDER, compressedName)
+        Settings(Settings.OUTPUT_FOLDER, outputFolder.as_posix())
 
         Settings.Save(self._attributes)
         

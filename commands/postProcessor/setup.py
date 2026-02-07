@@ -18,7 +18,6 @@ class Setup(Line):
         self._index = index
         self._isSelected = False if self._setup is None else markSelected or self._setup.isSelected
         self._outputFilename = None
-        # Only process operations if necessary
         self._operations = None 
         self.outputFilePath = ""
         self._origin: adsk.core.Point3D = None
@@ -75,6 +74,10 @@ class Setup(Line):
         yAxis.transformBy(self._setup.workCoordinateSystem)
         yAxis.normalize()
         return yAxis
+
+    @property
+    def hasMachine(self) -> bool:
+        return self._setup.machine is not None
 
     # Compute signed rotation around the setup's X axis.
     #
