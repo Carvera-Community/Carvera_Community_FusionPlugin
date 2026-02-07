@@ -13,20 +13,20 @@ from .operations import Operations
 from ...lib.fusionAddInUtils.general_utils import Utils
 
 class Setup(Line):
-    def __init__(self, setup: adsk.cam.Setup, markSelected: bool = False):
+    def __init__(self, setup: adsk.cam.Setup, index: int, markSelected: bool = False):
         self._setup = setup
+        self._index = index
         self._isSelected = False if self._setup is None else markSelected or self._setup.isSelected
         self._outputFilename = None
         # Only process operations if necessary
-        self._operations = None if \
-                self.isSuppressed \
-                and not self.isSelected \
-            else Operations(list(operation for operation in self._setup.allOperations))
+        self._operations = None 
         self.outputFilePath = ""
         self._origin: adsk.core.Point3D = None
         self._headerGenerated = False
 
-    _isSelected = False # Since adsk.cam.Setup.isSelected is not writeable, we need to track it ourselves.
+    @property
+    def index(self):
+        return self._index
 
     @property
     def isSuppressed(self):
@@ -181,7 +181,13 @@ class Setup(Line):
     def Parse(self, tmpPath: Path):
         from .programs import Programs
 
-        if self._operations is None or self.isSuppressed:
+        # Time to parse the operations of this setup unless it isn't suppressed.
+        self._operations = None if \
+                self.isSuppressed \
+                and not self.isSelected \
+            else Operations(list(operation for operation in self._setup.allOperations))
+
+        if self._operations is None:
             return # Don't process this setup.
 
         # Don't spam the user with temporary files that will be deleted anyway
