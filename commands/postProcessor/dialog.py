@@ -969,7 +969,18 @@ class PostDialog:
 
     @staticmethod
     def onOperationsGroupingChanged(dropdown: adsk.core.DropDownCommandInput):
-        Settings(Settings.OPERATIONS_GROUPING, dropdown.selectedItem.index)
+
+        # Since we update the dropdown dynamically and there is no way 
+        # to set an Id for the list items, we need to rely on the text 
+        # of the selected item to know which one is selected.
+        operationsGroupingsTexts = {
+            Strings("Single file")                  : Settings.OperationsGroupings.SINGLE_FILE,
+            Strings("Group on setup")               : Settings.OperationsGroupings.SETUP,
+            Strings("Group on setup and tool")      : Settings.OperationsGroupings.SETUP_AND_TOOL,
+            Strings("None, one file per operation") : Settings.OperationsGroupings.PER_OPERATION
+        }
+
+        Settings(Settings.OPERATIONS_GROUPING, operationsGroupingsTexts[dropdown.selectedItem.name])
         PostDialog._updateFlatFileStructure(dropdown.parentCommand)
 
     @staticmethod
