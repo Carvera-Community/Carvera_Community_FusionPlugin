@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, ClassVar, Optional
 import adsk.cam
 
 from .program import Program
-from .setups import Setups
+from .setups.setups import Setups
+from .settings import Settings
 from ...lib.fusionAddInUtils.general_utils import classproperty
 
 class _ProgramsMeta(type):
@@ -32,6 +33,14 @@ class Programs(metaclass=_ProgramsMeta):
         """Loads all NCPrograms from the current document."""
         cls._cam = cam
         cls._items = [Program(program) for program in cam.ncPrograms]
+
+        if Settings(Settings.NC_PROGRAM) is not None:
+            # Try to set the current program to the one specified in settings
+            for program in cls._items:
+                if program.name == Settings(Settings.NC_PROGRAM):
+                    cls.Current = program
+                    break
+
         Setups.Load(cam.setups)
 
     @classproperty

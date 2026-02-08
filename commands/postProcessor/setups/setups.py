@@ -1,18 +1,17 @@
 from __future__ import annotations
-import math
 from pathlib import Path
 from typing import List, TextIO, Iterator
 
 import adsk.cam
 
-from ...lib.fusionAddInUtils.general_utils import Utils, classproperty
+from ....lib.fusionAddInUtils.general_utils import Utils, classproperty
 
-from .settings import Settings
+from ..settings import Settings
 from .setup import Setup
 
-from .setups_body import SetupsBody
-from .setups_header import SetupsHeader
-from .setups_tail import SetupsTail
+from .body import SetupsBody
+from .header import SetupsHeader
+from .tail import SetupsTail
 
 class _SetupsMeta(type):
     def __iter__(cls) -> Iterator[Setup]:
@@ -62,7 +61,7 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
             if first is None:
                 first = setup
             else:
-                signed_angle = math.round(first.GetRotationAroundXAxisRelativeToDeg(setup)*10)/10.0
+                signed_angle = round(first.GetRotationAroundXAxisRelativeToDeg(setup), 3)
                 if signed_angle != 0:
                     needsRotation.append((setup.name, signed_angle))
                     Utils.log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")
@@ -76,8 +75,9 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
     @classmethod
     def _getFileHandler(cls, mode: FileModes, path: Path, fileName: str, setup: Setup, fileExtension: str) -> TextIO:
 
+        outputName = Utils.sanitizeFilename(setup.name, preserveExtension = False)
         setupName = "{index}_{fileName}".format(
-            fileName = Utils.sanitizeFilename(setup.name, preserveExtension = False), 
+            fileName = outputName, 
             index=str(setup.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
         
         outputName = ("{fileName}_{setupName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}{fileExtension}") \

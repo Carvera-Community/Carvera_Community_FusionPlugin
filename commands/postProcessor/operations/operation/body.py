@@ -2,8 +2,8 @@ import io
 from pathlib import Path
 from typing import Optional, TextIO, overload
 
-from .settings import Settings
-from .line import Line
+from ...settings import Settings
+from ...line import Line
 
 class OperationBody(Line):
     @overload

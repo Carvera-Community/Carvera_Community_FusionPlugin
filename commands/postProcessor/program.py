@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .strings import Strings
 from .attributes import Attributes
-from .setups import Setups
+from .setups.setups import Setups
 from .settings import Settings
 from .parameters import Parameters
 
@@ -35,7 +35,7 @@ class Program():
         self._parameters: Parameters = Parameters(program.parameters)
 
     @property
-    def programName(self):
+    def name(self):
         """Returns the name of the NCProgram."""
         return self._program.name
     
@@ -78,9 +78,14 @@ class Program():
         return self._attributes
     
     @property
+    def hasMachine(self):
+        """Returns whether the NCProgram has a machine."""
+        return self._program.machine is not None
+
+    @property
     def machineName(self):
         """Returns the machine of the NCProgram."""
-        return self._program.machine.model if self._program.machine is not None else Strings("<no machine chosen>")
+        return self._program.machine.model if self.hasMachine else Strings("<no machine selected>")
 
     @property
     def machineHasAAxis(self):

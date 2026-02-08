@@ -4,14 +4,14 @@ from typing import Optional
 import uuid
 
 import adsk
-from ...lib.fusionAddInUtils.general_utils import Utils
+from .....lib.fusionAddInUtils.general_utils import Utils
 
-from .operation_parser import OperationParser
-from .operation_header import OperationHeader
-from .operation_body import OperationBody
-from .operation_tail import OperationTail
-from .parameters import Parameters
-from .strings import Strings
+from .parser import OperationParser
+from .header import OperationHeader
+from .body import OperationBody
+from .tail import OperationTail
+from ...parameters import Parameters
+from ...strings import Strings
 
 class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):    
     def __init__(self):
@@ -86,7 +86,7 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
 
 
     def Parse(self, tmpPath: Path):
-        from .programs import Programs
+        from ...programs import Programs
 
         name = uuid.uuid4().hex + Programs.Current.fileExtension
         self._tempFilePath = tmpPath / name

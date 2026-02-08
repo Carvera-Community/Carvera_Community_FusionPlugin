@@ -21,8 +21,9 @@ class Events():
     """
     _handlers = []
 
-    @staticmethod
+    @classmethod
     def add(
+            cls,
             event: adsk.core.Event,
             callback: Callable,
             *,
@@ -54,26 +55,27 @@ class Events():
         event.add(handler)
         return handler
 
-    @staticmethod
-    def clear():
+    @classmethod
+    def clear(cls):
         """Clears the global list of handlers.
         """
-        Events._handlers = []
+        cls._handlers = []
 
-
+    @classmethod
     def _create_handler(
+            cls,
             handler_type,
             callback: Callable,
             event: adsk.core.Event,
             name: str = None,
             local_handlers: list = None
     ):
-        handler = Events._define_handler(handler_type, callback, name)()
-        (local_handlers if local_handlers is not None else Events._handlers).append(handler)
+        handler = cls._define_handler(handler_type, callback, name)()
+        (local_handlers if local_handlers is not None else cls._handlers).append(handler)
         return handler
 
-
-    def _define_handler(handler_type, callback, name: str = None):
+    @classmethod
+    def _define_handler(cls, handler_type, callback, name: str = None):
         name = name or handler_type.__name__
 
         class Handler(handler_type):

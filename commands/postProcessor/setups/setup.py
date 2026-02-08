@@ -7,10 +7,10 @@ from typing import Optional, TextIO, Union, overload
 
 import adsk.cam
 
-from .line import Line
-from .settings import Settings
-from .operations import Operations
-from ...lib.fusionAddInUtils.general_utils import Utils
+from ..line import Line
+from ..settings import Settings
+from ..operations.operations import Operations
+from ....lib.fusionAddInUtils.general_utils import Utils
 
 class Setup(Line):
     def __init__(self, setup: adsk.cam.Setup, index: int, markSelected: bool = False):
@@ -23,6 +23,10 @@ class Setup(Line):
         self._origin: adsk.core.Point3D = None
         self._headerGenerated = False
 
+    @property
+    def hasError(self) -> bool:
+        return self._setup is None or self._setup.hasError
+    
     @property
     def index(self):
         return self._index
@@ -182,7 +186,7 @@ class Setup(Line):
             self._setup.name = newName
     
     def Parse(self, tmpPath: Path):
-        from .programs import Programs
+        from ..programs import Programs
 
         # Time to parse the operations of this setup unless it isn't suppressed.
         self._operations = None if \
@@ -200,9 +204,6 @@ class Setup(Line):
         Programs.CheckAndGenerateToolpath(self._setup)
 
         self._operations.Parse(tmpPath)
-
-    def SetOutputFileName(self, fileName):
-        self._outputFileName = fileName
 
     def WriteSetupName(self, fileHandler: TextIO, lineNumber: int) -> int:
         return Setup._writeLine(fileHandler, f"({self._setup.name})", lineNumber)
@@ -289,9 +290,10 @@ class Setup(Line):
 
     def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
         if Settings(Settings.FLAT_FILE_STRUCTURE):
+            setupName = Utils.sanitizeFilename(self.name, preserveExtension = False)
             setupName = "{index}_{fileName}".format(
-                fileName = Utils.sanitizeFilename(self.name, preserveExtension = False), 
-                index=str(self.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
+                fileName = setupName, 
+                index=str(self.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else setupName
             
             fileName = ("{fileName}_{setupName}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}") \
                 .format(

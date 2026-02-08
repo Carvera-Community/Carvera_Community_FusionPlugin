@@ -3,10 +3,10 @@ from pathlib import Path
 from typing import List, List, Optional, TextIO, overload
 
 import adsk
-from .line import Line
-from ...lib.fusionAddInUtils import Utils
-from .settings import Settings
-from .operation import Operation
+from ..line import Line
+from ....lib.fusionAddInUtils import Utils
+from ..settings import Settings
+from .operation.operation import Operation
 
 
 class Operations(Line):

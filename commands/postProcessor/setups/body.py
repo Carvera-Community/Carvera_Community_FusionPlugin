@@ -2,9 +2,9 @@ import io
 from pathlib import Path
 from typing import Optional, TextIO, Union, overload
 
-from ...lib.fusionAddInUtils.general_utils import Utils
+from ....lib.fusionAddInUtils.general_utils import Utils
 
-from .settings import Settings
+from ..settings import Settings
 from .setup import Setup
 
 class SetupsBody():

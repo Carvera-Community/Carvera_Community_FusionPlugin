@@ -125,7 +125,7 @@
   "Group on setup and tool": "Group on setup and tool",
   "None, one file per operation": "None, one file per operation",
   "TOOL TIP: Operations grouping": "How to group the operations into output files",
-  "TOOLTIP TEXT: Operations grouping": "Choose how operations are grouped into output files.<p><i>Single file:</i> All operations are combined into a single G-code file. This option is only available if the origin of all setups are the same.<br>If the setups are rotated on the X-axis it also requires that the <i>Rotate A-Axis between setups</i> option is chosen and that the X-axes of all the chosen setups are parallel.<br><i>Group on setup:</i> Each setup is output as a separate G-code file. This option is only available if there is multiple setups that will be processed.<br><i>Group on setup and tool:</i> Operations are grouped by setup and tool, so each time the tool changes within a setup a new file is created.<br><i>None, one file per operation:</i> Each operation is output as its own G-code file.",
+  "TOOLTIP TEXT: Operations grouping": "Choose how operations are grouped into output files.<p><i>Single file:</i> All operations are combined into a single G-code file. This option is only available if the origin of all setups are the same.<br>If the setups are rotated on the X-axis it also requires that the <i>Rotate A-Axis between setups</i> option is selected and that the X-axes of all the selected setups are parallel.<br><i>Group on setup:</i> Each setup is output as a separate G-code file. This option is only available if there is multiple setups that will be processed.<br><i>Group on setup and tool:</i> Operations are grouped by setup and tool, so each time the tool changes within a setup a new file is created.<br><i>None, one file per operation:</i> Each operation is output as its own G-code file.",
 
   "The selected NC Program has the following warning:\n{warning}": "The selected NC Program has the following warning:\n{warning}",
 
@@ -139,7 +139,7 @@
 
   "Retract Y on A-axis rotation": "Retract Y on A-axis rotation",
   "TOOL TIP: Retract Y on A-axis rotation": "Retract Y axis when rotating A-axis",
-  "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position before rotating the A-axis but the Y axis will retract as well when rotating between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been chosen.",
+  "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position before rotating the A-axis but the Y axis will retract as well when rotating between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been selected.",
 
   "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
   "TOOL TIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",

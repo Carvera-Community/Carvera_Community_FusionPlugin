@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from .line import Line
-from .settings import Settings
+from ...line import Line
+from ...settings import Settings
 
 class OperationParser(Line):
 
