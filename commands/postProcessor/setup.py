@@ -289,10 +289,14 @@ class Setup(Line):
 
     def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
         if Settings(Settings.FLAT_FILE_STRUCTURE):
+            setupName = "{index}_{fileName}".format(
+                fileName = Utils.sanitizeFilename(self.name, preserveExtension = False), 
+                index=str(self.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
+            
             fileName = ("{fileName}_{setupName}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}") \
                 .format(
                     fileName = fileName, 
-                    setupName = Utils.sanitizeFilename(self.name, preserveExtension = False))
+                    setupName = setupName)
             folder = folderPath 
         else:
             folder = folderPath / Utils.sanitizeFilename(self.name, preserveExtension = False)

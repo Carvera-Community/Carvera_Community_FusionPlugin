@@ -178,14 +178,15 @@ class Operations(Line):
 
     def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
         for operation in self._operations:
+            operationFileName = Utils.sanitizeFilename(operation.name, preserveExtension = False)
+            outputName = "{index}_{fileName}".format(
+                fileName = operationFileName, 
+                index=str(operation.firstIndex + 1).rjust(2, '0')) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else fileName
             outputName = ("{fileName}_{operationName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{operationName}{fileExtension}") \
                 .format(
                     fileName = fileName, 
-                    operationName = Utils.sanitizeFilename(operation.name, preserveExtension = False), 
+                    operationName = outputName, 
                     fileExtension = fileExtension)
-            outputName = "{index}_{fileName}".format(
-                fileName = outputName, 
-                index=operation.firstIndex + 1) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
             operationFile = folderPath / outputName
             with operationFile.open("w", encoding="utf-8") as fileHandler:
                 lineNumber = 0 # Writing operations separately, so line numbers start at 0 for each file

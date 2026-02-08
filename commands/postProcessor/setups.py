@@ -76,14 +76,15 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
     @classmethod
     def _getFileHandler(cls, mode: FileModes, path: Path, fileName: str, setup: Setup, fileExtension: str) -> TextIO:
 
+        setupName = "{index}_{fileName}".format(
+            fileName = Utils.sanitizeFilename(setup.name, preserveExtension = False), 
+            index=str(setup.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
+        
         outputName = ("{fileName}_{setupName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}{fileExtension}") \
             .format(
                 fileName = fileName, 
-                setupName = Utils.sanitizeFilename(setup.name, preserveExtension = False), 
+                setupName = setupName, 
                 fileExtension = fileExtension)
-        outputName = "{index}_{fileName}".format(
-            fileName = outputName, 
-            index=setup.index + 1) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
         setupFile = path / outputName
         return setupFile.open(mode, encoding="utf-8")
 
