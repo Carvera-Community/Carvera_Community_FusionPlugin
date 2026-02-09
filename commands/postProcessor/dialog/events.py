@@ -9,7 +9,7 @@ from ..programs import Programs
 from ..setups.setups import Setups
 from ..setups.setup import Setup
 from ..const import Const
-from ..settings import Settings
+from ..settings.settings import Settings
 from ..strings import Strings
 
 class PostDialogOnEvent:

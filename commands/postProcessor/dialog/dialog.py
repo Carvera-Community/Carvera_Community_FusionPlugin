@@ -7,7 +7,7 @@ import os
 
 from ..setups.setups import Setups
 from ..programs import Programs
-from ..settings import Settings
+from ..settings.settings import Settings
 from ..strings import Strings
 
 from ..const import Const
@@ -16,7 +16,7 @@ from ....lib.fusionAddInUtils.event_utils import Events
 from .. import config
 
 # Mixins for the PostDialog class, separated for better readability and maintainability.
-from .layout import PostDialogLayout
+from .layout.layout import PostDialogLayout
 from .events import PostDialogOnEvent
 
 class PostDialog(PostDialogLayout, PostDialogOnEvent):

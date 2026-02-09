@@ -1,13 +1,13 @@
 import json
 
 
-from . import config
-from .attributes import Attributes
-from .const import *
-from ...config import PLUGIN_VERSION as GLOBAL_PLUGIN_VERSION
-from ...lib.fusionAddInUtils.general_utils import *
+from .. import config
+from ..attributes import Attributes
+from ..const import *
+from ....config import PLUGIN_VERSION as GLOBAL_PLUGIN_VERSION
+from ....lib.fusionAddInUtils.general_utils import *
 
-from .settings_const import SettingsConstants
+from .constants import Constants
 
 _UNSET = object()
 
@@ -22,7 +22,7 @@ class _SettingsMeta(type):
         cls.Set(key, value)
         return cls.Get(key)
 
-class Settings(SettingsConstants, metaclass=_SettingsMeta):
+class Settings(Constants, metaclass=_SettingsMeta):
     """Manages the user settings for the Post Processor Add-In."""
 
     _default = None
@@ -34,32 +34,32 @@ class Settings(SettingsConstants, metaclass=_SettingsMeta):
     #region Initial default values of settings
     # See above definitions for details
     _defaultSettings = {
-        SettingsConstants.END_CODES:                  "M5\nM9\nM30",
-        SettingsConstants.DEL_FILES:                  False,
-        SettingsConstants.DEL_FOLDER:                 False,
-        SettingsConstants.OUTPUT_FOLDER:              "",
-        SettingsConstants.SEQUENCE:                   SettingsConstants.Sequences.NONE,
-        SettingsConstants.NUMERIC_NAME:               False,  
-        SettingsConstants.NAME_DIGITS:                1,
-        SettingsConstants.NUMBERING_INTERVAL:         5,
-        SettingsConstants.OPERATIONS_GROUPING:        SettingsConstants.OperationsGroupings.SETUP,
-        SettingsConstants.COMBINE_TOOL:               False,
-        SettingsConstants.VERSION:                    config.SETTINGS_VERSION,
-        SettingsConstants.PLUGIN_VERSION:             GLOBAL_PLUGIN_VERSION,
-        SettingsConstants.NC_PROGRAM:                 "",
-        SettingsConstants.LANGUAGE:                   "en",
-        SettingsConstants.TOOL_CHANGE:                "M9",
-        SettingsConstants.RESTORE_RAPID_MOVES:        False,
-        SettingsConstants.INITIAL_DELAY:              0.2,
-        SettingsConstants.POST_RETRIES:               3,
-        SettingsConstants.ROTATE_A_AXIS:              False,
-        SettingsConstants.SAFE_Y_RETRACTION:          True,
-        SettingsConstants.Y_RETRACTION_COORDINATE:    -100,
-        SettingsConstants.FLAT_FILE_STRUCTURE:        False,
-        SettingsConstants.USE_REGEX:                  False,
-        SettingsConstants.FIND_STRING:                "",
-        SettingsConstants.REPLACE_STRING:             "",
-        SettingsConstants.HEADER_END_CODES:           "G20\nG21",
+        Constants.END_CODES:                  "M5\nM9\nM30",
+        Constants.DEL_FILES:                  False,
+        Constants.DEL_FOLDER:                 False,
+        Constants.OUTPUT_FOLDER:              "",
+        Constants.SEQUENCE:                   Constants.Sequences.NONE,
+        Constants.NUMERIC_NAME:               False,  
+        Constants.NAME_DIGITS:                1,
+        Constants.NUMBERING_INTERVAL:         5,
+        Constants.OPERATIONS_GROUPING:        Constants.OperationsGroupings.SETUP,
+        Constants.COMBINE_TOOL:               False,
+        Constants.VERSION:                    config.SETTINGS_VERSION,
+        Constants.PLUGIN_VERSION:             GLOBAL_PLUGIN_VERSION,
+        Constants.NC_PROGRAM:                 "",
+        Constants.LANGUAGE:                   "en",
+        Constants.TOOL_CHANGE:                "M9",
+        Constants.RESTORE_RAPID_MOVES:        False,
+        Constants.INITIAL_DELAY:              0.2,
+        Constants.POST_RETRIES:               3,
+        Constants.ROTATE_A_AXIS:              False,
+        Constants.SAFE_Y_RETRACTION:          True,
+        Constants.Y_RETRACTION_COORDINATE:    -100,
+        Constants.FLAT_FILE_STRUCTURE:        False,
+        Constants.USE_REGEX:                  False,
+        Constants.FIND_STRING:                "",
+        Constants.REPLACE_STRING:             "",
+        Constants.HEADER_END_CODES:           "G20\nG21",
     }
     #endregion
 
@@ -68,7 +68,7 @@ class Settings(SettingsConstants, metaclass=_SettingsMeta):
         if attr and attr.count > 0:
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
-                if cls._items[SettingsConstants.VERSION] == config.SETTINGS_VERSION:
+                if cls._items[Constants.VERSION] == config.SETTINGS_VERSION:
                     return  # settings are valid for this version
             except Exception:
                 pass
@@ -81,9 +81,9 @@ class Settings(SettingsConstants, metaclass=_SettingsMeta):
                 with open(cls._getPath()) as file:
                     cls._default = json.load(file)
                 # never allow delFiles or delFolder to default to True
-                cls._default[SettingsConstants.DEL_FILES] = False
-                cls._default[SettingsConstants.DEL_FOLDER] = False
-                if cls._default[SettingsConstants.VERSION] != config.SETTINGS_VERSION:
+                cls._default[Constants.DEL_FILES] = False
+                cls._default[Constants.DEL_FOLDER] = False
+                if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
                     cls.Update(Settings._defaultSettings, cls._default)
             except Exception:
                 cls._default = dict(Settings._defaultSettings)
@@ -99,8 +99,8 @@ class Settings(SettingsConstants, metaclass=_SettingsMeta):
         cls._fMustSave = False
         cls._default = dict(cls._items)
         # never allow delFiles or delFolder to default to True
-        cls._default[SettingsConstants.DEL_FILES] = False
-        cls._default[SettingsConstants.DEL_FOLDER] = False
+        cls._default[Constants.DEL_FILES] = False
+        cls._default[Constants.DEL_FOLDER] = False
         try:
             strSettings = json.dumps(cls._items, indent=4, sort_keys=True)
             file = open(cls._getPath(), "w")
@@ -120,7 +120,7 @@ class Settings(SettingsConstants, metaclass=_SettingsMeta):
         for item in src:
             if not (item in dst):
                 dst[item] = src[item]
-        dst[SettingsConstants.VERSION] = src[SettingsConstants.VERSION]
+        dst[Constants.VERSION] = src[Constants.VERSION]
 
     @classmethod
     def _getPath(cls):

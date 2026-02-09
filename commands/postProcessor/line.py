@@ -2,7 +2,7 @@
 import re
 from typing import Final, TextIO
 
-from .settings import Settings
+from .settings.settings import Settings
 
 class Line():
 

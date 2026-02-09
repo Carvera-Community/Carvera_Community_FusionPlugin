@@ -9,7 +9,7 @@ from ....lib.fusionAddInUtils.general_utils import Utils
 from ..config import CMD_NAME
 from ....config import PLUGIN_VERSION
 
-from ..settings import Settings
+from ..settings.settings import Settings
 from .setup import Setup
 from ..line import Line
 

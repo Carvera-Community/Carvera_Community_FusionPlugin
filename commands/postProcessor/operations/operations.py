@@ -5,7 +5,7 @@ from typing import List, List, Optional, TextIO, overload
 import adsk
 from ..line import Line
 from ....lib.fusionAddInUtils import Utils
-from ..settings import Settings
+from ..settings.settings import Settings
 from .operation.operation import Operation
 
 

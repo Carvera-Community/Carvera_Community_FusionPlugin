@@ -4,7 +4,7 @@ from typing import Optional, TextIO, Union, overload
 
 from ....lib.fusionAddInUtils.general_utils import Utils
 
-from ..settings import Settings
+from ..settings.settings import Settings
 from .setup import Setup
 
 class SetupsBody():

@@ -6,7 +6,7 @@ import adsk.cam
 
 from ....lib.fusionAddInUtils.general_utils import Utils, classproperty
 
-from ..settings import Settings
+from ..settings.settings import Settings
 from .setup import Setup
 
 from .body import SetupsBody

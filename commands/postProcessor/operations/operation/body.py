@@ -2,7 +2,7 @@ import io
 from pathlib import Path
 from typing import Optional, TextIO, overload
 
-from ...settings import Settings
+from ...settings.settings import Settings
 from ...line import Line
 
 class OperationBody(Line):

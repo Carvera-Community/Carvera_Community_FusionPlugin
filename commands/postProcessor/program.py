@@ -8,7 +8,7 @@ from pathlib import Path
 from .strings import Strings
 from .attributes import Attributes
 from .setups.setups import Setups
-from .settings import Settings
+from .settings.settings import Settings
 from .parameters import Parameters
 
 def CountOutputFolderFiles(folder, limit, fileExt):

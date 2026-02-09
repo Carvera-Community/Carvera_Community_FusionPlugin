@@ -6,7 +6,7 @@ import adsk.cam
 
 from .program import Program
 from .setups.setups import Setups
-from .settings import Settings
+from .settings.settings import Settings
 from ...lib.fusionAddInUtils.general_utils import classproperty
 
 class _ProgramsMeta(type):

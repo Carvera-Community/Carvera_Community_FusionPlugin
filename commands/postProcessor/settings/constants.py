@@ -1,6 +1,6 @@
 from typing import Final
 
-class SettingsConstants:
+class Constants:
     """Contains constant values for settings keys and options."""
 
     # G-codes that mark the ending sequence

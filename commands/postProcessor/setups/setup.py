@@ -8,7 +8,7 @@ from typing import Optional, TextIO, Union, overload
 import adsk.cam
 
 from ..line import Line
-from ..settings import Settings
+from ..settings.settings import Settings
 from ..operations.operations import Operations
 from ....lib.fusionAddInUtils.general_utils import Utils
 
