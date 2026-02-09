@@ -34,6 +34,7 @@ class Programs(metaclass=_ProgramsMeta):
         cls._cam = cam
         cls._items = [Program(program) for program in cam.ncPrograms]
 
+        cls._current = None
         if Settings(Settings.NC_PROGRAM) is not None:
             # Try to set the current program to the one specified in settings
             for program in cls._items:

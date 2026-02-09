@@ -199,6 +199,7 @@ class PostDialogOnEvent:
                 parallelXAxis = setup.xNormal.isParallelTo(firstSetup.xNormal)
                 inputCheckbox.isEnabled = equalOrigin \
                     and parallelXAxis \
+                    and Programs.Current is not None \
                     and Programs.Current.hasMachine \
                     and (Programs.Current.machineHasAAxis \
                          and (rotateAAxisCheckbox.value \
