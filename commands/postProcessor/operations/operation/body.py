@@ -53,7 +53,7 @@ class OperationBody(Line):
                                             lineNumber = self._writeLine(fileHandler, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction=Settings(Settings.Y_RETRACTION_COORDINATE)), lineNumber)
                                         else:
                                             lineNumber = self._writeLine(fileHandler, "G90 G53 G0 Z-3", lineNumber)
-                                        lineNumber = self._writeLine(fileHandler, "G90 G54 G0 A{:.3f}".format(rotationAngle), lineNumber)
+                                        lineNumber = self._writeLine(fileHandler, "G90 G54 G0 A{angle}".format(angle = f"{rotationAngle:.3f}".rstrip("0").rstrip(".")), lineNumber)
 
                                         #fileHandler.write(f" - ignored body: {line}")
                                         line = operationFile.readline()
