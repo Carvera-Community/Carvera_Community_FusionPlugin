@@ -2,3 +2,5 @@
 .env
 .assistant_rules.*
 commands/postProcessor/settings.settings
+Tests/**
+.vscode/*
