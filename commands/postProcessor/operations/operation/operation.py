@@ -3,7 +3,7 @@ import time
 from typing import Optional
 import uuid
 
-import adsk
+import adsk.cam
 from .....lib.fusionAddInUtils.general_utils import Utils
 
 from .parser import OperationParser
@@ -57,6 +57,12 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
 #        return self._operationWithTool.name if self._operationWithTool is not None else "NoToolOperation"
 
     @property
+    def tool(self) -> Optional[adsk.cam.Tool]:
+        if self._operationWithTool == -1:
+            return None
+        return self._operationsDict[self._operationWithTool].tool
+
+    @property
     def firstIndex(self) -> int:
         return min(self._operationsDict.keys())
 
@@ -80,6 +86,10 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
     def headerGenerated(self) -> bool:
         return self._headerGenerated
     
+    @staticmethod
+    def GetToolDescription(operation):
+        return operation.tool.description if operation.hasToolpath else Strings("<No tool>")
+
     @staticmethod
     def GetToolNumber(operation):
         return operation.tool.parameters.itemByName("tool_number").value.value

@@ -23,6 +23,12 @@ class Setup(Line):
         self._origin: adsk.core.Point3D = None
         self._headerGenerated = False
 
+        self._operations = None if \
+                self.isSuppressed \
+                and not self.isSelected \
+            else Operations(list(operation for operation in self._setup.allOperations))
+
+
     @property
     def hasError(self) -> bool:
         return self._setup is None or self._setup.hasError
@@ -82,6 +88,10 @@ class Setup(Line):
     @property
     def hasMachine(self) -> bool:
         return self._setup.machine is not None
+
+    @property
+    def tools(self) -> list[adsk.cam.Tool]:
+        return self._operations.tools if self._operations is not None else []
 
     # Compute signed rotation around the setup's X axis.
     #
@@ -187,12 +197,6 @@ class Setup(Line):
     
     def Parse(self, tmpPath: Path):
         from ..programs import Programs
-
-        # Time to parse the operations of this setup unless it isn't suppressed.
-        self._operations = None if \
-                self.isSuppressed \
-                and not self.isSelected \
-            else Operations(list(operation for operation in self._setup.allOperations))
 
         if self._operations is None:
             return # Don't process this setup.

@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 
 from .. import config
@@ -77,15 +78,16 @@ class Settings(Constants, metaclass=_SettingsMeta):
         if not cls._default:
             # Haven't read the settings file yet
             file = None
-            try:
-                with open(cls._getPath()) as file:
-                    cls._default = json.load(file)
+            path = cls._getPath()
+            if path.exists and path.is_file():
+                    with open(path) as file:
+                        cls._default = json.load(file)
                 # never allow delFiles or delFolder to default to True
-                cls._default[Constants.DEL_FILES] = False
-                cls._default[Constants.DEL_FOLDER] = False
-                if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
-                    cls.Update(Settings._defaultSettings, cls._default)
-            except Exception:
+                    cls._default[Constants.DEL_FILES] = False
+                    cls._default[Constants.DEL_FOLDER] = False
+                    if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
+                        cls.Update(Settings._defaultSettings, cls._default)
+            else:
                 cls._default = dict(Settings._defaultSettings)
                 cls._fMustSave = True
         
@@ -123,13 +125,13 @@ class Settings(Constants, metaclass=_SettingsMeta):
         dst[Constants.VERSION] = src[Constants.VERSION]
 
     @classmethod
-    def _getPath(cls):
+    def _getPath(cls) -> Path:
         if not cls._path:
             pos = __file__.rfind(".")
             if pos == -1:
                 pos = len(__file__)
             cls._path = __file__[0:pos] + Const.SETTINGS_FILE_EXT
-        return cls._path
+        return Path(cls._path)
     
     @classmethod
     def Get(cls, key):

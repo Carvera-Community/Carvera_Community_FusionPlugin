@@ -106,6 +106,9 @@ class PostDialogOnEvent:
         elif changedInput.id.startswith('setupSelected_'):
             cls.onSetupSelectedChanged(changedInput)
         
+        elif changedInput.id.startswith('toolCheckbox_'):
+            cls.onToolCheckboxChanged(changedInput)
+
         # General logging for debug.
         Utils.log(f'{config.CMD_NAME} Input Changed Event fired from a change to {changedInput.id}')
 
@@ -508,4 +511,38 @@ class PostDialogOnEvent:
         for setup in Setups:
             setup.select(checkbox.value)
         cls._updateDialog(checkbox.parentCommand)
+
+    @classmethod
+    def onToolCheckboxChanged(cls, checkbox: adsk.core.BoolValueCommandInput):
+        inputs = checkbox.parentCommand.commandInputs
+
+        index = int(checkbox.id.replace("toolCheckbox_", ""))
+        table = checkbox.parentCommandInput
+        dropdown = inputs.itemById(f"toolDropdown_{index}")
+        numberInput = inputs.itemById(f"toolText_{index}")
+        success, row, column, _, _ = table.getPosition(checkbox)
+        if success:
+            value = None
+            if dropdown is not None:
+                value = dropdown.selectedItem.name if dropdown.selectedItem is not None else None
+            elif numberInput is not None:
+                value = numberInput.value
+            table.removeInput(row, column + 1)
+            if checkbox.value:
+                numberInput: adsk.core.IntegerSpinnerCommandInput = inputs.addIntegerSpinnerCommandInput(f"toolText_{index}", '', 0, 999999, 1, int(value) if value is not None else 0)
+                table.addCommandInput(numberInput, row, column + 1)
+            else:
+                dropdown: adsk.core.DropDownCommandInput = inputs.addDropDownCommandInput(f"toolDropdown_{index}", '', adsk.core.DropDownStyles.TextListDropDownStyle)
+                toolNumber = (int(value) if value is not None else 0)
+                if toolNumber > Programs.Current.machineToolSlots:
+                    toolNumber = int(inputs.itemById(f"toolNumber_{index}").value)
+                for i in range(1, Programs.Current.machineToolSlots + 1):
+                    dropdown.listItems.add(str(i), toolNumber == i)
+                dropdown.isEnabled = True
+                dropdown.isReadOnly = True
+
+                table.addCommandInput(dropdown, row, column + 1)
+            #textBox.isVisible = checkbox.value
+            #textBox.isEnabled = True
+            #textBox.isReadOnly = False
     #endregion

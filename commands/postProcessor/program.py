@@ -83,9 +83,23 @@ class Program():
         return self._program.machine is not None
 
     @property
-    def machineName(self):
+    def machineName(self) -> str:
         """Returns the machine of the NCProgram."""
         return self._program.machine.model if self.hasMachine else Strings("<no machine selected>")
+
+    @property
+    def machineHasATC(self):
+        """Returns whether the machine of the NCProgram has an ATC."""
+        return self._program.machine.elements.itemById('tooling','default').isToolChangerAutomatic if self.hasMachine else False
+    
+    @property
+    def machineToolSlots(self):
+        """Returns the number of ATC slots of the machine of the NCProgram."""
+        return self._program.machine.elements.itemById('tooling','default').maxToolCount if self.machineHasATC else 1
+
+    @property
+    def machineATCSlots(self) -> int:
+        return self._program
 
     @property
     def machineHasAAxis(self):

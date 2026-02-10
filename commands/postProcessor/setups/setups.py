@@ -126,3 +126,10 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
 
             lineNumber = setup.WriteOperations(folderPath, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
         return lineNumber
+
+    @classproperty
+    def tools(cls) -> list[adsk.cam.Tool]:
+        tools = list[adsk.cam.Tool]()
+        for setup in cls.selected:
+            tools.extend(setup.tools)
+        return tools

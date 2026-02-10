@@ -49,9 +49,14 @@ class Operations(Line):
                     break
         if operation is not None: # append final group
             self._operations.append(operation)
-                
-    def SetOutputFolder(self, folder):
-        self._outputFolder = folder
+
+    @property
+    def tools(self) -> list[adsk.cam.Tool]:
+        tools = list[adsk.cam.Tool]()
+        for operation in self._operations:
+            if operation.hasTool and operation.tool not in tools:
+                tools.append(operation.tool)
+        return tools
 
     def Parse(self, tmpPath: Path):
         for operation in self._operations:

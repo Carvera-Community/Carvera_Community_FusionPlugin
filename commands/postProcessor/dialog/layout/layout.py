@@ -25,8 +25,8 @@ class PostDialogLayout(InputTab, GCodeTab, OutputTab, MiscTab, ToolsTab):
         cls.createInputTab(inputs)
         cls.createGCodeTab(inputs)
         cls.createOutputTab(inputs)
+        # cls.createToolsTab(inputs) To be added later.
         cls.createMiscTab(inputs)
-        cls.createToolsTab(inputs)
 
         #region Save as default button
         input = inputs.addSeparatorCommandInput('dummy')
