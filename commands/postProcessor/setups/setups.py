@@ -7,7 +7,7 @@ import adsk.cam
 from ....lib.fusionAddInUtils.general_utils import Utils, classproperty
 
 from ..settings.settings import Settings
-from .setup import Setup
+from .setup.setup import Setup
 
 from .body import SetupsBody
 from .header import SetupsHeader
@@ -66,27 +66,6 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
                     needsRotation.append((setup.name, signed_angle))
                     Utils.log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")
         return (len(needsRotation) != 0, needsRotation)
-
-    class FileModes:
-        READ = 'r'
-        WRITE = 'w'
-        APPEND = 'a'
-
-    @classmethod
-    def _getFileHandler(cls, mode: FileModes, path: Path, fileName: str, setup: Setup, fileExtension: str) -> TextIO:
-
-        outputName = Utils.sanitizeFilename(setup.name, preserveExtension = False)
-        setupName = "{index}_{fileName}".format(
-            fileName = outputName, 
-            index=str(setup.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else outputName
-        
-        outputName = ("{fileName}_{setupName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}{fileExtension}") \
-            .format(
-                fileName = fileName, 
-                setupName = setupName, 
-                fileExtension = fileExtension)
-        setupFile = path / outputName
-        return setupFile.open(mode, encoding="utf-8")
 
     @classmethod
     def RenameAll(cls, find, replace, isRegex):

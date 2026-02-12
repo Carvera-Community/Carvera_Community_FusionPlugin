@@ -1,10 +1,11 @@
 from __future__ import annotations
 import os
+from typing import Optional
 import adsk
 import adsk.cam
 from pathlib import Path
 
-
+from .file_modes import FileModes
 from .strings import Strings
 from .attributes import Attributes
 from .setups.setups import Setups
@@ -181,54 +182,32 @@ class Program():
 
     def Generate(self):
         """Generate the final G-code files from the results of the post processing."""
-        outputFolder = self.GetOutputFolder()
-        fileName = self.fileName
+        path = self.GetOutputFolder()
+        previousFileName = self.fileName
         name = self.Parameters.Get(Parameters.NAME)
 
         try:
-            if not outputFolder.exists():
-                outputFolder.mkdir(parents=True)
-
-            fileName = self.fileName
+            fileName: Optional[str] = None
             lineNumber = 0            
             fileExtension = self._program.postConfiguration.extension
 
-            # Single file output
-            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-                outputFolder.mkdir(parents=True, exist_ok=True)
-                filePath = outputFolder / f"{fileName}{fileExtension}"
-                with filePath.open("w", encoding="utf-8") as fileHandler:
-                    lineNumber = Setups.WriteHeader(fileHandler, lineNumber)
-                    lineNumber = Setups.WriteBody(fileHandler, lineNumber)
-                    
-                    if(Setups.hasOperationWithTail):
-                        Setups.WriteTail(fileHandler, lineNumber)
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE or Settings(Settings.FLAT_FILE_STRUCTURE):
+                # Flat file structure or single file
+                fileName = self.fileName
+                folder = path
+            else:
+                # Output with folder structure
+                folder = path / self.fileName
 
-            else: # Output with folder/file name structure
-                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-                    if Settings(Settings.FLAT_FILE_STRUCTURE):
-                        folder = outputFolder
-                    else:
-                        folder = outputFolder / self.fileName
-                        folder.mkdir(parents=True, exist_ok=True)
-                    lineNumber = Setups.WriteHeader(folder, lineNumber, fileName, fileExtension)
-                    lineNumber = Setups.WriteBody(folder, lineNumber, fileName, fileExtension)
-                    if(Setups.hasOperationWithTail):
-                        Setups.WriteTail(folder, lineNumber, fileName, fileExtension)
-
-                elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
-                    if Settings(Settings.FLAT_FILE_STRUCTURE):
-                        folder = outputFolder
-                    else:
-                        folder = outputFolder / self.fileName
-                        folder.mkdir(parents=True, exist_ok=True)
-                    Setups.WriteOperations(folder, fileName, fileExtension)
+            lineNumber = Setups.WriteHeader(folder, lineNumber, fileName, fileExtension)
+            lineNumber = Setups.WriteBody(folder, lineNumber, fileName, fileExtension)
+            lineNumber = Setups.WriteTail(folder, lineNumber, fileName, fileExtension)
 
         except Exception as exc:
             raise exc
         finally:
-            self.SetOutputFolder(outputFolder)
-            self.Parameters.Set(Parameters.FILE_NAME, fileName)
+            self.SetOutputFolder(path)
+            self.Parameters.Set(Parameters.FILE_NAME, previousFileName)
             self.Parameters.Set(Parameters.NAME, name)
 
     def DisableOpenInEditor(self):

@@ -1,30 +1,17 @@
-import io
 from pathlib import Path
-from typing import Optional, TextIO, overload
+from typing import Optional, TextIO
+
+from ...file_modes import FileModes
 
 class OperationTail():
 
-    #region GenerateTail
-    # Type signatures for tools (mypy/IDE) hints
+    def WriteTail(self, folderPath: Path, lineNumber: int, toolIdIndex: int, fileName: str, fileExtension: str) -> int:
+        fileHandler: Optional[TextIO] = None
 
-    # If GenerateTail is called with a fileHandler it means that the output
-    # will only be one file
-    @overload
-    def WriteTail(self, fileHandler: TextIO, lineNumber: int) -> int: ...
+        try:
+            fileHandler: TextIO = self._getFileHandler(folderPath, FileModes.APPEND, fileName, toolIdIndex, fileExtension)
 
-    # If GenerateTail is called with folder it means that 
-    # multiple files will be generated on lower levels of the hierarchy
-    @overload
-    def WriteTail(self, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str) -> int: ...
-
-    # Runtime implementation of Generate
-    def WriteTail(self, arg, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
-
-        # case 1: given an open file (TextIO) means that everything 
-        # should be written to it and not creating a new file
-        if isinstance(arg, io.TextIOBase) and fileName is None and fileExtension is None:
-            fileHandler: TextIO = arg
-            with self._tempFilePath.open("r") as operationFile:
+            with self._tempFilePath.open(FileModes.READ) as operationFile:
                 line = operationFile.readline()
                 row = 0
                 while len(line) != 0:
@@ -38,5 +25,8 @@ class OperationTail():
                     row += 1
             return lineNumber
 
-        raise TypeError("Call GenerateTail(fileHandler) or GenerateTail(folderPath, fileName, fileExtension)")
+        finally:
+            if fileHandler is not None:
+                fileHandler.close()
+        
     #endregion

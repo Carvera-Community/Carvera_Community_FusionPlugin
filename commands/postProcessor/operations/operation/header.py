@@ -1,14 +1,18 @@
-import io
 from pathlib import Path
-from typing import Optional, TextIO, overload
+from typing import TextIO
 
+from .....config import PLUGIN_VERSION
+from ...config import CMD_NAME
+from ...file_modes import FileModes
 
 class OperationHeader():
-    # Crude implementation, optimally it should be one file open
-    # and iterate over it. Room for improvement.
-    def WriteHeaderStart(self, fileHandler: TextIO, lineNumber: int) -> int:
+    def WriteHeaderStart(self, fileHandler: TextIO) -> int:
         with self._tempFilePath.open("r") as operationFile:
             
+            file = Path(fileHandler.name).stem
+            lineNumber = self._writeLine(fileHandler, "({fileName})".format(fileName = file), 0)
+            lineNumber = self._writeLine(fileHandler, "(Generated with {pluginName} version {pluginVersion})".format(pluginName = CMD_NAME, pluginVersion = PLUGIN_VERSION), lineNumber)
+
             line = operationFile.readline()
             row = 0
 
@@ -28,7 +32,7 @@ class OperationHeader():
         return lineNumber
 
     def WriteToolComment(self, fileHandler: TextIO, lineNumber: int) -> int:
-        with self._tempFilePath.open("r") as operationFile:
+        with self._tempFilePath.open(FileModes.READ) as operationFile:
             line = operationFile.readline()
             row = 0
             while len(line) != 0:
@@ -41,7 +45,7 @@ class OperationHeader():
         return lineNumber
 
     def WriteHeaderEnd(self, fileHandler: TextIO, lineNumber: int) -> int:
-        with self._tempFilePath.open("r") as operationFile:
+        with self._tempFilePath.open(FileModes.READ) as operationFile:
             line = operationFile.readline()
             row = 0
             while len(line) != 0:
@@ -51,44 +55,14 @@ class OperationHeader():
                 row += 1
 
         return lineNumber
-
-    # Type signatures for tools (mypy/IDE) hints
-
-    # If GenerateHeader is called with a fileHandler it means that the output
-    # will only be one file
-    @overload
-    def WriteHeader(self, fileHandler: TextIO, lineNumber: int, briefHeader: bool) -> int: ...
-
-    # If GenerateHeader is called with folder it means that 
-    # multiple files will be generated on lower levels of the hierarchy
-    @overload
-    def WriteHeader(self, folderPath: Path, lineNumber: int, briefHeader: bool, fileName: str, fileExtension: str) -> int: ...
-
-    # Runtime implementation of Generate
-    def WriteHeader(self, pathOrFile, lineNumber: int, briefHeader: bool, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
-
-        fileOpened = False
-        # If given a Path, create the folder structure and the file to write to
-        try:
-            if isinstance(pathOrFile, Path):
-                folder: Path = pathOrFile
-                folder.mkdir(parents=True, exist_ok=True)
-                filename = f"{fileName}{fileExtension}"
-                headerFile = folder / filename
-                fileHandler = headerFile.open("w", encoding="utf-8")
-                fileOpened = True
-
-            if isinstance(pathOrFile, io.TextIOBase):
-                fileHandler: TextIO = pathOrFile
-
-            if not briefHeader:
-                self.WriteHeaderStart(fileHandler, lineNumber)
-            self.WriteToolComment(fileHandler, lineNumber)
-            if not briefHeader:
-                self.WriteHeaderEnd(fileHandler, lineNumber)
-            self._headerGenerated = True
-            return lineNumber
-
+    
+    def WriteHeader(self, path, fileName, toolIdIndex, fileExtension) -> int:
+        try: 
+            with self._getFileHandler(path, FileModes.OVERWRITE, fileName, toolIdIndex, fileExtension) as fileHandler:
+                lineNumber = self.WriteHeaderStart(fileHandler)
+                lineNumber = self.WriteToolComment(fileHandler, lineNumber)
+                return self.WriteHeaderEnd(fileHandler, lineNumber)
         finally:
-            if fileOpened:
-                fileHandler.close()                
+            if fileHandler is not None:
+                fileHandler.close()
+

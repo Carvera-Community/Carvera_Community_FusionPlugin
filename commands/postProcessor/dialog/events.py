@@ -7,7 +7,7 @@ from .. import config
 from ..parameters import Parameters
 from ..programs import Programs
 from ..setups.setups import Setups
-from ..setups.setup import Setup
+from ..setups.setup.setup import Setup
 from ..const import Const
 from ..settings.settings import Settings
 from ..strings import Strings
@@ -335,32 +335,34 @@ class PostDialogOnEvent:
         app = adsk.core.Application.get()
         ui = app.userInterface
         command = checkbox.parentCommand
+        inputs = command.commandInputs
 
         if checkbox.value:
     
             allAligned, badOrigins, badXAxes = Setups.getWCSAlignmentIssues()
 
             if not allAligned:
-                msg = "<i><u>Notice:</u></i> Some setups has been deselected as they have incompatible WCS origin/X-axis alignment."
+                inputs.itemById(cls._INPUT_SELECTION_TAB_ID).activate()
+                msg = Strings("<i><u>Note</u></i><p>Some setups will be deselected as they have incompatible WCS origin/X-axis alignment.")
                 ui.messageBox(msg,
-                "Incorrect WCS Alignment", 
+                Strings("Incorrect WCS Alignment"), 
                 adsk.core.MessageBoxButtonTypes.OKButtonType,
                 adsk.core.MessageBoxIconTypes.InformationIconType)
-                cls._updateSetupsTable(command)
         else:
             requiresRotation, setupRotations = Setups.AAxisRotationRequired()            
             if requiresRotation:
-                msg = "<i><u>Notice:</u></i> Some setups has been deselected as they require A-axis rotation."
+                inputs.itemById(cls._INPUT_SELECTION_TAB_ID).activate()
+                msg = Strings("<i><u>Note</u></i><p>Some setups will be deselected as they require A-axis rotation.")
                 ui.messageBox(msg,
-                "AAxis Rotation Disabled", 
+                Strings("A-Axis Rotation Disabled"), 
                 adsk.core.MessageBoxButtonTypes.OKButtonType,
                 adsk.core.MessageBoxIconTypes.InformationIconType)
-                cls._updateSetupsTable(command)
 
         command = checkbox.parentCommand
         cls._updateOperationsGroupingDropdown(command)
         cls._updateSafeYRetraction(command)
         cls._updateYRetractionCoordinate(command)
+        cls._updateSetupsTable(command)
         
         inputs = command.commandInputs
         safeYRetractionCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(cls._SAFE_Y_RETRACTION_ID)
