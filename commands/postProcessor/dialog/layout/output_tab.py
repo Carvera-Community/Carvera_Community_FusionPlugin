@@ -79,30 +79,6 @@ class OutputTab:
         input.tooltipDescription = Strings("TOOLTIP TEXT: Numbering interval")
         #endregion
 
-        #region Combine tool checkbox
-        input = outputTab.children.addBoolValueInput(cls._COMBINE_TOOLS_ID, Strings('Combine operations using same tool'), True, "", Settings(Settings.COMBINE_TOOL))
-        input.tooltip = Strings("TOOL TIP: Combine operations using same tool")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Combine operations using same tool")
-        #endregion
-
-        #region Rotate A-Axis between setups checkbox
-        input = outputTab.children.addBoolValueInput(cls._ROTATE_A_AXIS_ID, Strings('Rotate A-Axis between setups'), True, "", Settings(Settings.ROTATE_A_AXIS))
-        input.tooltip = Strings("TOOL TIP: Rotate A-Axis between setups")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Rotate A-Axis between setups")
-        #endregion
-
-        #region Retract to safe Y on A-axis rotation checkbox
-        input = outputTab.children.addBoolValueInput(cls._SAFE_Y_RETRACTION_ID, Strings("Retract Y on A-axis rotation"), True, "", Settings(Settings.SAFE_Y_RETRACTION))
-        input.tooltip = Strings("TOOL TIP: Retract Y on A-axis rotation")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Retract Y on A-axis rotation")
-        #endregion
-
-        #region Safe Y-retraction coordinate number
-        input = outputTab.children.addIntegerSpinnerCommandInput(cls._Y_RETRACTION_COORDINATE_ID, Strings("Safe Y-retraction coordinate (mm)"), -150, 0, 1, Settings(Settings.Y_RETRACTION_COORDINATE))
-        input.tooltip = Strings("TOOL TIP: Safe Y-retraction coordinate (mm)")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Safe Y-retraction coordinate (mm)")
-        #endregion
-
         #region Operations grouping dropdown
         input = outputTab.children.addDropDownCommandInput(cls._OPERATIONS_GROUPING_ID, Strings("Operations grouping"), adsk.core.DropDownStyles.TextListDropDownStyle)
         input.tooltip = Strings("TOOL TIP: Operations grouping")

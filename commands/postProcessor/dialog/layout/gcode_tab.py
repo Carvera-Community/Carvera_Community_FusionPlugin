@@ -13,10 +13,8 @@ class GCodeTab:
         input = gCodeTab.children.addTextBoxCommandInput(cls._TOOL_CHANGE_ID, Strings('Tool change code'), Settings(Settings.TOOL_CHANGE), 3, False)
         input.tooltip = Strings("TOOL TIP: Tool change code")
         input.tooltipDescription = Strings("TOOLTIP TEXT: Tool change code")
-        #endregion
 
-        #region dummy input to separate the textboxes properly
-        dummy = gCodeTab.children.addStringValueInput('dummy', '')
+        dummy = gCodeTab.children.addStringValueInput('', '') # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
         dummy.isEnabled = False
         dummy.isReadOnly = True
         #endregion
@@ -26,8 +24,9 @@ class GCodeTab:
         input.tooltip = Strings("TOOL TIP: G-codes that mark ending sequence")
         input.tooltipDescription = Strings("TOOLTIP TEXT: G-codes that mark ending sequence")
 
-        dummy = gCodeTab.children.addBoolValueInput('','', True, "", False) # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
+        dummy = gCodeTab.children.addStringValueInput('', '') # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
         dummy.isEnabled = False
+        dummy.isReadOnly = True
         #endregion
 
         #region Header end codes textbox input
@@ -35,8 +34,33 @@ class GCodeTab:
         input.tooltip = Strings("TOOL TIP: G-codes that mark header end")
         input.tooltipDescription = Strings("TOOLTIP TEXT: G-codes that mark header end")
 
-        dummy = gCodeTab.children.addBoolValueInput('','', True, "", False) # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
+        dummy = gCodeTab.children.addStringValueInput('', '') # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
         dummy.isEnabled = False
+        dummy.isReadOnly = True
+        #endregion
+
+        #region Combine tool checkbox
+        input = gCodeTab.children.addBoolValueInput(cls._COMBINE_TOOLS_ID, Strings('Combine operations using same tool'), True, "", Settings(Settings.COMBINE_TOOL))
+        input.tooltip = Strings("TOOL TIP: Combine operations using same tool")
+        input.tooltipDescription = Strings("TOOLTIP TEXT: Combine operations using same tool")
+        #endregion
+
+        #region Rotate A-Axis between setups checkbox
+        input = gCodeTab.children.addBoolValueInput(cls._ROTATE_A_AXIS_ID, Strings('Rotate A-Axis between setups'), True, "", Settings(Settings.ROTATE_A_AXIS))
+        input.tooltip = Strings("TOOL TIP: Rotate A-Axis between setups")
+        input.tooltipDescription = Strings("TOOLTIP TEXT: Rotate A-Axis between setups")
+        #endregion
+
+        #region Retract to safe Y on A-axis rotation checkbox
+        input = gCodeTab.children.addBoolValueInput(cls._SAFE_Y_RETRACTION_ID, Strings("Retract Y on A-axis rotation"), True, "", Settings(Settings.SAFE_Y_RETRACTION))
+        input.tooltip = Strings("TOOL TIP: Retract Y on A-axis rotation")
+        input.tooltipDescription = Strings("TOOLTIP TEXT: Retract Y on A-axis rotation")
+        #endregion
+
+        #region Safe Y-retraction coordinate number
+        input = gCodeTab.children.addIntegerSpinnerCommandInput(cls._Y_RETRACTION_COORDINATE_ID, Strings("Safe Y-retraction coordinate (mm)"), -150, 0, 1, Settings(Settings.Y_RETRACTION_COORDINATE))
+        input.tooltip = Strings("TOOL TIP: Safe Y-retraction coordinate (mm)")
+        input.tooltipDescription = Strings("TOOLTIP TEXT: Safe Y-retraction coordinate (mm)")
         #endregion
 
         #region Restore rapid moves checkbox
