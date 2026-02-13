@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from .rapidsParser import RapidsParser
+
 from ...line import Line
 from ...settings.settings import Settings
 
@@ -31,6 +33,12 @@ class OperationParser(Line):
         # The tail is stripped until the last operation is done.
         #endregion
 
+        if Settings(Settings.RESTORE_RAPID_MOVES):
+            minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE) | 20
+            self._rapidsAnalysis = {seg["startLine"]: seg["endLine"]
+                    for seg in RapidsParser().analyze(RapidsParser().parseFile(filePath), minDist = minDist)
+                    if seg.get("isValid") and "startLine" in seg and "endLine" in seg}
+        
         with filePath.open("r") as operationFile:
             line = operationFile.readline()
             self._toolCommentLine = -1
@@ -124,3 +132,4 @@ class OperationParser(Line):
                     self._tailStartLine = lineNumber
                     return True # File analysis complete
         return False
+    

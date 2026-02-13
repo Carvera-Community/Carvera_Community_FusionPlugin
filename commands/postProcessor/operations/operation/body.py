@@ -24,15 +24,37 @@ class OperationBody(Line):
                 with self._tempFilePath.open(FileModes.READ) as operationFile:
                     line = operationFile.readline()
                     row = 0
+                    rapidsEnds = 0
+                    readNextLine = False
                     while len(line) != 0:
+                        if readNextLine:
+                            line = operationFile.readline() 
+                            row += 1
+                            readNextLine = False
+
                         if row >= self._bodyStartLine:
                             if row == self._bodyStartLine: # Add an extra line marking where this operation starts
                                 if self._allowBlankLines:
                                     fileHandler.write('\n') # keep blank line before operation start
                                 lineNumber = self._writeLine(fileHandler, f"({self.name})", lineNumber)
+                            if row + 1 in self._rapidsAnalysis: # Add rapids comments if this line is the start of a rapid move
+                                rapidsEnds = self._rapidsAnalysis[row + 1]
+                                lineMatch = OperationBody._PARSE_LINE_RE.match(line)
+                                if lineMatch:
+                                    if lineMatch.group("G") is not None:
+                                        if int(lineMatch.group("G")) == 1:
+                                            gStart, gEnd = lineMatch.span("G")
+                                            line = (line[:gStart] + "0" + line[gEnd:]).rstrip() + " (Rapid movement start)\n" # Change G1 to G0 for rapid move comment line
+                                    else:
+                                        lineNumber = self._writeLine(fileHandler, f"G0 {line.rstrip()} (Rapid movement start)", lineNumber)
+                                        readNextLine = True
+                                        continue
+                            if row + 1 == rapidsEnds:
+                                rapidsEnds = 0
+                                lineNumber = self._write(fileHandler, line, lineNumber)
+                                line = "G1 (Rapid movement end)\n" # Add a line after the rapid move to switch back to G1 if it was changed for the rapid move comment
                             if self._matchLine(fileHandler, lineNumber, line, row, rotationAngle, preserveRotation):
-                                line = operationFile.readline() 
-                                row += 1
+                                readNextLine = True
                                 continue
 
                             lineNumber = self._write(fileHandler, line, lineNumber)

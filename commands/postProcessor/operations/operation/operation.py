@@ -1,5 +1,4 @@
 from pathlib import Path
-import time
 from typing import Optional, TextIO
 import uuid
 
@@ -34,6 +33,7 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
         self._bodyStartLine: int = -1
         self._rotationLine: int = -1
         self._tailStartLine: int = -1
+        self._rapidsAnalysis: dict[int, int] = {} # line number of rapid move start -> line number of rapid move end
 
     def Append(self, operation: adsk.cam.Operation, index, hasTool: bool):
         self._operationsDict[index] = operation
