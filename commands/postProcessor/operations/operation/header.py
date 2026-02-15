@@ -54,6 +54,12 @@ class OperationHeader():
                 line = operationFile.readline()
                 row += 1
 
+        # For numeric names
+        from ...programs import Programs
+        from ...settings.settings import Settings
+        
+        if Settings(Settings.NUMERIC_NAME) and Programs.Current.fileName.isnumeric():
+            Programs.Current.SetFileName(str(int(Programs.Current.fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)))
         return lineNumber
     
     def WriteHeader(self, path, fileName, toolIdIndex, fileExtension) -> int:

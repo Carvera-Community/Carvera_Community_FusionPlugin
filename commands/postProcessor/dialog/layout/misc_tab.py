@@ -1,56 +1,52 @@
-import adsk
+import adsk.core
 from ...settings.settings import Settings
 from ...strings import Strings
+from ...programs import Programs
 
-class MiscTab:
+from ..event_registry import EventRegistry
+from ..dialog_constants import PostDialogConstants
+
+class MiscTab(PostDialogConstants):
     @classmethod
-    def createMiscTab(cls, inputs: adsk.core.CommandInputs):
+    def create(cls, inputs: adsk.core.CommandInputs):
 
         miscTab = inputs.addTabCommandInput(cls._RENAME_SETUPS_GROUP_ID, Strings("Misc"))
 
-        #region ----- [ Rename setups group ] -----
+        def setTabEnabled(dropdown: adsk.core.DropDownCommandInput):
+            dropdown.parentCommand.commandInputs.itemById(cls._OUTPUT_GROUP_ID).isEnabled = Programs.Current is not None
+
+        programDropdown = inputs.itemById(cls._PROGRAM_DROPDOWN_ID)
+        EventRegistry.register(programDropdown, setTabEnabled)
+        setTabEnabled(programDropdown) # initialize state based on current program selection
+
         group = miscTab.children.addGroupCommandInput(cls._RENAME_SETUPS_GROUP_ID, Strings("Rename Setups"))
         group.isExpanded = True
 
         #region Use regex checkbox
-        input = group.children.addBoolValueInput(cls._USE_REGEX_ID, Strings("Use Python regular expressions"), True, "", Settings(Settings.USE_REGEX))
-        input.tooltip = Strings("TOOL TIP: Use Python regular expressions")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Use Python regular expressions")
+        useRegex = group.children.addBoolValueInput(cls._USE_REGEX_ID, Strings("Use Python regular expressions"), True, "", Settings(Settings.USE_REGEX))
+        useRegex.tooltip = Strings("TOOL TIP: Use Python regular expressions")
+        useRegex.tooltipDescription = Strings("TOOLTIP TEXT: Use Python regular expressions")
+
+        EventRegistry.register(useRegex, lambda input: Settings.Set(Settings.USE_REGEX, input.value))
         #endregion
 
         #region Find string input
-        input = group.children.addStringValueInput(cls._FIND_STRING_ID, Strings("Search for this string"), Settings(Settings.FIND_STRING))
-        input.tooltip = Strings("TOOL TIP: Search for this string")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Search for this string")
+        findText = group.children.addStringValueInput(cls._FIND_STRING_ID, Strings("Search for this string"), Settings(Settings.FIND_STRING))
+        findText.tooltip = Strings("TOOL TIP: Search for this string")
+        findText.tooltipDescription = Strings("TOOLTIP TEXT: Search for this string")
+        EventRegistry.register(findText, lambda input: Settings.Set(Settings.FIND_STRING, input.value))
         #endregion
 
         #region Replace string input
-        input = group.children.addStringValueInput(cls._REPLACE_STRING_ID, Strings("Replace with this string"), Settings(Settings.REPLACE_STRING))
-        input.tooltip = Strings("TOOL TIP: Replace with this string")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Replace with this string")
+        replaceText = group.children.addStringValueInput(cls._REPLACE_STRING_ID, Strings("Replace with this string"), Settings(Settings.REPLACE_STRING))
+        replaceText.tooltip = Strings("TOOL TIP: Replace with this string")
+        replaceText.tooltipDescription = Strings("TOOLTIP TEXT: Replace with this string")
+        EventRegistry.register(replaceText, lambda input: Settings.Set(Settings.REPLACE_STRING, input.value))
         #endregion
 
         #region Replace button
-        input = group.children.addBoolValueInput(cls._REPLACE_ID, f"   {Strings("Search and replace")}   ", False)
-        input.isFullWidth = True
-        input.tooltip = Strings("TOOL TIP: Search and replace")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Search and replace")
+        replaceButton = group.children.addBoolValueInput(cls._REPLACE_ID, f"   {Strings("Search and replace")}   ", False)
+        replaceButton.isFullWidth = True
+        replaceButton.tooltip = Strings("TOOL TIP: Search and replace")
+        replaceButton.tooltipDescription = Strings("TOOLTIP TEXT: Search and replace")
         #endregion
-        #endregion -----
-
-        #region ----- [ Advanced settings ] -----
-        group = miscTab.children.addGroupCommandInput(cls._ADVANCED_SETTINGS_GROUP_ID, Strings("Advanced Settings"))
-        group.isExpanded = True
-
-        #region Initial delay spinner input
-        input = group.children.addFloatSpinnerCommandInput(cls._INITIAL_DELAY_ID, Strings("Initial time allowance"), "s", 0.1, 1.0, 0.1, Settings(Settings.INITIAL_DELAY))
-        input.tooltip = Strings("TOOL TIP: Initial time allowance")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Initial time allowance")
-        #endregion
-
-        #region Post retries spinner input
-        input = group.children.addIntegerSpinnerCommandInput(cls._POST_RETRIES_ID, Strings("Number of retries"), 1, 9, 1, Settings(Settings.POST_RETRIES))
-        input.tooltip = Strings("TOOL TIP: Number of retries")
-        input.tooltipDescription = Strings("TOOLTIP TEXT: Number of retries")
-        #endregion
-        #endregion -----

@@ -3,7 +3,9 @@ from ...programs import Programs
 from ...setups.setups import Setups
 from ...strings import Strings
 
-class ToolsTab:
+from ..dialog_constants import PostDialogConstants
+
+class ToolsTab(PostDialogConstants):
 
     _TOOLS_GROUP_ID = 'toolsTab'
     _TOOLS_TABLE_ID = 'toolsTable'

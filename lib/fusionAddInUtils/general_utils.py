@@ -1,14 +1,3 @@
-#  Copyright 2022 by Autodesk, Inc.
-#  Permission to use, copy, modify, and distribute this software in object code form
-#  for any purpose and without fee is hereby granted, provided that the above copyright
-#  notice appears in all copies and that both that copyright notice and the limited
-#  warranty and restricted rights notice below appear in all supporting documentation.
-#
-#  AUTODESK PROVIDES THIS PROGRAM "AS IS" AND WITH ALL FAULTS. AUTODESK SPECIFICALLY
-#  DISCLAIMS ANY IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR USE.
-#  AUTODESK, INC. DOES NOT WARRANT THAT THE OPERATION OF THE PROGRAM WILL BE
-#  UNINTERRUPTED OR ERROR FREE.
-
 import traceback
 import adsk.core
 
@@ -49,7 +38,7 @@ class Utils():
             Utils._app.log(message, level, log_type)
 
     @staticmethod
-    def handle_error(name: str, show_message_box: bool = False):
+    def handleError(name: str, show_message_box: bool = False):
         """Utility function to simplify error handling.
 
         Arguments:
@@ -192,7 +181,7 @@ class Utils():
         return s + ext
     
     def maxFilenameLength(path: str = ".") -> int:
-        import os, sys
+        import os
         if os.name == "nt":
             import ctypes, ctypes.wintypes
             root = os.path.abspath(path)

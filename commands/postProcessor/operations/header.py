@@ -14,7 +14,7 @@ class OperationsHeader:
         
         # Always OVERWRITE on first header as it indcates a new file
         with self._getFileHandler(path, FileModes.OVERWRITE, fileName, self._operations[0], 1, fileExtension) as fileHandler:
-            return fileHandler, self._operations[0].WriteHeaderStart(fileHandler, 0) # New file, so line number starts at 0
+            return self._operations[0].WriteHeaderStart(fileHandler) # New file, so line number starts at 0
 
     def WriteToolComments(self, path: Path, lineNumber: int, fileName: str, fileExtension: str) -> int:
         if len(self._operations) == 0:
@@ -32,7 +32,7 @@ class OperationsHeader:
                 with self._getFileHandler(path, FileModes.APPEND, fileName, operation, toolIdIndex[toolId], fileExtension) as fileHandler:
                     lineNumber = operation.WriteToolComment(fileHandler, lineNumber)
             finally:
-                if fileHandler is not None:
+                if fileHandler is not None and not fileHandler.closed:
                     fileHandler.close()
         return lineNumber
 

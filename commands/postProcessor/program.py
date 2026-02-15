@@ -110,9 +110,14 @@ class Program():
             else False
     
     @property
+    def hasPostProcessor(self):
+        """Returns whether the NCProgram has a post processor."""
+        return self._program.postConfiguration is not None
+
+    @property
     def postProcessorDescription(self):
         """Returns the post processor of the current NCProgram."""
-        return self._program.postConfiguration.description if self._program.postConfiguration else Strings("<no post processor chosen>")
+        return self._program.postConfiguration.description if self.hasPostProcessor else Strings("<no post processor selected>")
     
     @property
     def fileName(self):
@@ -132,36 +137,6 @@ class Program():
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
         oldOutputFolder = self.GetOutputFolder()
-
-        #region --- Flyttas till Generate ---
-        # if not Settings(Settings.DEL_FILES):
-        #     Settings(Settings.DEL_FOLDER, False) # Only remove folders if files will be removed too
-
-        # if Settings.Get(Settings.DEL_FOLDER):
-        #     strMsg = CountOutputFolderFiles(self._outputFolder, Setups.Count(), self.fileExtension)
-        #     if strMsg:
-        #         Settings(Settings.DEL_FOLDER, False)
-        #         strMsg = (
-        #             "The output folder contains {}. "
-        #             "It will not be deleted. You may wish to make sure you selected "
-        #             "the correct folder. If you want the folder deleted, you must "
-        #             "do it manually."
-        #             ).format(strMsg)
-        #         res = self._ui.messageBox(strMsg, 
-        #                             Const.CMD_NAME,
-        #                             adsk.core.MessageBoxButtonTypes.OKCancelButtonType,
-        #                             adsk.core.MessageBoxIconTypes.WarningIconType)
-        #         if res == adsk.core.DialogResults.DialogCancel:
-        #             return  # abort!
-
-        # if Settings.Get(Settings.DEL_FOLDER):
-        #     try:
-        #         shutil.rmtree(self._outputFolder, True)
-        #     except:
-        #         pass #ignore errors
-
-        # # Make sure that the root folder exists as defined in the NC Program parameters
-        # self.SetAndCreateOutputFolder()
 
         # TODO: Start showing progress here
         #endregion
@@ -199,8 +174,16 @@ class Program():
                 # Output with folder structure
                 folder = path / self.fileName
 
+            if Settings(Settings.NUMERIC_NAME) and self.fileName.isnumeric():
+                self.SetFileName(str(int(previousFileName)))
             lineNumber = Setups.WriteHeader(folder, lineNumber, fileName, fileExtension)
+
+            if Settings(Settings.NUMERIC_NAME) and self.fileName.isnumeric():
+                self.SetFileName(str(int(previousFileName)))
             lineNumber = Setups.WriteBody(folder, lineNumber, fileName, fileExtension)
+
+            if Settings(Settings.NUMERIC_NAME) and self.fileName.isnumeric():
+                self.SetFileName(str(int(previousFileName)))
             lineNumber = Setups.WriteTail(folder, lineNumber, fileName, fileExtension)
 
         except Exception as exc:

@@ -1,14 +1,3 @@
-#  Copyright 2022 by Autodesk, Inc.
-#  Permission to use, copy, modify, and distribute this software in object code form
-#  for any purpose and without fee is hereby granted, provided that the above copyright
-#  notice appears in all copies and that both that copyright notice and the limited
-#  warranty and restricted rights notice below appear in all supporting documentation.
-#
-#  AUTODESK PROVIDES THIS PROGRAM "AS IS" AND WITH ALL FAULTS. AUTODESK SPECIFICALLY
-#  DISCLAIMS ANY IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR USE.
-#  AUTODESK, INC. DOES NOT WARRANT THAT THE OPERATION OF THE PROGRAM WILL BE
-#  UNINTERRUPTED OR ERROR FREE.
-
 import sys
 from typing import Callable
 
@@ -51,7 +40,7 @@ class Events():
         """   
         module = sys.modules[event.__module__]
         handler_type = module.__dict__[event.add.__annotations__['handler']]
-        handler = Events._create_handler(handler_type, callback, event, name, local_handlers)
+        handler = Events._createHandler(handler_type, callback, event, name, local_handlers)
         event.add(handler)
         return handler
 
@@ -62,7 +51,7 @@ class Events():
         cls._handlers = []
 
     @classmethod
-    def _create_handler(
+    def _createHandler(
             cls,
             handler_type,
             callback: Callable,
@@ -70,12 +59,12 @@ class Events():
             name: str = None,
             local_handlers: list = None
     ):
-        handler = cls._define_handler(handler_type, callback, name)()
+        handler = cls._defineHandler(handler_type, callback, name)()
         (local_handlers if local_handlers is not None else cls._handlers).append(handler)
         return handler
 
     @classmethod
-    def _define_handler(cls, handler_type, callback, name: str = None):
+    def _defineHandler(cls, handler_type, callback, name: str = None):
         name = name or handler_type.__name__
 
         class Handler(handler_type):
@@ -86,6 +75,6 @@ class Events():
                 try:
                     callback(args)
                 except:
-                    Utils.handle_error(name)
+                    Utils.handleError(name)
 
         return Handler

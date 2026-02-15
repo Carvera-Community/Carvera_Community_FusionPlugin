@@ -127,7 +127,7 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
             return fileName
         
-        outputName = f"_{Utils.sanitizeFilename(self.name, preserveExtension = False)}"
+        outputName = f"{Utils.sanitizeFilename(self.name, preserveExtension = False)}"
 
         # Append operation name and tool number
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL or Settings(Settings.FLAT_FILE_STRUCTURE):
@@ -139,8 +139,8 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
             #     outputName = f"{outputName}_{str(toolIdIndex)}"
 
         # Prepend operation index
-        if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP):
-            outputName = f"{str(self.index + 1).rjust(2, '0')}{outputName}" 
+        if Settings(Settings.FILE_SEQUENCE):
+            outputName = f"{str((self.index + 1) * Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')}_{outputName}" 
         else:
             # To make sure that files are not overwritten when multiple
             # operations use the same tool, adds an index to the file 
@@ -160,6 +160,15 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
         return fileName
 
     def _getFileHandler(self, path: Path, mode: str, fileName: str, toolIdIndex: int, fileExtension: str) -> TextIO:
+        from ...programs import Programs
+
+        # Numeric file names are always generated in the output folder,
+        # no matter what other settings we have and each time we open a
+        # file for writing (not appending) we create a new file.
+        if Settings(Settings.NUMERIC_NAME) and Programs.Current.fileName.isnumeric():
+            filePath = Path(Settings(Settings.OUTPUT_FOLDER)) / f"{Programs.Current.fileName}{fileExtension}"
+            return filePath.open(mode, encoding="utf-8")
+
         filePath = path
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL:
             filePath = path / Utils.sanitizeFilename(fileName, preserveExtension = False) # Add setup name to the path

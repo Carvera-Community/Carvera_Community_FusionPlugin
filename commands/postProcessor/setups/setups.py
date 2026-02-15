@@ -1,12 +1,11 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import List, TextIO, Iterator
+from typing import List, Iterator
 
 import adsk.cam
 
 from ....lib.fusionAddInUtils.general_utils import Utils, classproperty
 
-from ..settings.settings import Settings
 from .setup.setup import Setup
 
 from .body import SetupsBody
@@ -29,7 +28,7 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
 
     @classmethod
     def Load(cls, setups: adsk.cam.Setups):
-        noneSelected = not any((setup.isSelected and not setup.isSuppressed for setup in setups))
+        noneSelected = not any((setup.isSelected and not setup.isSuppressed and not setup.hasError for setup in setups))
         cls._items: List[Setup] = [Setup(setup, index, noneSelected) for index, setup in enumerate(setups)]
 
     @classmethod
@@ -74,7 +73,7 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
 
     @classproperty
     def selected(cls) -> List[Setup]:
-        return [setup for setup in cls._items if setup.isSelected and not setup.isSuppressed]
+        return [setup for setup in cls._items if setup.isSelected and not setup.isSuppressed and not setup.hasError]
     
     @classproperty
     def hasSelected(cls) -> bool:
@@ -88,24 +87,6 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
     def Count(cls) -> int:
         return len(cls.selected)
     
-    @classmethod
-    def WriteOperations(cls, folderPath: Path, fileName: str, fileExtension: str) -> int:
-        firstSetup = None
-        rotationAngle = None
-        currentRotationAngle = 0
-        for setup in cls.selected:
-            if Settings(Settings.ROTATE_A_AXIS): # Calculate the rotation between the setups
-                angle = 0 if firstSetup is None else setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)
-                rotationAngle = None if angle == currentRotationAngle else angle
-                currentRotationAngle = angle
-                preserveRotation = firstSetup is None # Always use the rotation code of the first setup.
-            else:
-                preserveRotation = True # We don't want to do any changes to the native rotation code
-            firstSetup = firstSetup or setup
-
-            lineNumber = setup.WriteOperations(folderPath, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
-        return lineNumber
-
     @classproperty
     def tools(cls) -> list[adsk.cam.Tool]:
         tools = list[adsk.cam.Tool]()

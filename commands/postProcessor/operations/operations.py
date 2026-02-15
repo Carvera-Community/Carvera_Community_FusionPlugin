@@ -1,4 +1,3 @@
-from importlib.resources import path
 from pathlib import Path
 from typing import List, List, Optional, TextIO
 
@@ -48,11 +47,13 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
                 # Append to current group if:
                 # - operation has no toolpath, or
                 # - current group has no tool yet (we haven't encountered a toolpath), or
+                # - we're grouping operations on setup and tool, or
                 # - we're combining tools and this op uses the same tool as the current group
                 # otherwise finish current group and start a new one
                 if (not operations[i].hasToolpath) \
                     or (not operation.hasTool) \
-                    or (Settings.Get(Settings.COMBINE_TOOL) \
+                    or ((Settings.Get(Settings.COMBINE_TOOL) \
+                        or Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL) \
                         and Operation.GetToolNumber(operations[i]) == operation.toolId):
                     operation.Append(operations[i], i, operations[i].hasToolpath)
                     i += 1
@@ -85,8 +86,8 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
             outputName = f"{outputName}_T{str(operation.toolId)}"
 
         # Prepend operation index
-        if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP):
-            outputName = f"{str(operation.index + 1).rjust(2, '0')}{outputName}" 
+        if Settings(Settings.FILE_SEQUENCE):
+            outputName = f"{str((operation.index + 1) * Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')}{outputName}" 
 
         else:
             # To make sure that files are not overwritten when multiple
@@ -107,32 +108,17 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
         return fileName
 
     def _getFileHandler(self, path: Path, mode: str, fileName: str, operation: Operation, toolNumberIndex: int, fileExtension: str) -> TextIO:
+        from ..programs import Programs
+        # Numeric file names are always generated in the output folder,
+        # no matter what other settings we have and each time we open a
+        # file for writing (not appending) we create a new file.
+        if Settings(Settings.NUMERIC_NAME) and Programs.Current.fileName.isnumeric():
+            filePath = Path(Settings(Settings.OUTPUT_FOLDER)) / f"{Programs.Current.fileName}{fileExtension}"
+            return filePath.open(mode, encoding="utf-8")
+
         filePath = path
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL:
             filePath = path / Utils.sanitizeFilename(fileName, preserveExtension = False) # Add setup name to the path
         filePath = filePath / f"{self._getFileName(fileName, operation, toolNumberIndex)}{fileExtension}"
         filePath.parent.mkdir(parents=True, exist_ok=True) # Ensure the output folder exists
         return (filePath).open(mode, encoding="utf-8")
-
-    # TODO: Move to operation if possible
-    def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
-        for operation in self._operations:
-            operationFileName = Utils.sanitizeFilename(operation.name, preserveExtension = False)
-            outputName = "{index}_{fileName}".format(
-                fileName = operationFileName, 
-                index=str(operation.firstIndex + 1).rjust(2, '0')) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else fileName
-            outputName = ("{fileName}_{operationName}{fileExtension}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{operationName}{fileExtension}") \
-                .format(
-                    fileName = fileName, 
-                    operationName = outputName, 
-                    fileExtension = fileExtension)
-            operationFile = folderPath / outputName
-            with operationFile.open("w", encoding="utf-8") as fileHandler:
-                lineNumber = 0 # Writing operations separately, so line numbers start at 0 for each file
-                lineNumber = Operations._writeLine(fileHandler, f"({operationFile.stem})", lineNumber)
-                lineNumber = operation.WriteHeaderStart(fileHandler, lineNumber)
-                lineNumber = operation.WriteToolComment(fileHandler, lineNumber)
-                lineNumber = operation.WriteHeaderEnd(fileHandler, lineNumber)
-                lineNumber = operation.WriteBody(fileHandler, lineNumber, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
-                lineNumber = operation.WriteTail(fileHandler, lineNumber)
-        return lineNumber

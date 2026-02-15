@@ -62,14 +62,14 @@ class Line():
         :rtype: int
         """
         # Check if the line is numbered
-        addLineNumbers = Settings(Settings.SEQUENCE) in (Settings.Sequences.STEP, Settings.Sequences.FILE_AND_STEP)
-        digits = Settings(Settings.NAME_DIGITS) if addLineNumbers else 0
+        addLineNumbers = Settings(Settings.LINE_SEQUENCE) 
+        digits = Settings(Settings.LINE_SEQUENCE_DIGITS) if addLineNumbers else 0
         match = cls._BODY_RE.match(line)
         if match and match.group("N") is not None: # line is numbered
             # Replace or remove the line number            
             line = re.sub(r"^N[0-9]+", f"N{str(lineNumber).rjust(digits, '0')}" if addLineNumbers else "", line, count=1)
         elif addLineNumbers: # Line is not numbered, add it
-            lineNumber += Settings(Settings.NUMBERING_INTERVAL)
+            lineNumber += Settings(Settings.LINE_SEQUENCE_INTERVAL)
             line = f"N{str(lineNumber).rjust(digits, '0')} " + line
         fileHandler.write(line)
         return lineNumber

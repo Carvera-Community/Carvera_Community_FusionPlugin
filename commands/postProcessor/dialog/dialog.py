@@ -15,11 +15,10 @@ from ....lib.fusionAddInUtils.general_utils import Utils
 from ....lib.fusionAddInUtils.event_utils import Events
 from .. import config
 
-# Mixins for the PostDialog class, separated for better readability and maintainability.
 from .layout.layout import PostDialogLayout
-from .events import PostDialogOnEvent
+from .event_registry import EventRegistry
 
-class PostDialog(PostDialogLayout, PostDialogOnEvent):
+class PostDialog(PostDialogLayout):
 
     # Local list of event handlers used to maintain a reference so
     # they are not released and garbage collected.
@@ -27,47 +26,6 @@ class PostDialog(PostDialogLayout, PostDialogOnEvent):
 
     # Resource location for command icons, here we assume a sub folder in this directory named "resources".
     _ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', '')
-
-    #region Input id's
-    _PROGRAM_DROPDOWN_ID = 'program'
-    _OUTPUT_FOLDER_ID = 'outputFolder'
-    _COMBINE_TOOLS_ID = 'combineTool'
-    _TOOL_CHANGE_ID = 'toolChange'
-    _END_CODES_ID = 'endCodes'
-    _RESTORE_RAPID_MOVES_ID = 'restoreRapidMoves'
-    _DELETE_OUTPUT_FOLDER_ID = 'deleteOutputFolder'
-    _OPERATIONS_GROUPING_ID = 'operationsGrouping'
-    _DELETE_EXISTING_FILES_ID = 'deleteExistingFiles'
-    _PREPEND_SEQUENCE_ID = 'prependSequence'
-    _DIGITS_COUNT_ID = 'digitsCount'
-    _NUMBERING_INTERVAL_ID = 'numberingInterval'
-    _USE_REGEX_ID = 'useRegex'
-    _FIND_STRING_ID = 'findString'
-    _REPLACE_STRING_ID = 'replaceString'
-    _REPLACE_ID = 'replace'
-    _INITIAL_DELAY_ID = 'initialDelay'
-    _POST_RETRIES_ID = 'postRetries'
-    _NUMERIC_NAME_ID = 'numericName'
-    _SAVE_ID = 'saveAsDefault'
-    _RENAME_SETUPS_GROUP_ID = 'renameSetupsGroup'
-    _ADVANCED_SETTINGS_GROUP_ID = 'advancedSettingsGroup'
-    _OUTPUT_GROUP_ID = 'outputGroup'
-    _INPUT_SELECTION_TAB_ID = 'inputSelectionGroup'
-    _GCODE_OPTIONS_GROUP_ID = 'gcodeOptionsGroup'
-    _OUTPUT_FOLDER_LABEL_ID = 'outputFolderLabel'
-    _OUTPUT_FOLDER_BUTTON_ID = 'outputFolderButton'
-    _OUTPUT_FOLDER_TABLE_ID = 'outputFolderTable'
-    _FLAT_FILE_STRUCTURE_ID = 'flatFileStructure'
-    _MACHINE_ID = 'machine'
-    _ROTATE_A_AXIS_ID = 'rotateAAxis'
-    _SAFE_Y_RETRACTION_ID = 'safeYRetraction'
-    _Y_RETRACTION_COORDINATE_ID = 'yRetractionCoordinate'
-    _POST_PROCESSOR_ID = 'postProcessor'
-    _FILE_NAME_ID = 'fileName'
-    _HEADER_CODES_ID = 'headerEndCodes'
-    _WCS_NOT_ALIGNED_ID = 'WCSNotAligned'
-    _SELECT_ALL_SETUPS_ID = 'selectAllSetups'
-    #endregion
 
     # Executed when add-in is started.
     @classmethod
@@ -128,7 +86,6 @@ class PostDialog(PostDialogLayout, PostDialogOnEvent):
     @classmethod
     def commandCreated(cls, args: adsk.core.CommandCreatedEventArgs):
         # General logging for debug.
-        Utils.log(f'{config.CMD_NAME} Command Created Event')
 
         app: adsk.core.Application = adsk.core.Application.get()
         doc: adsk.core.Document = app.activeDocument
@@ -142,22 +99,24 @@ class PostDialog(PostDialogLayout, PostDialogOnEvent):
 
         cls.createLayout(command) # Create the the dialog inputs and structure
 
-        cls._updateDialog(command) # Update the dialog with the current values
+        #cls._updateDialog(command) # Update the dialog with the current values
 
         #region Hook up events
-        Events.add(command.execute, cls.command_execute, local_handlers=cls._local_handlers)
-        Events.add(command.inputChanged, cls.commandInputChanged, local_handlers=cls._local_handlers)
-        Events.add(command.validateInputs, cls.command_validate_input, local_handlers=cls._local_handlers)
-        Events.add(command.destroy, cls.command_destroy, local_handlers=cls._local_handlers)
+        Events.add(command.execute, cls.commandExecute, local_handlers = cls._local_handlers)
+        Events.add(command.inputChanged, cls.commandInputChanged, local_handlers = cls._local_handlers)
+        Events.add(command.validateInputs, cls.commandValidateInput, local_handlers = cls._local_handlers)
+        Events.add(command.destroy, cls.commandDestroy, local_handlers = cls._local_handlers)
         #endregion
 
+    @classmethod
+    def commandInputChanged(cls, args):
+        EventRegistry.handle(args)
 
     # This event handler is called when the user clicks the OK button in the command dialog or 
     # is immediately called after the created event not command inputs were created for the dialog.
     @classmethod
-    def command_execute(cls, args: adsk.core.CommandEventArgs):
+    def commandExecute(cls, args: adsk.core.CommandEventArgs):
         # General logging for debug.
-        Utils.log(f'{config.CMD_NAME} Command Execute Event')
 
         app: adsk.core.Application = adsk.core.Application.get()
         ui = app.userInterface
@@ -218,9 +177,8 @@ class PostDialog(PostDialogLayout, PostDialogOnEvent):
     # This event handler is called when the user interacts with any of the inputs in the dialog
     # which allows you to verify that all of the inputs are valid and enables the OK button.
     @classmethod
-    def command_validate_input(cls, args: adsk.core.ValidateInputsEventArgs):
+    def commandValidateInput(cls, args: adsk.core.ValidateInputsEventArgs):
         # General logging for debug.
-        Utils.log(f'{config.CMD_NAME} Validate Input Event')
 
         inputs = args.inputs
         
@@ -241,9 +199,8 @@ class PostDialog(PostDialogLayout, PostDialogOnEvent):
             
     # This event handler is called when the command terminates.
     @classmethod
-    def command_destroy(cls, args: adsk.core.CommandEventArgs):
+    def commandDestroy(cls, args: adsk.core.CommandEventArgs):
         # General logging for debug.
-        Utils.log(f'{config.CMD_NAME} Command Destroy Event')
 
         cls._local_handlers = []  # clear out the local handlers list
 

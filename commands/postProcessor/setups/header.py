@@ -1,16 +1,12 @@
-from __future__ import annotations
-
 from pathlib import Path
-from typing import Optional
 
 from ..settings.settings import Settings
 from ..line import Line
 
 class SetupsHeader(Line):
+
     @classmethod
-    def WriteHeader(cls, folderPath: Path, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None) -> int:
-
-
+    def WriteHeader(cls, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str) -> int:
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
             firstSetup = next((setup for setup in cls.selected if setup.hasHeader), None)
 

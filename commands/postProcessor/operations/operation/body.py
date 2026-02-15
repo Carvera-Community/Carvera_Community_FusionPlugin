@@ -63,9 +63,17 @@ class OperationBody(Line):
                         row += 1
                         if row >= self._tailStartLine:                            
                             break
+
+                # For numeric file names
+                if Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SETUP_AND_TOOL, Settings.OperationsGroupings.PER_OPERATION]:
+                    from ...programs import Programs
+                    
+                    if Settings(Settings.NUMERIC_NAME) and Programs.Current.fileName.isnumeric():
+                        Programs.Current.SetFileName(str(int(Programs.Current.fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)))
+
             return lineNumber
         finally:
-            if fileHandler is not None:
+            if fileHandler is not None and not fileHandler.closed:
                 fileHandler.close()
 
     def _matchLine(self, fileHandler: TextIO, lineNumber: int, line: str, row: int, rotationAngle: Optional[float], preserveRotation: Optional[bool] = False) -> bool:

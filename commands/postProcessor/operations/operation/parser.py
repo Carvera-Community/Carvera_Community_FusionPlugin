@@ -14,6 +14,7 @@ class OperationParser(Line):
         # Parse the gcode. We expect a header like this:
         #
         # % <optional>
+        # Oxxxx <optional>
         # (<comments>) <0 or more lines>
         # (<Txx tool comment>) <optional>
         # <comments or G-code initialization, up to Txx>

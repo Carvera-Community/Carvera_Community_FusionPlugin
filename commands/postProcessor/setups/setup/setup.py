@@ -24,12 +24,6 @@ class Setup(SetupHeader, SetupBody, SetupTail):
         self._operations = None 
         self.outputFilePath = ""
         self._origin: adsk.core.Point3D = None
-        self._headerGenerated = False
-
-        self._operations = None if \
-                self.isSuppressed \
-                and not self.isSelected \
-            else Operations(list(operation for operation in self._setup.allOperations))
 
     @property
     def hasError(self) -> bool:
@@ -202,6 +196,19 @@ class Setup(SetupHeader, SetupBody, SetupTail):
     def Parse(self, tmpPath: Path):
         from ...programs import Programs
 
+        # JIT parsing of operations to make sure that if settings are 
+        # changed while the dialog is open, they are applied to all 
+        # setups and operations. 
+        # Also, avoids parsing operations for setups that are not 
+        # selected or are suppressed, which can speed up processing 
+        # and avoid creating temporary files for those setups.
+        self._operations = None if \
+                self.isSuppressed \
+                and not self.hasError \
+                and not self.isSelected \
+            else Operations(list(operation for operation in self._setup.allOperations))
+
+
         if self._operations is None:
             return # Don't process this setup.
 
@@ -213,33 +220,15 @@ class Setup(SetupHeader, SetupBody, SetupTail):
 
         self._operations.Parse(tmpPath)
 
-    # TODO: Move to operations if possible
-    def WriteOperations(self, folderPath: Path, fileName: str, fileExtension: str, *, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False) -> int:
-        if Settings(Settings.FLAT_FILE_STRUCTURE):
-            setupName = Utils.sanitizeFilename(self.name, preserveExtension = False)
-            setupName = "{index}_{fileName}".format(
-                fileName = setupName, 
-                index=str(self.index + 1).rjust(2, "0")) if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP) else setupName
-            
-            fileName = ("{fileName}_{setupName}" if Settings(Settings.FLAT_FILE_STRUCTURE) else "{setupName}") \
-                .format(
-                    fileName = fileName, 
-                    setupName = setupName)
-            folder = folderPath 
-        else:
-            folder = folderPath / Utils.sanitizeFilename(self.name, preserveExtension = False)
-        folder.mkdir(parents=True, exist_ok=True)
-        return self._operations.WriteOperations(folder, fileName, fileExtension, rotationAngle = rotationAngle, preserveRotation = preserveRotation)
-
     def _getFileName(self, fileName) -> str:
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
             return fileName
 
         outputName = Utils.sanitizeFilename(self.name, preserveExtension = False)
-        if Settings(Settings.SEQUENCE) in (Settings.Sequences.FILE, Settings.Sequences.FILE_AND_STEP):
+        if Settings(Settings.FILE_SEQUENCE):
             outputName = "{index}_{fileName}".format(
                 fileName = outputName, 
-                index=str(self.index + 1).rjust(2, "0"))
+                index=str((self.index + 1) * Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), "0"))
         
         if Settings(Settings.FLAT_FILE_STRUCTURE):
             return f"{fileName}_{outputName}"

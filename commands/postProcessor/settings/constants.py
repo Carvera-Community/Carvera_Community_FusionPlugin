@@ -1,3 +1,4 @@
+import enum
 from typing import Final
 
 class Constants:
@@ -12,12 +13,20 @@ class Constants:
     # The name of the output folder
     OUTPUT_FOLDER:                  Final[str] = 'outputFolder'
     
-    # If sequence numbers should be used in file names/folders/operation steps
-    SEQUENCE:                       Final[str] = 'sequence'
+    # If sequence numbers should be used in file names/folders
+    FILE_SEQUENCE:                  Final[str] = 'fileSequence'
     # Number of digits to use in sequence names
-    NAME_DIGITS:                    Final[str] = 'nameDigits'
+    FILE_SEQUENCE_DIGITS:           Final[str] = 'fileSequenceDigits'
     # The interval that the numbering should increment by
-    NUMBERING_INTERVAL:             Final[str] = 'numberingInterval'
+    FILE_SEQUENCE_INTERVAL:         Final[str] = 'fileSequenceInterval'
+
+    # If sequence numbers should be used in program lines
+    LINE_SEQUENCE:                  Final[str] = 'lineSequence'
+    # Number of digits to use in line numbers
+    LINE_SEQUENCE_DIGITS:           Final[str] = 'lineSequenceDigits'
+    # The interval that the line numbering should increment by
+    LINE_SEQUENCE_INTERVAL:         Final[str] = 'lineSequenceInterval'
+
 
     # If the name should be numeric
     NUMERIC_NAME:                   Final[str] = 'numericName'
@@ -69,14 +78,7 @@ class Constants:
     HEADER_END_CODES:               Final[str] = 'headerEndCodes'
     #endregion
 
-    class Sequences:
-        __doc__ = "Contains constant values for sequence options."
-        FILE:           Final[int] = 0
-        STEP:           Final[int] = 1
-        FILE_AND_STEP:  Final[int] = 2
-        NONE:           Final[int] = 3
-
-    class OperationsGroupings:
+    class OperationsGroupings():
         __doc__ = "Contains constant values for operation grouping options."
         SINGLE_FILE:    Final[int] = 0
         SETUP:          Final[int] = 1
