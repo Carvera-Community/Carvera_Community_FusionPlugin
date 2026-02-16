@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import shutil
 from typing import Optional
 import adsk
 import adsk.cam
@@ -166,6 +167,19 @@ class Program():
             lineNumber = 0            
             fileExtension = self._program.postConfiguration.extension
 
+            if path.exists() and not path.is_dir():
+                return # Need to notify the user about this.
+
+            if Settings(Settings.DEL_FOLDER) and path.exists() and path.is_dir():
+                for child in path.iterdir():
+                    try:
+                        if child.is_dir() and not child.is_symlink():
+                            shutil.rmtree(child)
+                        else:
+                            child.unlink()
+                    except Exception:
+                        return # File/folder could not be deleted, likely due to permissions. Need to notify the user about this.
+                    
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE or Settings(Settings.FLAT_FILE_STRUCTURE):
                 # Flat file structure or single file
                 fileName = self.fileName
