@@ -231,6 +231,6 @@ class OutputTab(PostDialogConstants):
         deleteOutputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Delete output folder")
 
         EventRegistry.register(deleteOutputFolder, lambda checkbox: Settings.Set(Settings.DEL_FOLDER, checkbox.value))
-        EventRegistry.register(deleteExistingFiles, lambda checkbox: setattr(deleteOutputFolder, 'isEnabled', checkbox.value)) # Enable "Delete output folder" when "Overwrite existing files" is enabled
+        EventRegistry.register(deleteExistingFiles, lambda checkbox: setattr(checkbox.parentCommand.commandInputs.itemById(cls._DELETE_OUTPUT_FOLDER_ID), 'isEnabled', checkbox.value)) # Enable "Delete output folder" when "Overwrite existing files" is enabled
         #endregion -----
 
