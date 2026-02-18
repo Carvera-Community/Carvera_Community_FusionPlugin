@@ -83,7 +83,7 @@ class InputTab(PostDialogConstants):
         #region Setups table
         setupsTable = inputTab.children.addTableCommandInput('SetupsTable', '',5, "6:31:21:21:21") # 5 columns with relative widths of 6, 40, 18, 18, 18 (100[%] is easier)
         setupsTable.minimumVisibleRows = 3
-        setupsTable.maximumVisibleRows = min(20, len([setup for setup in Setups if not (setup.hasError or setup.isSuppressed)]) + 1) # +1 for the header row
+        setupsTable.maximumVisibleRows = min(20, max(3, len([setup for setup in Setups if not (setup.hasError or setup.isSuppressed)]) + 1)) # +1 for the header row
 
         selectAllSetups = inputs.addBoolValueInput(cls._SELECT_ALL_SETUPS_ID, '', True, '', False)
 
