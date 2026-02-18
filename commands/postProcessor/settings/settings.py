@@ -63,6 +63,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
         Constants.USE_REGEX:                    False,
         Constants.FIND_STRING:                  "",
         Constants.REPLACE_STRING:               "",
+        Constants.REPLACE_ONLY_SELECTED:        True,
         Constants.HEADER_END_CODES:             "G20\nG21",
     }
     #endregion

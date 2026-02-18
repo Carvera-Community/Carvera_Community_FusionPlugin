@@ -2,9 +2,12 @@ import adsk.core
 from ...settings.settings import Settings
 from ...strings import Strings
 from ...programs import Programs
+from ...setups.setups import Setups
 
 from ..event_registry import EventRegistry
 from ..dialog_constants import PostDialogConstants
+
+from .input_tab import InputTab
 
 class MiscTab(PostDialogConstants):
     @classmethod
@@ -44,9 +47,30 @@ class MiscTab(PostDialogConstants):
         EventRegistry.register(replaceText, lambda input: Settings.Set(Settings.REPLACE_STRING, input.value))
         #endregion
 
+        #region Clear output folder checkbox
+        replaceOnlySelected = group.children.addBoolValueInput(cls._REPLACE_ONLY_SELECTED_ID, Strings("Only selected Setups"),  True, "", Settings(Settings.REPLACE_ONLY_SELECTED))
+        replaceOnlySelected.tooltip = Strings("TOOL TIP: Only selected Setups")
+        replaceOnlySelected.tooltipDescription = Strings("TOOLTIP TEXT: Only selected Setups")
+        EventRegistry.register(replaceOnlySelected, lambda input: Settings.Set(Settings.REPLACE_ONLY_SELECTED, input.value))
+        #endregion
+
         #region Replace button
         replaceButton = group.children.addBoolValueInput(cls._REPLACE_ID, f"   {Strings("Search and replace")}   ", False)
         replaceButton.isFullWidth = True
         replaceButton.tooltip = Strings("TOOL TIP: Search and replace")
         replaceButton.tooltipDescription = Strings("TOOLTIP TEXT: Search and replace")
+        
+        def replaceButtonHandler(input: adsk.core.BoolValueCommandInput):
+            values = input.parentCommand.commandInputs
+            if input.value:
+                Setups.RenameSetups(
+                    values.itemById(cls._FIND_STRING_ID).value, 
+                    values.itemById(cls._REPLACE_STRING_ID).value, 
+                    values.itemById(cls._USE_REGEX_ID).value, 
+                    values.itemById(cls._REPLACE_ONLY_SELECTED_ID).value
+                )
+                input.value = False # reset button state after operation
+
+        EventRegistry.register(replaceButton, replaceButtonHandler)
+        EventRegistry.register(replaceButton, lambda input: InputTab._updateSetups(input))
         #endregion

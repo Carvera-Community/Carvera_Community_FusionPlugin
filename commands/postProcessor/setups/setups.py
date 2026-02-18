@@ -127,3 +127,9 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
         for setup in cls.selected:
             tools.extend(setup.tools)
         return tools
+    
+    @classmethod
+    def RenameSetups(cls, find: str, replace: str, isRegex: bool, onlySelected: bool) -> None:
+        setupsToRename = cls.selected if onlySelected else cls._items
+        for setup in setupsToRename:
+            setup.Rename(find, replace, isRegex)

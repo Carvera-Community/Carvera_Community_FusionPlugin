@@ -143,7 +143,6 @@ class InputTab(PostDialogConstants):
         # updated to reflect the new state.
         EventRegistry.register(cls._ROTATE_A_AXIS_ID, lambda input: EventRegistry.setValue(cls._SELECT_ALL_SETUPS_ID, areAllSetupsSelected(input.parentCommand.commandInputs)))
         
-
         def updateSetupsWithNotice(input: adsk.core.CommandInput):
             needsRotation, rotatedSetups = Setups.AAxisRotationRequired()
             if needsRotation and not input.value:
@@ -279,6 +278,7 @@ class InputTab(PostDialogConstants):
     _INDEX = "index"
     _ENABLED = "enabled"
     _SELECTED = "selected"
+    _NAME = "name"
     _ORIGIN = "origin"
     _X_NORMAL = "xNormal"
     _ROTATION = "rotation"
@@ -318,6 +318,7 @@ class InputTab(PostDialogConstants):
 
         return {
             cls._INDEX: setup.index,
+            cls._NAME: setup.name,
             cls._ENABLED: isEnabled, 
             cls._SELECTED: isSelected, 
             cls._ORIGIN: originText, 
@@ -337,6 +338,7 @@ class InputTab(PostDialogConstants):
         aRotation: adsk.core.TextBoxCommandInput = inputs.itemById(f"setupARotation_{rowState[cls._INDEX]}")
 
         inputCheckbox.isEnabled = rowState[cls._ENABLED]
+        setupName.value = rowState[cls._NAME]
         setupName.isEnabled = rowState[cls._ENABLED]
         origin.isEnabled = rowState[cls._ENABLED]
         xNormalInput.isEnabled = rowState[cls._ENABLED]

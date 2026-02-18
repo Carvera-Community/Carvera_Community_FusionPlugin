@@ -69,7 +69,8 @@ class Constants:
     FIND_STRING:                    Final[str] = 'findString'
     # The string to replace the found string when renaming setups
     REPLACE_STRING:                 Final[str] = 'replaceString'
-
+    # Replace only the Setups that is currently selected in the dialog
+    REPLACE_ONLY_SELECTED:          Final[str] = 'replaceOnlySelected'
     # G-code to Precede Tool Change
     TOOL_CHANGE:                    Final[str] = 'toolChange'
     # G-codes that ends the header section

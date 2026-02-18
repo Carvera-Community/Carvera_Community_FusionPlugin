@@ -18,6 +18,7 @@ class PostDialogConstants:
     _FIND_STRING_ID = 'findString'
     _REPLACE_STRING_ID = 'replaceString'
     _REPLACE_ID = 'replace'
+    _REPLACE_ONLY_SELECTED_ID = 'replaceOnlySelected'
     _INITIAL_DELAY_ID = 'initialDelay'
     _POST_RETRIES_ID = 'postRetries'
     _NUMERIC_NAME_ID = 'numericName'
