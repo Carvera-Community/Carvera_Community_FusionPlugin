@@ -17,8 +17,6 @@ class Constants:
     FILE_SEQUENCE:                  Final[str] = 'fileSequence'
     # Number of digits to use in sequence names
     FILE_SEQUENCE_DIGITS:           Final[str] = 'fileSequenceDigits'
-    # The interval that the numbering should increment by
-    FILE_SEQUENCE_INTERVAL:         Final[str] = 'fileSequenceInterval'
 
     # If sequence numbers should be used in program lines
     LINE_SEQUENCE:                  Final[str] = 'lineSequence'

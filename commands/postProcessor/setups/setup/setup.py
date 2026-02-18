@@ -244,7 +244,7 @@ class Setup(SetupHeader, SetupBody, SetupTail):
         if Settings(Settings.FILE_SEQUENCE):
             outputName = "{index}_{fileName}".format(
                 fileName = outputName, 
-                index=str((self.index + 1) * Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), "0"))
+                index=str(self.index + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), "0"))
         
         if Settings(Settings.FLAT_FILE_STRUCTURE):
             return f"{fileName}_{outputName}"

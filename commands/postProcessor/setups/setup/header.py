@@ -29,7 +29,7 @@ class SetupHeader(Line):
         # (which doesn't increment file names)
         if Settings(Settings.NUMERIC_NAME) \
             and Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SETUP]:
-                self._operations.SetFileName(str(int(self._operations.fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0'))
+                self._operations.SetFileName(str(int(self._operations.fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0'))
 
     def WriteHeader(self) -> None:
         # SETUP writes one setup per file

@@ -13,7 +13,7 @@ class OperationsTail:
             self._operationWithTail.SetLineNumber(self._lineNumber)
             self._operationWithTail.WriteTail(fileHandler)
         if Settings(Settings.NUMERIC_NAME):
-            self._fileName = str(int(self._fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
+            self._fileName = str(int(self._fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
 
     def WriteTail(self):
         # SETUP_AND_TOOL, PER_OPERATION

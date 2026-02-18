@@ -11,7 +11,6 @@ class PostDialogConstants:
     _DELETE_EXISTING_FILES_ID = 'deleteExistingFiles'
     _FILE_SEQUENCE_ID = 'fileSequence'
     _FILE_SEQUENCE_DIGITS_ID = 'fileSequenceDigits'
-    _FILE_SEQUENCE_INTERVAL_ID = 'fileSequenceInterval'
     _LINE_SEQUENCE_ID = 'lineSequence'
     _LINE_SEQUENCE_DIGITS_ID = 'lineSequenceDigits'
     _LINE_SEQUENCE_INTERVAL_ID = 'lineSequenceInterval'

@@ -22,5 +22,5 @@ class OperationTail():
         from ...settings.settings import Settings
 
         if Settings(Settings.NUMERIC_NAME) and Programs.Current.fileName.isnumeric():
-            Programs.Current.SetFileName(str(int(Programs.Current.fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)))
+            Programs.Current.SetFileName(str(int(Programs.Current.fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0'))
     #endregion

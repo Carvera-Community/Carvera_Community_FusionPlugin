@@ -167,20 +167,6 @@ class OutputTab(PostDialogConstants):
         setNumberingDigitsOnNumericFileName(numericName)
         #endregion
 
-        #region Numbering interval spinner input
-        numberingInterval = outputTab.children.addIntegerSliderListCommandInput(cls._FILE_SEQUENCE_INTERVAL_ID, Strings("Numbering interval"), [1, 2, 5, 10, 20])
-        numberingInterval.valueOne = Settings(Settings.FILE_SEQUENCE_INTERVAL)  
-        numberingInterval.tooltip = Strings("TOOL TIP: File numbering interval")
-        numberingInterval.tooltipDescription = Strings("TOOLTIP TEXT: File numbering interval")
-
-        def setNumberingIntervalEnabled(checkbox: adsk.core.BoolValueCommandInput):
-            checkbox.parentCommand.commandInputs.itemById(cls._FILE_SEQUENCE_INTERVAL_ID).isEnabled = checkbox.value
-
-        EventRegistry.register(numberingInterval, lambda spinner: Settings.Set(Settings.FILE_SEQUENCE_INTERVAL, spinner.valueOne))
-        EventRegistry.register(prependFileNumber, setNumberingIntervalEnabled)
-        setNumberingIntervalEnabled(prependFileNumber) # initialize state based on current checkbox value
-        #endregion
-
         #region Operations grouping dropdown
         operationsGrouping = outputTab.children.addDropDownCommandInput(cls._OPERATIONS_GROUPING_ID, Strings("Operations grouping"), adsk.core.DropDownStyles.TextListDropDownStyle)
         operationsGrouping.tooltip = Strings("TOOL TIP: Operations grouping")

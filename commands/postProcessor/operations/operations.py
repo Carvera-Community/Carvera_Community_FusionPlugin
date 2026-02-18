@@ -113,7 +113,7 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
         
         if Settings(Settings.NUMERIC_NAME):
             # Bump up the file name for the next operation if numeric naming is set
-            self._fileName = str(int(self._fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
+            self._fileName = str(int(self._fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
         else:
             if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL:
                 # For setup and tool grouping, use the tool number as 
