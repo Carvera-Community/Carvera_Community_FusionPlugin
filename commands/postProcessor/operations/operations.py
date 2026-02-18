@@ -111,6 +111,8 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
                                                        Settings.OperationsGroupings.SETUP]:
             return
         
+        fileNumber = str((operation.index + 1)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
+
         if Settings(Settings.NUMERIC_NAME):
             # Bump up the file name for the next operation if numeric naming is set
             self._fileName = str(int(self._fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
@@ -120,15 +122,13 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
                 # the file name, and append an index if there are 
                 # multiple operations with the same tool
                 toolIdStr = f"T{operation.toolId}{'_' + str(toolIdIndex) if toolIdIndex > 1 else ''}"
-                operation.SetFileName(Utils.sanitizeFilename(toolIdStr, preserveExtension = False))
+                if Settings(Settings.FILE_SEQUENCE):
+                    toolIdStr = f"{fileNumber}_{toolIdStr}"
+                operation.SetFileName(Utils.sanitizeFilename(f"{self._fileName}_{toolIdStr}", preserveExtension = False))
             elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
                 # For per operation grouping, use the operation name as
                 # the file name
-                operation.SetFileName(Utils.sanitizeFilename(operation.name, preserveExtension = False))
-
-            # If the files should be numbered, prepend the file name 
-            # with the operation index to make sure that they will be 
-            # sorted correctly
-            if Settings(Settings.FILE_SEQUENCE):
-                fileNumber = str((operation.index + 1)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0') 
-                operation.SetFileName(f"{fileNumber}_{operation.fileName}")
+                if Settings(Settings.FILE_SEQUENCE):
+                    operation.SetFileName(Utils.sanitizeFilename(f"{fileNumber}_{operation.name}", preserveExtension = False))
+                else:
+                    operation.SetFileName(Utils.sanitizeFilename(operation.name, preserveExtension = False))
