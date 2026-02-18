@@ -235,20 +235,3 @@ class Setup(SetupHeader, SetupBody, SetupTail):
         Programs.CheckAndGenerateToolpath(self._setup)
 
         self._operations.Parse(tmpPath)
-
-    def _getFileName(self, fileName) -> str:
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-            return fileName
-
-        outputName = Utils.sanitizeFilename(self.name, preserveExtension = False)
-        if Settings(Settings.FILE_SEQUENCE):
-            outputName = "{index}_{fileName}".format(
-                fileName = outputName, 
-                index=str(self.index + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), "0"))
-        
-        if Settings(Settings.FLAT_FILE_STRUCTURE):
-            return f"{fileName}_{outputName}"
-        return outputName
-
-    def _getFileHandler(self, mode: FileModes, path: Path, fileName: str, fileExtension: str) -> TextIO:
-        return (path / f"{self._getFileName(fileName)}{fileExtension}").open(mode, encoding="utf-8")
