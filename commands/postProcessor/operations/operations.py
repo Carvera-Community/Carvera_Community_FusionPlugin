@@ -56,8 +56,7 @@ class Operations(Line, OperationsHeader, OperationsBody, OperationsTail):
                 # otherwise finish current group and start a new one
                 if (not operations[i].hasToolpath) \
                     or (not operation.hasTool) \
-                    or ((Settings.Get(Settings.COMBINE_TOOL) \
-                        or Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL) \
+                    or (Settings.Get(Settings.COMBINE_TOOL) \
                         and Operation.GetToolNumber(operations[i]) == operation.toolId):
                     operation.Append(operations[i], i, operations[i].hasToolpath)
                     i += 1
