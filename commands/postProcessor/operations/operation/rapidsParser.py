@@ -441,6 +441,7 @@ class RapidsParser:
 
         Rules:
         - Reject if any middle-step line contains G2/G3 (arc) or F (feed).
+        - Reject if ending line contains feed, move back one line until it is valid or run out of middle lines.
         - Reject if effectiveDist < minDist, where:
                 zDist = abs(dZUp) + abs(dZDown)
                 effectiveDist = max(totalXYDist, zDist)
@@ -487,7 +488,7 @@ class RapidsParser:
                     segment[cls.KEY_IS_VALID] = False
                     segment[cls.KEY_REASONS].append(cls.REASON_FEED_IN_MIDDLE)
 
-            # Rule: If ending line contains feed, move back one line until it is valid or ran out of middle lines.
+            # Rule: If ending line contains feed, move back one line until it is valid or run out of middle lines.
             tokens = _tokenize(segment[cls.O_END])
             if _hasFeed(tokens):
                 middle = segment.get(cls.O_MIDDLE, [])
