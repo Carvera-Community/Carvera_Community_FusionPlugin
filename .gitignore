@@ -3,4 +3,4 @@
 .assistant_rules.*
 **/settings.settings
 Tests/**
-.vscode/*
+.vscode/**
