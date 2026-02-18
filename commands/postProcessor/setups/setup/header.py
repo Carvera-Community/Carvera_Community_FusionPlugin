@@ -7,8 +7,6 @@ class SetupHeader(Line):
         return self._operations is not None and self._operations.hasHeader
 
     def WriteHeaderStart(self) -> None:
-        if not Settings(Settings.NUMERIC_NAME):
-            self._operations.SetFileName(self.name)
         self._operations.WriteFirstHeaderStart()
         self._lineNumber = self._operations.lineNumber
     
@@ -30,17 +28,21 @@ class SetupHeader(Line):
                 self._operations.SetFileName(str(int(self._operations.fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0'))
 
     def WriteHeader(self) -> None:
+        self._setOperationsFileName()
+
         # SETUP writes one setup per file
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
             self.WriteHeaderStart()
             self.WriteToolComments()
             self.WriteHeaderEnd()
-        else:
-            # SETUP_AND_TOOL and PER_OPERATION breaks the setup down further
-            if Settings(Settings.FILE_SEQUENCE):
-                fileNumber = str((self.index + 1)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
-                self._operations.SetFileName(f"{fileNumber}_{self.name}")
-            else:
-                self._operations.SetFileName(self.name)
+        else: # SETUP_AND_TOOL and PER_OPERATION breaks the setup down further
             self._operations.SetLineNumber(self._lineNumber)
             self._operations.WriteHeader()
+
+
+    def _setOperationsFileName(self) -> None:
+        if Settings(Settings.FILE_SEQUENCE):
+            fileNumber = str((self.index + 1)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
+            self._operations.SetFileName(f"{fileNumber}_{self.name}")
+        else:
+            self._operations.SetFileName(self.name)
