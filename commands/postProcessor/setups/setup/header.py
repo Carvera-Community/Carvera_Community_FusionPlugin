@@ -1,8 +1,6 @@
-from pathlib import Path
-from typing import Optional
+from .....lib.fusionAddInUtils.general_utils import Utils
 
 from ...settings.settings import Settings
-
 from ...line import Line
 
 class SetupHeader(Line):
@@ -10,22 +8,45 @@ class SetupHeader(Line):
     def hasHeader(self):
         return self._operations is not None and self._operations.hasHeader
 
-    def WriteHeaderStart(self, path: Path, fileName: str, fileExtension: str) -> int:
-        return self._operations.WriteFirstHeaderStart(path, self._getFileName(fileName), fileExtension)
+    def WriteHeaderStart(self) -> None:
+        if not Settings(Settings.NUMERIC_NAME):
+            self._setFileName()
+        self._operations.WriteFirstHeaderStart()
+        self._lineNumber = self._operations.lineNumber
     
-    def WriteToolComments(self, path: Path, lineNumber: int, fileName: str, fileExtension: str) -> int: 
-        return self._operations.WriteToolComments(path, lineNumber, self._getFileName(fileName), fileExtension) 
+    def WriteToolComments(self) -> None:
+        self._operations.SetLineNumber(self._lineNumber)
+        self._operations.WriteToolComments()
+        self._lineNumber = self._operations.lineNumber
     
-    def WriteHeaderEnd(self, path: Path, lineNumber: int, fileName: str, fileExtension: str) -> int:
-        return self._operations.WriteFirstHeaderEnd(path, lineNumber, self._getFileName(fileName), fileExtension)
+    def WriteHeaderEnd(self) -> None:
+        self._operations.SetLineNumber(self._lineNumber)
+        self._operations.WriteFirstHeaderEnd()
+        self._lineNumber = self._operations.lineNumber
 
-    def WriteHeader(self, path: Path, fileName: str, fileExtension: str) -> int:
+        # Bump up the file name for the next setup if numeric naming 
+        # is enabled and we're not in SINGLE_FILE mode 
+        # (which doesn't increment file names)
+        if Settings(Settings.NUMERIC_NAME) \
+            and Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SETUP]:
+                self._operations.SetFileName(str(int(self._operations.fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0'))
 
+    def WriteHeader(self) -> None:
+        # SETUP writes one setup per file
         if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-            lineNumber = self.WriteHeaderStart(path, fileName, fileExtension)
-            lineNumber = self.WriteToolComments(path, lineNumber, fileName, fileExtension)
-            return self.WriteHeaderEnd(path, lineNumber, fileName, fileExtension)
+            self.WriteHeaderStart()
+            self.WriteToolComments()
+            self.WriteHeaderEnd()
+        else:
+            # SETUP_AND_TOOL and PER_OPERATION breaks the setup down further
+            if not Settings(Settings.NUMERIC_NAME):
+                self._setFileName()
+            self._operations.SetLineNumber(self._lineNumber)
+            self._operations.WriteHeader()
 
-        return self._operations.WriteHeader(path, self._getFileName(fileName), fileExtension)
-
-
+    def _setFileName(self):
+        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
+            fileName = Utils.sanitizeFilename(self.name)
+            if Settings(Settings.FILE_SEQUENCE):
+                fileName = f"{str(self._index + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')}_{fileName}"
+            self._operations.SetFileName(fileName)

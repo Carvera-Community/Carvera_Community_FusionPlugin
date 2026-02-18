@@ -1,21 +1,16 @@
-from pathlib import Path
+from ...settings.settings import Settings
 
 class SetupBody:
 
-    def WriteBody(self, 
-                  path: Path, 
-                  lineNumber: int, 
-                  fileName: str, 
-                  fileExtension: str, 
-                  *, 
-                  rotationAngle: float, 
-                  preserveRotation: bool
-    ) -> int:
-        return self._operations.WriteBody(
-            path, 
-            lineNumber, 
-            self._getFileName(fileName), 
-            fileExtension, 
-            rotationAngle = rotationAngle, 
-            preserveRotation = preserveRotation
-        )
+    def WriteBody(self, rotationAngle: float, preserveRotation: bool) -> int:
+        self._operations.SetLineNumber(self._lineNumber)
+        self._operations.WriteBody(rotationAngle, preserveRotation)
+        self._lineNumber = self._operations.lineNumber
+    
+        # Bump up the file name for the next setup if numeric naming 
+        # is enabled and we're not in SINGLE_FILE mode 
+        # (which doesn't increment file names)
+        if Settings(Settings.NUMERIC_NAME) \
+            and Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SETUP]:
+                self._operations.SetFileName(str(int(self._operations.fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0'))
+

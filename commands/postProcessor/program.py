@@ -1,33 +1,15 @@
 from __future__ import annotations
 import os
 import shutil
-from typing import Optional
 import adsk
 import adsk.cam
 from pathlib import Path
 
-from .file_modes import FileModes
 from .strings import Strings
 from .attributes import Attributes
 from .setups.setups import Setups
 from .settings.settings import Settings
 from .parameters import Parameters
-
-def CountOutputFolderFiles(folder, limit, fileExt):
-    cntFiles = 0
-    cntNcFiles = 0
-    for path, dirs, files in os.walk(folder):
-        for file in files:
-            if file.endswith(fileExt):
-                cntNcFiles += 1
-            else:
-                cntFiles += 1
-        if cntFiles > limit:
-            return "many files that are not G-code"
-        if cntNcFiles > limit * 1.5:
-            return "many more G-code files than are produced by this design"
-    return None
-
 
 class Program():
     def __init__(self, program: adsk.cam.NCProgram):
@@ -158,20 +140,16 @@ class Program():
 
     def Generate(self):
         """Generate the final G-code files from the results of the post processing."""
-        path = self.GetOutputFolder()
-        previousFileName = self.fileName
-        name = self.Parameters.Get(Parameters.NAME)
+        initialPath = self.GetOutputFolder()
+        initialFileName = self.fileName
+        programName = self.Parameters.Get(Parameters.NAME)
 
         try:
-            fileName: Optional[str] = None
-            lineNumber = 0            
-            fileExtension = self._program.postConfiguration.extension
-
-            if path.exists() and not path.is_dir():
+            if initialPath.exists() and not initialPath.is_dir():
                 return # Need to notify the user about this.
 
-            if Settings(Settings.DEL_FOLDER) and path.exists() and path.is_dir():
-                for child in path.iterdir():
+            if Settings(Settings.DEL_FOLDER) and initialPath.exists() and initialPath.is_dir():
+                for child in initialPath.iterdir():
                     try:
                         if child.is_dir() and not child.is_symlink():
                             shutil.rmtree(child)
@@ -179,33 +157,36 @@ class Program():
                             child.unlink()
                     except Exception:
                         return # File/folder could not be deleted, likely due to permissions. Need to notify the user about this.
-                    
-            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE or Settings(Settings.FLAT_FILE_STRUCTURE):
+            
+            # Setting the base parameters for the output.
+            Setups.SetFileExtension(self._program.postConfiguration.extension)
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE \
+                or Settings(Settings.FLAT_FILE_STRUCTURE) \
+                or (Settings(Settings.NUMERIC_NAME) \
+                    and initialFileName.isnumeric()): # numeric name is a special case where we want to keep a single file name and just increment it, so we treat it like single file grouping even if the user has selected otherwise
                 # Flat file structure or single file
-                fileName = self.fileName
-                folder = path
+                Setups.SetPath(initialPath)
+                Setups.SetFileName(initialFileName)
             else:
-                # Output with folder structure
-                folder = path / self.fileName
+                Setups.SetPath(initialPath / initialFileName)
 
-            if Settings(Settings.NUMERIC_NAME) and self.fileName.isnumeric():
-                self.SetFileName(str(int(previousFileName)))
-            lineNumber = Setups.WriteHeader(folder, lineNumber, fileName, fileExtension)
+            Setups.SetLineNumber(0)
+            Setups.WriteHeader()
 
-            if Settings(Settings.NUMERIC_NAME) and self.fileName.isnumeric():
-                self.SetFileName(str(int(previousFileName)))
-            lineNumber = Setups.WriteBody(folder, lineNumber, fileName, fileExtension)
+            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
+                Setups.SetFileName(initialFileName) # Reset the numeric name
+            Setups.WriteBody()
 
-            if Settings(Settings.NUMERIC_NAME) and self.fileName.isnumeric():
-                self.SetFileName(str(int(previousFileName)))
-            lineNumber = Setups.WriteTail(folder, lineNumber, fileName, fileExtension)
+            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
+                Setups.SetFileName(initialFileName) # Reset the numeric name
+            Setups.WriteTail()
 
         except Exception as exc:
             raise exc
         finally:
-            self.SetOutputFolder(path)
-            self.Parameters.Set(Parameters.FILE_NAME, previousFileName)
-            self.Parameters.Set(Parameters.NAME, name)
+            self.SetOutputFolder(initialPath)
+            self.Parameters.Set(Parameters.FILE_NAME, initialFileName)
+            self.Parameters.Set(Parameters.NAME, programName)
 
     def DisableOpenInEditor(self):
         """Convenience method for disabling "Open in Editor" option"""

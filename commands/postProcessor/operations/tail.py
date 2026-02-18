@@ -1,27 +1,35 @@
-from pathlib import Path
+from ..file_modes import FileModes
 from ..settings.settings import Settings
+
+from .operation.operation import Operation
 
 class OperationsTail:
     @property
     def hasTail(self):
         return self._operationWithTail is not None
 
-    def WriteTail(self, folderPath: Path, lineNumber: int, fileName: str, fileExtension: str) -> int:
-        if self._operationWithTail is None:
-            return lineNumber
+    def WriteFirstTail(self) -> None:
+        with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
+            self._operationWithTail.SetLineNumber(self._lineNumber)
+            self._operationWithTail.WriteTail(fileHandler)
+        if Settings(Settings.NUMERIC_NAME):
+            self._fileName = str(int(self._fileName) + Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
 
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-            firstTailOperation = next((operation for operation in self._operations if operation.hasTail), None)
-            if firstTailOperation is not None:
-                return firstTailOperation.WriteTail(folderPath, lineNumber, 1, fileName, fileExtension)
-            return lineNumber
+    def WriteTail(self):
+        # SETUP_AND_TOOL, PER_OPERATION
+        if self._operationWithTail is None:
+            return 
 
         toolIdIndex = {}
-        for operation in self._operations:
+        #firstOperationPerTool: dict[int, Operation] = {}
+        operation: Operation
+        for operation in self:
             toolId = operation.toolId
             if toolId not in toolIdIndex:
                 toolIdIndex[toolId] = 0
             toolIdIndex[toolId] += 1
 
-            lineNumber = operation.WriteTail(folderPath, lineNumber, toolIdIndex[toolId], fileName, fileExtension)
-        return lineNumber
+            self._setOperationFileName(operation, toolIdIndex[toolId])
+
+            with (self._path / f"{operation.fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
+                operation.WriteTail(fileHandler)

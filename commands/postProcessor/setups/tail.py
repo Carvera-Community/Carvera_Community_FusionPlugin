@@ -1,16 +1,20 @@
-from pathlib import Path
-from typing import Optional
-
 from ..settings.settings import Settings
 
 class SetupsTail():
     @classmethod
-    def WriteTail(cls, folderPath: Path, lineNumber: int, fileName: Optional[str] = None, fileExtension: Optional[str] = None):
+    def WriteTail(cls):
 
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-             firstTailSetup = next((setup for setup in cls.selected if setup.hasTail), None)
-             return lineNumber if firstTailSetup is None else firstTailSetup.WriteTail(folderPath, lineNumber, fileName, fileExtension)
+        if Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SINGLE_FILE]:
+            firstSetup = next((setup for setup in cls.selected if setup.hasHeader), None)
 
-        for setup in cls.selected:
-            lineNumber = setup.WriteTail(folderPath, lineNumber, fileName, fileExtension)
-        return lineNumber
+            if firstSetup is not None:
+                firstSetup.WriteTail()
+        else: # SETUP, SETUP_AND_TOOL, PER_OPERATION
+            fileName = None
+            for setup in cls.selected:
+                if Settings(Settings.NUMERIC_NAME) and fileName is not None:
+                    setup.SetFileName(fileName)
+                setup.WriteTail()
+                if Settings(Settings.NUMERIC_NAME):
+                    fileName = setup._operations.fileName
+    

@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import Optional
 import uuid
 
 import adsk.cam
 
 from .....lib.fusionAddInUtils.general_utils import Utils
 
-from ...settings.settings import Settings
 from ...parameters import Parameters
 from ...strings import Strings
 
@@ -17,7 +16,7 @@ from .tail import OperationTail
 
 class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):    
     def __init__(self, index: int):
-        self._outputFileName = None
+        self._outputFilePath: Path = None
         # As there can be multiple operations without tools they are 
         # grouped with the previous operation (or next if it is the 
         # first operation missing a tool)
@@ -27,7 +26,9 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
         self._operationWithTool: int = -1
         self._tempFilePath: Path = None
         self._allowBlankLines: bool = False
-        self._headerGenerated: bool = False
+
+        self._fileName: str = None
+        self._lineNumber: int = 0
 
         self._headerEndLine: int = -1
         self._bodyStartLine: int = -1
@@ -41,8 +42,22 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
             self._operationWithTool = index
 
     @property
+    def fileName(self) -> str:
+        return self._fileName
+    
+    def SetFileName(self, fileName: str):
+        self._fileName = fileName
+
+    @property
     def index(self) -> int:
         return self._index
+
+    @property
+    def lineNumber(self) -> int:
+        return self._lineNumber
+
+    def SetLineNumber(self, lineNumber: int):
+        self._lineNumber = lineNumber
 
     @property
     def toolId(self) -> Optional[int]:
@@ -89,6 +104,9 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
     def hasRotation(self) -> bool:
         return self._rotationLine != -1
 
+    def SetOutputPath(self, path: Path):
+        self._outputFilePath = path
+
     @staticmethod
     def GetToolDescription(operation):
         return operation.tool.description if operation.hasToolpath else Strings("<No tool>")
@@ -121,57 +139,3 @@ class Operation(OperationParser, OperationHeader, OperationBody, OperationTail):
             raise Exception(f"Operation {self.name} post processing failed: output file was not created.")
 
         self._parseFile(self._tempFilePath)
-
-    def _getFileName(self, fileName: str, toolIdIndex: int) -> str:
-
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE:
-            return fileName
-        
-        outputName = f"{Utils.sanitizeFilename(self.name, preserveExtension = False)}"
-
-        # Append operation name and tool number
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL or Settings(Settings.FLAT_FILE_STRUCTURE):
-            outputName = f"{outputName}_T{str(self.toolId)}"
-            ## At the moment not needed as the operation name is included 
-            ## in the file name when grouping by setup, but it might be 
-            ## needed when using numeric file names in the future.
-            # if toolIdIndex > 1:
-            #     outputName = f"{outputName}_{str(toolIdIndex)}"
-
-        # Prepend operation index
-        if Settings(Settings.FILE_SEQUENCE):
-            outputName = f"{str((self.index + 1) * Settings(Settings.FILE_SEQUENCE_INTERVAL)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')}_{outputName}" 
-        else:
-            # To make sure that files are not overwritten when multiple
-            # operations use the same tool, adds an index to the file 
-            # name for subsequent occurrences of the same tool
-            if self.index > 1: 
-                outputName = f"{outputName}_{str(self.index)}"
-
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-            return f"{fileName}"
-
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL:
-            return outputName
-
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
-            return f"{fileName}_{outputName}"
-
-        return fileName
-
-    def _getFileHandler(self, path: Path, mode: str, fileName: str, toolIdIndex: int, fileExtension: str) -> TextIO:
-        from ...programs import Programs
-
-        # Numeric file names are always generated in the output folder,
-        # no matter what other settings we have and each time we open a
-        # file for writing (not appending) we create a new file.
-        if Settings(Settings.NUMERIC_NAME) and Programs.Current.fileName.isnumeric():
-            filePath = Path(Settings(Settings.OUTPUT_FOLDER)) / f"{Programs.Current.fileName}{fileExtension}"
-            return filePath.open(mode, encoding="utf-8")
-
-        filePath = path
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL:
-            filePath = path / Utils.sanitizeFilename(fileName, preserveExtension = False) # Add setup name to the path
-        filePath = filePath / f"{self._getFileName(fileName, toolIdIndex)}{fileExtension}"
-        filePath.parent.mkdir(parents=True, exist_ok=True) # Ensure the output folder exists
-        return (filePath).open(mode, encoding="utf-8")

@@ -17,43 +17,49 @@ from .tail import SetupTail
 
 class Setup(SetupHeader, SetupBody, SetupTail):
     def __init__(self, setup: adsk.cam.Setup, index: int, markSelected: bool = False):
-        self._setup = setup
-        self._index = index
-        self._isSelected = False if self._setup is None else markSelected or self._setup.isSelected
-        self._outputFilename = None
-        self._operations = None 
-        self.outputFilePath = ""
-        self._origin: adsk.core.Point3D = None
+        self._setup: adsk.cam.Setup = setup
+        self._index: int = index
+        self._isSelected: bool = markSelected or self._setup.isSelected
+        self._operations: Optional[Operations] = None
+        self._origin: Optional[adsk.core.Point3D] = None
+        self._lineNumber: int = 0
 
     @property
     def hasError(self) -> bool:
         return self._setup is None or self._setup.hasError
     
     @property
-    def index(self):
+    def index(self) -> int:
         return self._index
 
     @property
-    def isSuppressed(self):
+    def isSuppressed(self) -> bool:
         return self._setup is None or self._setup.isSuppressed
     
     @property
-    def isSelected(self):
+    def lineNumber(self) -> int:
+        return self._lineNumber
+    
+    def SetLineNumber(self, lineNumber: int):
+        self._lineNumber = lineNumber
+
+    @property
+    def isSelected(self) -> bool:
         return self._isSelected
 
-    def select(self, value: bool):
+    def Select(self, value: bool):
         self._isSelected = value
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._setup.name
     
     @property 
-    def hasOperationWithTail(self):
+    def hasOperationWithTail(self) -> bool:
         return self._operations.hasTail if self._operations is not None else False
 
     @property
-    def hasOperationWithHeader(self):
+    def hasOperationWithHeader(self) -> bool:
         return self._operations.hasHeader if self._operations is not None else False
 
     @property
@@ -90,6 +96,16 @@ class Setup(SetupHeader, SetupBody, SetupTail):
     @property
     def tools(self) -> list[adsk.cam.Tool]:
         return self._operations.tools if self._operations is not None else []
+
+    def SetOutputPath(self, path: Path):
+        path.mkdir(parents=True, exist_ok=True)
+        self._operations.SetOutputPath(path)
+
+    def SetFileName(self, fileName: str):
+        self._operations.SetFileName(fileName)
+
+    def SetFileExtension(self, fileExtension: str):
+        self._operations.SetFileExtension(fileExtension)
 
     # Compute signed rotation around the setup's X axis.
     #

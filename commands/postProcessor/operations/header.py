@@ -1,24 +1,24 @@
-from pathlib import Path
 from typing import Optional, TextIO
 
+from ..settings.settings import Settings
 from ..file_modes import FileModes
+from .operation.operation import Operation
 
 class OperationsHeader:
     @property
     def hasHeader(self):
         return self._operationWithHeader is not None
 
-    def WriteFirstHeaderStart(self, path: Path, fileName: str, fileExtension: str) -> int:
-        if len(self._operations) == 0:
-            return 0
-        
-        # Always OVERWRITE on first header as it indcates a new file
-        with self._getFileHandler(path, FileModes.OVERWRITE, fileName, self._operations[0], 1, fileExtension) as fileHandler:
-            return self._operations[0].WriteHeaderStart(fileHandler) # New file, so line number starts at 0
+    def WriteFirstHeaderStart(self) -> None:
+        if len(self._operations) != 0:
+            # Always OVERWRITE on first header as it indcates a new file
+            with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.OVERWRITE) as fileHandler:
+                self._operations[0].WriteHeaderStart(fileHandler)
+                self._lineNumber = self._operations[0].lineNumber
 
-    def WriteToolComments(self, path: Path, lineNumber: int, fileName: str, fileExtension: str) -> int:
+    def WriteToolComments(self) -> None:
         if len(self._operations) == 0:
-            return lineNumber
+            return
 
         toolIdIndex = {}
         fileHandler: Optional[TextIO] = None
@@ -28,31 +28,49 @@ class OperationsHeader:
             if toolId not in toolIdIndex:
                 toolIdIndex[toolId] = 0
             toolIdIndex[toolId] += 1
-            try: 
-                with self._getFileHandler(path, FileModes.APPEND, fileName, operation, toolIdIndex[toolId], fileExtension) as fileHandler:
-                    lineNumber = operation.WriteToolComment(fileHandler, lineNumber)
-            finally:
-                if fileHandler is not None and not fileHandler.closed:
-                    fileHandler.close()
-        return lineNumber
+            with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
+                operation.SetLineNumber(self._lineNumber)
+                operation.WriteToolComment(fileHandler)
+                self._lineNumber = operation.lineNumber
 
-    def WriteFirstHeaderEnd(self, path: Path, lineNumber: int, fileName: str, fileExtension: str) -> int:
+    def WriteFirstHeaderEnd(self) -> None:
+        if len(self._operations) != 0:
+            with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
+                self._operations[0].SetLineNumber(self._lineNumber)
+                self._operations[0].WriteHeaderEnd(fileHandler)
+                self._lineNumber = self._operations[0].lineNumber
+
+    def WriteHeader(self) -> None:
+        # SETUP_AND_TOOL or PER_OPERATION
         if len(self._operations) == 0:
-            return lineNumber
+            return
 
-        with self._getFileHandler(path, FileModes.APPEND, fileName, self._operations[0], 1, fileExtension) as fileHandler:
-            return self._operations[0].WriteHeaderEnd(fileHandler, lineNumber)
-
-    def WriteHeader(self, path: Path, fileName: str, fileExtension: str) -> int:
-
-        if len(self._operations) == 0:
-            return 0
-
+        previousTool = None
         toolIdIndex = {}
-        for operation in self._operations:
+        operation: Operation
+        for operation in self:
             toolId = operation.toolId
             if toolId not in toolIdIndex:
                 toolIdIndex[toolId] = 0
             toolIdIndex[toolId] += 1
-            lineNumber = operation.WriteHeader(path, fileName, toolIdIndex[toolId], fileExtension)
-        return lineNumber
+
+            self._setOperationFileName(operation, toolIdIndex[toolId])
+
+            with (self._path / f"{operation.fileName}{self._fileExtension}").open(FileModes.OVERWRITE) as fileHandler:
+                if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
+                    operation.SetLineNumber(0)
+                    operation.WriteHeaderStart(fileHandler)
+                    operation.WriteToolComment(fileHandler)
+                    operation.WriteHeaderEnd(fileHandler)
+                    self._lineNumber = operation.lineNumber
+                else: # SETUP_AND_TOOL
+                    toolChange = previousTool is None or previousTool != toolId
+                    if toolChange: # New tool, new header
+                        operation.SetLineNumber(0)
+                        operation.WriteHeaderStart(fileHandler)
+                    
+                    operation.WriteToolComment(fileHandler)
+
+                    if toolChange:
+                        operation.WriteHeaderEnd(fileHandler)
+            previousTool = toolId            
