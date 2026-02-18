@@ -1,3 +1,4 @@
+from pathlib import Path
 from ..settings.settings import Settings
 from ..file_modes import FileModes
 
@@ -17,7 +18,8 @@ class OperationsBody:
 
             self._setOperationFileName(operation, toolIdIndex[toolId])
 
-            with (self._path / f"{operation.fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
+            pathToOpen: Path = self._path / f"{operation.fileName}{self._fileExtension}"
+            with pathToOpen.open(FileModes.APPEND) as fileHandler:
                 if Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SINGLE_FILE, 
                                                                 Settings.OperationsGroupings.SETUP]:
                     # Line number is saved in the setup (operations) when writing the header, so it can be used here

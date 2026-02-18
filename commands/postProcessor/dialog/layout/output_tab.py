@@ -202,21 +202,27 @@ class OutputTab(PostDialogConstants):
         EventRegistry.register(flatFileStructure, lambda checkbox: Settings.Set(Settings.FLAT_FILE_STRUCTURE, checkbox.value))
         #endregion
 
-        #region Delete existing files checkbox
-        deleteExistingFiles = outputTab.children.addBoolValueInput(cls._DELETE_EXISTING_FILES_ID, Strings("Overwrite existing files"),  True, "", Settings(Settings.DEL_FILES))
-        deleteExistingFiles.tooltip = Strings("TOOL TIP: Overwrite existing files")
-        deleteExistingFiles.tooltipDescription = Strings("TOOLTIP TEXT: Overwrite existing files")
-        deleteExistingFiles.isEnabled = True
+        #region Overwrite existing files checkbox
+        overwriteExistingFiles = outputTab.children.addBoolValueInput(cls._OVERWRITE_EXISTING_FILES_ID, Strings("Overwrite existing files"),  True, "", False)
+        overwriteExistingFiles.tooltip = Strings("TOOL TIP: Overwrite existing files")
+        overwriteExistingFiles.tooltipDescription = Strings("TOOLTIP TEXT: Overwrite existing files")
+        overwriteExistingFiles.isEnabled = True
 
-        EventRegistry.register(deleteExistingFiles, lambda checkbox: Settings.Set(Settings.DEL_FILES, checkbox.value))
+        EventRegistry.register(overwriteExistingFiles, lambda checkbox: Settings.Set(Settings.OVERWRITE_FILES, checkbox.value))
         #endregion
 
-        #region Delete output folder checkbox
-        deleteOutputFolder = outputTab.children.addBoolValueInput(cls._DELETE_OUTPUT_FOLDER_ID, Strings("Clear output folder"),  True, "", Settings(Settings.DEL_FOLDER))
-        deleteOutputFolder.tooltip = Strings("TOOL TIP: Clear output folder")
-        deleteOutputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Clear output folder")
+        #region Clear output folder checkbox
+        clearOutputFolder = outputTab.children.addBoolValueInput(cls._CLEAR_OUTPUT_FOLDER_ID, Strings("Clear output folder"),  True, "", False)
+        clearOutputFolder.tooltip = Strings("TOOL TIP: Clear output folder")
+        clearOutputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Clear output folder")
 
-        EventRegistry.register(deleteOutputFolder, lambda checkbox: Settings.Set(Settings.DEL_FOLDER, checkbox.value))
-        EventRegistry.register(deleteExistingFiles, lambda checkbox: setattr(checkbox.parentCommand.commandInputs.itemById(cls._DELETE_OUTPUT_FOLDER_ID), 'isEnabled', checkbox.value)) # Enable "Clear output folder" when "Overwrite existing files" is enabled
+        def setClearOutputFolderEnabled(checkbox: adsk.core.BoolValueCommandInput):
+            checkbox.parentCommand.commandInputs.itemById(cls._CLEAR_OUTPUT_FOLDER_ID).isEnabled = checkbox.value
+            if not checkbox.value:
+                Settings.Set(Settings.CLEAR_FOLDER, False) # Uncheck "Clear output folder" when "Overwrite existing files" is disabled, as it doesn't make sense to clear the output folder if we're not overwriting existing files
+
+        EventRegistry.register(clearOutputFolder, lambda checkbox: Settings.Set(Settings.CLEAR_FOLDER, checkbox.value))
+        EventRegistry.register(overwriteExistingFiles, setClearOutputFolderEnabled) # Enable "Clear output folder" when "Overwrite existing files" is enabled
+        setClearOutputFolderEnabled(overwriteExistingFiles) # initialize state based on current value
         #endregion -----
 

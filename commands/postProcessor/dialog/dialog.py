@@ -167,10 +167,17 @@ class PostDialog(PostDialogLayout):
             Settings.Save(doc.attributes)  # Save settings for the current project
 
 
-        # Create a temporary folder to prepare all files in
-        with tempfile.TemporaryDirectory() as tmpdir:
-            Programs.Current.Process(Path(tmpdir))
-            Programs.Current.Generate()
+        try:
+            # Create a temporary folder to prepare all files in
+            with tempfile.TemporaryDirectory() as tmpdir:
+                Programs.Current.Process(Path(tmpdir))
+                Programs.Current.Generate()
+        except FileExistsError as e:
+            Utils.log(f'PostDialog: {str(e)}', adsk.core.LogLevels.ErrorLogLevel)
+            ui.messageBox(str(e), "File already exists!", adsk.core.MessageBoxButtonTypes.OKButtonType, adsk.core.MessageBoxIconTypes.CriticalIconType)
+        except Exception as e:
+            Utils.log(f'PostDialog: An error occurred during post processing: {str(e)}', adsk.core.LogLevels.ErrorLogLevel)
+            ui.messageBox(f"An error occurred during post processing: {str(e)}", "Error!", adsk.core.MessageBoxButtonTypes.OKButtonType, adsk.core.MessageBoxIconTypes.CriticalIconType)
 
     # This event handler is called when the user interacts with any of the inputs in the dialog
     # which allows you to verify that all of the inputs are valid and enables the OK button.

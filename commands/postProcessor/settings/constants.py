@@ -6,10 +6,10 @@ class Constants:
 
     # G-codes that mark the ending sequence
     END_CODES:                      Final[str] = 'endCodes'
-    # If the files should be deleted before post processing
-    DEL_FILES:                      Final[str] = 'delFiles'
-    # If the folder should be deleted before post processing
-    DEL_FOLDER:                     Final[str] = 'delFolder'
+    # If the files should be overwritten before post processing
+    OVERWRITE_FILES:                Final[str] = 'overwriteFiles'
+    # If the folder should be cleared before post processing
+    CLEAR_FOLDER:                   Final[str] = 'clearFolder'
     # The name of the output folder
     OUTPUT_FOLDER:                  Final[str] = 'outputFolder'
     

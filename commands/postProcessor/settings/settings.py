@@ -36,8 +36,8 @@ class Settings(Constants, metaclass=_SettingsMeta):
     # See above definitions for details
     _defaultSettings = {
         Constants.END_CODES:                    "M5\nM9\nM30",
-        Constants.DEL_FILES:                    False,
-        Constants.DEL_FOLDER:                   False,
+        Constants.OVERWRITE_FILES:                    False,
+        Constants.CLEAR_FOLDER:                   False,
         Constants.OUTPUT_FOLDER:                "",
         Constants.FILE_SEQUENCE:                False,
         Constants.NUMERIC_NAME:                 False,  
@@ -86,8 +86,8 @@ class Settings(Constants, metaclass=_SettingsMeta):
                     with open(path) as file:
                         cls._default = json.load(file)
                 # never allow delFiles or delFolder to default to True
-                    cls._default[Constants.DEL_FILES] = False
-                    cls._default[Constants.DEL_FOLDER] = False
+                    cls._default[Constants.OVERWRITE_FILES] = False
+                    cls._default[Constants.CLEAR_FOLDER] = False
                     if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
                         cls.Update(Settings._defaultSettings, cls._default)
             else:
@@ -104,8 +104,8 @@ class Settings(Constants, metaclass=_SettingsMeta):
         cls._fMustSave = False
         cls._default = dict(cls._items)
         # never allow delFiles or delFolder to default to True
-        cls._default[Constants.DEL_FILES] = False
-        cls._default[Constants.DEL_FOLDER] = False
+        cls._default[Constants.OVERWRITE_FILES] = False
+        cls._default[Constants.CLEAR_FOLDER] = False
         try:
             strSettings = json.dumps(cls._items, indent=4, sort_keys=True)
             file = open(cls._getPath(), "w")

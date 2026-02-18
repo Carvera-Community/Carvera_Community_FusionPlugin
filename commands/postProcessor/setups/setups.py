@@ -115,10 +115,9 @@ class Setups(SetupsHeader, SetupsBody, SetupsTail, metaclass=_SetupsMeta):
 
     @classmethod
     def SetFileName(cls, fileName: str) -> None:
+        setup: Setup
         for setup in cls.selected:
-            if Settings(Settings.FLAT_FILE_STRUCTURE):
-                fileName = f"{fileName}_{Utils.sanitizeFilename(setup.name, preserveExtension = False)}"
-            elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE \
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE \
                 or Settings(Settings.NUMERIC_NAME):
                 setup.SetFileName(fileName)
                 

@@ -148,7 +148,7 @@ class Program():
             if initialPath.exists() and not initialPath.is_dir():
                 return # Need to notify the user about this.
 
-            if Settings(Settings.DEL_FOLDER) and initialPath.exists() and initialPath.is_dir():
+            if Settings(Settings.CLEAR_FOLDER) and initialPath.exists() and initialPath.is_dir():
                 for child in initialPath.iterdir():
                     try:
                         if child.is_dir() and not child.is_symlink():
