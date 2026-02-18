@@ -157,7 +157,7 @@ class OutputTab(PostDialogConstants):
         def setNumberingDigitsOnFileName(textbox: adsk.core.StringValueCommandInput):
             if Programs.Current and Programs.Current.fileName.isnumeric() and textbox.parentCommand.commandInputs.itemById(cls._NUMERIC_NAME_ID).value:
                 Settings.Set(Settings.FILE_SEQUENCE_DIGITS, min(len(Programs.Current.fileName), 6))
-                numberingDigits.valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
+                textbox.commandInputs.itemById(cls._FILE_SEQUENCE_DIGITS_ID).valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
 
         EventRegistry.register(numberingDigits, lambda spinner: Settings.Set(Settings.FILE_SEQUENCE_DIGITS, spinner.valueOne))
         EventRegistry.register(cls._NUMERIC_NAME_ID, setNumberingDigitsOnNumericFileName) # Disable numbering digits when "Name must be numeric" is enabled, as it doesn't make sense in that context

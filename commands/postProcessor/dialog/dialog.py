@@ -99,8 +99,6 @@ class PostDialog(PostDialogLayout):
 
         cls.createLayout(command) # Create the the dialog inputs and structure
 
-        #cls._updateDialog(command) # Update the dialog with the current values
-
         #region Hook up events
         Events.add(command.execute, cls.commandExecute, local_handlers = cls._local_handlers)
         Events.add(command.inputChanged, cls.commandInputChanged, local_handlers = cls._local_handlers)

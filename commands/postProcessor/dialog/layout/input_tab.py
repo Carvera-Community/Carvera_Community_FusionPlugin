@@ -90,7 +90,7 @@ class InputTab(PostDialogConstants):
         def setAllSetups(checkbox):
             for setup in Setups:
                 if not setup.hasError and not setup.isSuppressed:
-                    setup.select(checkbox.value)
+                    setup.Select(checkbox.value)
                     cls._updateSetups(checkbox) # Update the table to enable/disable inputs based on the new selection
             
         EventRegistry.registerWithOnlyChange(selectAllSetups, setAllSetups) # For some reason the checkbox generates duplicate events, so we use a special registry method that ignores duplicates. See EventRegistry for details.
@@ -121,7 +121,7 @@ class InputTab(PostDialogConstants):
             setup = next((s for s in Setups if s.index == setupIndex), None)
             if setup and setup.isSelected != checkbox.value:
                 Utils.log(f'Updating setup selection from dialog: {setup.name} selected={checkbox.value}')
-                setup.select(checkbox.value)
+                setup.Select(checkbox.value)
                 cls._updateSetups(checkbox) # Update the table to enable/disable inputs based on the new selection
                 EventRegistry.setValue(cls._SELECT_ALL_SETUPS_ID, areAllSetupsSelected(checkbox.parentCommand.commandInputs))
 
@@ -252,7 +252,7 @@ class InputTab(PostDialogConstants):
 
             cls._setTableRowValues(inputs, rowState)
             
-            setup.select(rowState[cls._SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
+            setup.Select(rowState[cls._SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
 
             if firstSetup is None and setup.isSelected:
                 firstSetup = setup
