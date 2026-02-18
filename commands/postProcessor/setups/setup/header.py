@@ -39,14 +39,6 @@ class SetupHeader(Line):
             self.WriteHeaderEnd()
         else:
             # SETUP_AND_TOOL and PER_OPERATION breaks the setup down further
-            if not Settings(Settings.NUMERIC_NAME):
-                self._setFileName()
+            self._operations.SetFileName(self.name)
             self._operations.SetLineNumber(self._lineNumber)
             self._operations.WriteHeader()
-
-    def _setFileName(self):
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP:
-            fileName = Utils.sanitizeFilename(self.name)
-            if Settings(Settings.FILE_SEQUENCE):
-                fileName = f"{str(self._index + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')}_{fileName}"
-            self._operations.SetFileName(fileName)

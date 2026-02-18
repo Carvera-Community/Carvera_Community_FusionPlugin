@@ -9,6 +9,7 @@ class OperationsTail:
         return self._operationWithTail is not None
 
     def WriteFirstTail(self) -> None:
+        # SINGLE_FILE, SETUP
         with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
             self._operationWithTail.SetLineNumber(self._lineNumber)
             self._operationWithTail.WriteTail(fileHandler)
@@ -21,7 +22,6 @@ class OperationsTail:
             return 
 
         toolIdIndex = {}
-        #firstOperationPerTool: dict[int, Operation] = {}
         operation: Operation
         for operation in self:
             toolId = operation.toolId

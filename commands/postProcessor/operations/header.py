@@ -10,6 +10,7 @@ class OperationsHeader:
         return self._operationWithHeader is not None
 
     def WriteFirstHeaderStart(self) -> None:
+        # SINGLE_FILE, SETUP
         if len(self._operations) != 0:
             # Always OVERWRITE on first header as it indcates a new file
             with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.OVERWRITE) as fileHandler:
@@ -17,6 +18,7 @@ class OperationsHeader:
                 self._lineNumber = self._operations[0].lineNumber
 
     def WriteToolComments(self) -> None:
+        # SINGLE_FILE, SETUP
         if len(self._operations) == 0:
             return
 
@@ -34,6 +36,7 @@ class OperationsHeader:
                 self._lineNumber = operation.lineNumber
 
     def WriteFirstHeaderEnd(self) -> None:
+        # SINGLE_FILE, SETUP
         if len(self._operations) != 0:
             with (self._path / f"{self._fileName}{self._fileExtension}").open(FileModes.APPEND) as fileHandler:
                 self._operations[0].SetLineNumber(self._lineNumber)
@@ -41,7 +44,7 @@ class OperationsHeader:
                 self._lineNumber = self._operations[0].lineNumber
 
     def WriteHeader(self) -> None:
-        # SETUP_AND_TOOL or PER_OPERATION
+        # SETUP_AND_TOOL, PER_OPERATION
         if len(self._operations) == 0:
             return
 
