@@ -1,5 +1,3 @@
-from .....lib.fusionAddInUtils.general_utils import Utils
-
 from ...settings.settings import Settings
 from ...line import Line
 
@@ -10,7 +8,7 @@ class SetupHeader(Line):
 
     def WriteHeaderStart(self) -> None:
         if not Settings(Settings.NUMERIC_NAME):
-            self._setFileName()
+            self._operations.SetFileName(self.name)
         self._operations.WriteFirstHeaderStart()
         self._lineNumber = self._operations.lineNumber
     
