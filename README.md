@@ -1,15 +1,15 @@
 # Makera Community Fusion Plugin
 
-Short description: The Autodesk Fusion plugin created by the Makera Community
+The Autodesk Fusion plugin created by the Makera Community
 
 ## Overview
-This repository contains the Autodesk Fusion add-in for the Makera Community. It allows you to do post post-processing of the g-code that the community post-processor generates.  
+This repository contains the Autodesk Fusion add-in by the Makera Community. It allows you to do post post-processing of the g-code that the community post-processor generates.
 
 ## Features
 - It takes each operation and outputs either one file per operation, per setup, per setup and tool or one single file. 
 - Rotation of the A-axis if one is installed for support of indexed milling.
 - Allows tool changes in a single setup
-- Adds rapid moves when no cut iss being made
+- Adds rapid moves when no cut is being made
 - ... and more!
 
 ## Acknowledements
@@ -17,22 +17,41 @@ This plugin was heavily inspired by Tim Patersons [PostProcessAll](https://githu
 
 ## Requirements
 - Autodesk Fusion (Personal Edition)
+- [Makera post-processor](https://github.com/Carvera-Community/Carvera_Community_Profiles/tree/main/CAM_Post_Processors) (or a post-processor for your CNC-machine)
 
 ## Installation
+This plugin follows the normal plugin-installation procedure of a local add-in for Fusion.
 1. Clone the repository:
 
-```bash
-git clone git@github.com:USERNAME/REPO.git
-cd "Makera Community"
-```
+Using a git client you start by downloading this repository into a folder of your choice:
 
-2. Follow the generic instructions to install add-ins into Fusion 360:
-- Go to Utilities
-- Open Scripts and add-ins...
-- Click the '+' above the table with plugins and scripts
-- Choose 'Script or add-in from device'
-- Select the folder that you just cloned the repo to (the folder with the Makera Community.manifest file)
-- Done.
+```bash
+# SSH (recommended if you have SSH keys configured):
+git clone git@github.com:Carvera-Community/CarveraCommunity_FusionPlugin.git "Makera Community"
+
+# OR HTTPS:
+git clone https://github.com/Carvera-Community/CarveraCommunity_FusionPlugin.git "Makera Community"
+
+```
+Follow the generic instructions to install add-ins into Fusion 360:
+
+<img src="resources/readme/installation/step1.png">
+
+1. Go to Utilities
+2. Open Scripts and add-ins...
+
+<img src="resources/readme/installation/step3.png">
+
+3. Click the '+' above the table with plugins and scripts
+
+<img src="resources/readme/installation/step4.png">
+
+4. Choose 'Script or add-in from device' and select the folder that you just cloned the repo to (the folder with the Makera Community.manifest file)
+
+<img src="resources/readme/installation/step5.png">
+
+5. (Optional) Tick the checkbox to run the plug-in on startup
+6. Done!
 
 You should now se a new icon in the Manufacture workspace, next to the Setup sheet under Milling.
 

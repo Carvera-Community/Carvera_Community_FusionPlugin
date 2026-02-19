@@ -1,13 +1,13 @@
 {
 	"autodeskProduct":	"Fusion",
 	"type":	"addin",
-	"author":	"Magnus Andersson",
+	"author":	"Makera Community",
 	"description":	{
-		"":	"Just a test to get the structure"
+		"":	"A plug-in for the Makera family of CNC mills."
 	},
-	"version":	"",
+	"version":	"1.0.0",
 	"runOnStartup":	false,
 	"supportedOS":	"windows|mac",
 	"editEnabled":	true,
-	"iconFilename":	"MakeraCommunity.png"
+	"iconFilename":	"Makera Community.svg"
 }
