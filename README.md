@@ -73,7 +73,7 @@ These settings will be saved in the document itself, so if you're sharing your d
 
 #### Input Selection Tab
 
-The first step you need to do is to select your NC Program that contains the information for the post processor to work. In the drop down `NC Program` (2) you will find the NC Programs that is in the current document that doesn't have an error. Select the one that you want to use, normally you might just have one after the first step above.
+The first step you need to do is to select your NC Program that contains the information for the post processor to work. In the drop down `NC Program` (2) you will find the NC Programs that is in the current document that isn't suppressed and doesn't have an error. Select the one that you want to use, normally you might just have one after the first step above.
 
 As a validation you will see the `Machine` selected (3) and the `Post Processor` (4) that will be used when running the plugin later. 
 
