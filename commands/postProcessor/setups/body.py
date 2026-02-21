@@ -42,6 +42,7 @@ class SetupsBody():
                 fileName = setup._operations.fileName 
 
     def _getRotation(setup: Setup, firstSetup: Optional[Setup], currentRotation: Optional[float]) -> Tuple[float, Optional[float], bool]:
+        newRotation = None
         if Settings(Settings.ROTATE_A_AXIS): # Calculate the rotation between the setups
             angle = 0 if firstSetup is None else setup.GetRotationAroundXAxisRelativeToDeg(firstSetup)
             newRotation = None if angle == currentRotation else angle
