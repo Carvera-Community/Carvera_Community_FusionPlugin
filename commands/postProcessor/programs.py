@@ -1,10 +1,12 @@
 from __future__ import annotations
 import time
+from typing import TYPE_CHECKING, ClassVar, Optional
 
 import adsk.cam
 
 from .program import Program
-from .setups import Setups
+from .setups.setups import Setups
+from .settings.settings import Settings
 from ...lib.fusionAddInUtils.general_utils import classproperty
 
 class _ProgramsMeta(type):
@@ -19,24 +21,36 @@ class _ProgramsMeta(type):
         return super().__setattr__(name, value)
     
 class Programs(metaclass=_ProgramsMeta):
-    _current: Program = None
+    _current: Optional[Program] = None
     _items: list[Program] = []
     _cam: adsk.cam.CAM = None
+    if TYPE_CHECKING:
+        # Help type checkers/IDE infer the type of Programs.Current (runtime uses @classproperty)
+        Current: ClassVar[Optional["Program"]]
 
     @classmethod
     def Load(cls, cam: adsk.cam.CAM):
         """Loads all NCPrograms from the current document."""
         cls._cam = cam
         cls._items = [Program(program) for program in cam.ncPrograms]
+
+        cls._current = None
+        if Settings(Settings.NC_PROGRAM) is not None:
+            # Try to set the current program to the one specified in settings
+            for program in cls._items:
+                if program.name == Settings(Settings.NC_PROGRAM):
+                    cls.Current = program
+                    break
+
         Setups.Load(cam.setups)
 
     @classproperty
-    def Current(cls) -> Program:
+    def Current(cls) -> Optional["Program"]:
         """Returns the current NCProgram."""
         return cls._current
     
     @Current.setter
-    def Current(cls, program: Program):
+    def Current(cls, program: Optional["Program"]):
         """Sets the current NCProgram."""
         cls._current = program
 

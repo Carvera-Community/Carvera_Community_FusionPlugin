@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .postProcessor.dialog import PostDialog
+from .postProcessor.dialog.dialog import PostDialog
 
 class Commands():
 
@@ -12,15 +12,15 @@ class Commands():
 
     # Assumes you defined a "start" function in each of your modules.
     # The start function will be run when the add-in is started.
-    @staticmethod
-    def start():
+    @classmethod
+    def start(cls):
         for command in Commands._commands:
             command.start()
 
 
     # Assumes you defined a "stop" function in each of your modules.
     # The stop function will be run when the add-in is stopped.
-    @staticmethod
-    def stop():
+    @classmethod
+    def stop(cls):
         for command in Commands._commands:
             command.stop()

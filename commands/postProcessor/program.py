@@ -1,38 +1,17 @@
 from __future__ import annotations
 import os
 import shutil
-from typing import Optional, TextIO, overload
 import adsk
-import adsk.core
 import adsk.cam
 from pathlib import Path
 
-from . import config 
-from ...config import PLUGIN_VERSION
 from .strings import Strings
 from .attributes import Attributes
-from .const import Const
-from .setups import Setups
-from .settings import Settings
+from .setups.setups import Setups
+from .settings.settings import Settings
 from .parameters import Parameters
 
-def CountOutputFolderFiles(folder, limit, fileExt):
-    cntFiles = 0
-    cntNcFiles = 0
-    for path, dirs, files in os.walk(folder):
-        for file in files:
-            if file.endswith(fileExt):
-                cntNcFiles += 1
-            else:
-                cntFiles += 1
-        if cntFiles > limit:
-            return "many files that are not G-code"
-        if cntNcFiles > limit * 1.5:
-            return "many more G-code files than are produced by this design"
-    return None
-
-
-class Program:
+class Program():
     def __init__(self, program: adsk.cam.NCProgram):
         self._program: adsk.cam.NCProgram = program
         self._outputFolder: Path = None
@@ -40,7 +19,7 @@ class Program:
         self._parameters: Parameters = Parameters(program.parameters)
 
     @property
-    def programName(self):
+    def name(self):
         """Returns the name of the NCProgram."""
         return self._program.name
     
@@ -79,13 +58,32 @@ class Program:
         return self._parameters
     
     @property
-    def Attributes(self):
+    def attributes(self):
         return self._attributes
     
     @property
-    def machineName(self):
+    def hasMachine(self):
+        """Returns whether the NCProgram has a machine."""
+        return self._program.machine is not None
+
+    @property
+    def machineName(self) -> str:
         """Returns the machine of the NCProgram."""
-        return self._program.machine.model if self._program.machine is not None else Strings("<no machine chosen>")
+        return self._program.machine.model if self.hasMachine else Strings("<no machine selected>")
+
+    @property
+    def machineHasATC(self):
+        """Returns whether the machine of the NCProgram has an ATC."""
+        return self._program.machine.elements.itemById('tooling','default').isToolChangerAutomatic if self.hasMachine else False
+    
+    @property
+    def machineToolSlots(self):
+        """Returns the number of ATC slots of the machine of the NCProgram."""
+        return self._program.machine.elements.itemById('tooling','default').maxToolCount if self.machineHasATC else 1
+
+    @property
+    def machineATCSlots(self) -> int:
+        return self._program
 
     @property
     def machineHasAAxis(self):
@@ -95,9 +93,14 @@ class Program:
             else False
     
     @property
+    def hasPostProcessor(self):
+        """Returns whether the NCProgram has a post processor."""
+        return self._program.postConfiguration is not None
+
+    @property
     def postProcessorDescription(self):
         """Returns the post processor of the current NCProgram."""
-        return self._program.postConfiguration.description if self._program.postConfiguration else Strings("<no post processor chosen>")
+        return self._program.postConfiguration.description if self.hasPostProcessor else Strings("<no post processor selected>")
     
     @property
     def fileName(self):
@@ -118,36 +121,6 @@ class Program:
             and gather information for generation of final files."""
         oldOutputFolder = self.GetOutputFolder()
 
-        #region --- Flyttas till Generate ---
-        # if not Settings.Get(Settings.DEL_FILES):
-        #     Settings.Set(Settings.DEL_FOLDER, False) # Only remove folders if files will be removed too
-
-        # if Settings.Get(Settings.DEL_FOLDER):
-        #     strMsg = CountOutputFolderFiles(self._outputFolder, Setups.Count(), self.fileExtension)
-        #     if strMsg:
-        #         Settings.Set(Settings.DEL_FOLDER, False)
-        #         strMsg = (
-        #             "The output folder contains {}. "
-        #             "It will not be deleted. You may wish to make sure you selected "
-        #             "the correct folder. If you want the folder deleted, you must "
-        #             "do it manually."
-        #             ).format(strMsg)
-        #         res = self._ui.messageBox(strMsg, 
-        #                             Const.CMD_NAME,
-        #                             adsk.core.MessageBoxButtonTypes.OKCancelButtonType,
-        #                             adsk.core.MessageBoxIconTypes.WarningIconType)
-        #         if res == adsk.core.DialogResults.DialogCancel:
-        #             return  # abort!
-
-        # if Settings.Get(Settings.DEL_FOLDER):
-        #     try:
-        #         shutil.rmtree(self._outputFolder, True)
-        #     except:
-        #         pass #ignore errors
-
-        # # Make sure that the root folder exists as defined in the NC Program parameters
-        # self.SetAndCreateOutputFolder()
-
         # TODO: Start showing progress here
         #endregion
 
@@ -156,7 +129,7 @@ class Program:
         name = self.Parameters.Get(Parameters.NAME)
 
         try:
-            Setups.Process(tmpPath)
+            Setups.Parse(tmpPath)
         finally:
             self.SetOutputFolder(outputFolder)
             self.Parameters.Set(Parameters.FILE_NAME, fileName)
@@ -167,50 +140,53 @@ class Program:
 
     def Generate(self):
         """Generate the final G-code files from the results of the post processing."""
-        outputFolder = self.GetOutputFolder()
-        fileName = self.fileName
-        name = self.Parameters.Get(Parameters.NAME)
-        addLineNumbers = Settings(Settings.SEQUENCE) in [Settings.Sequences.STEP, Settings.Sequences.FILE_AND_STEP]
-        digits = Settings.Get(Settings.NAME_DIGITS)
+        initialPath = self.GetOutputFolder()
+        initialFileName = self.fileName
+        programName = self.Parameters.Get(Parameters.NAME)
 
         try:
-            if not outputFolder.exists():
-                outputFolder.mkdir(parents=True)
+            if initialPath.exists() and not initialPath.is_dir():
+                return # Need to notify the user about this.
 
-            # TODO: Handle file naming here
-            fileName = self.fileName
+            if Settings(Settings.CLEAR_FOLDER) and initialPath.exists() and initialPath.is_dir():
+                for child in initialPath.iterdir():
+                    try:
+                        if child.is_dir() and not child.is_symlink():
+                            shutil.rmtree(child)
+                        else:
+                            child.unlink()
+                    except Exception:
+                        return # File/folder could not be deleted, likely due to permissions. Need to notify the user about this.
+            
+            # Setting the base parameters for the output.
+            Setups.SetFileExtension(self._program.postConfiguration.extension)
+            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE \
+                or Settings(Settings.FLAT_FILE_STRUCTURE) \
+                or (Settings(Settings.NUMERIC_NAME) \
+                    and initialFileName.isnumeric()): # numeric name is a special case where we want to keep a single file name and just increment it, so we treat it like single file grouping even if the user has selected otherwise
+                # Flat file structure or single file
+                Setups.SetPath(initialPath)
+                Setups.SetFileName(initialFileName)
+            else:
+                Setups.SetPath(initialPath / initialFileName)
 
-            lineNumber = 0            
+            Setups.SetLineNumber(0)
+            Setups.WriteHeader()
 
-            if Settings(Settings.FLAT_FILE_STRUCTURE):
-                filePath = outputFolder / f"{fileName}{self._program.postConfiguration.extension}"
-                with filePath.open("w", encoding="utf-8") as fileHandler:
-                    lineNumber = self._writeLine(fileHandler, f"({fileName})\n", lineNumber, addLineNumbers, digits)
-                    lineNumber = self._writeLine(fileHandler, f"(Generated with Makera Community Post Processor version {PLUGIN_VERSION})\n", lineNumber, addLineNumbers, digits)
+            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
+                Setups.SetFileName(initialFileName) # Reset the numeric name
+            Setups.WriteBody()
 
-                    lineNumber = Setups.GenerateHeader(fileHandler, lineNumber, addLineNumbers, digits)
-                    lineNumber = Setups.GenerateBody(fileHandler, lineNumber, addLineNumbers, digits)
-                    if(Setups.hasOperationWithTail):
-                        Setups.GenerateTail(fileHandler, lineNumber, addLineNumbers, digits)
-            else: # Output is possibly grouped on a lower level
-                Setups.GenerateHeader(outputFolder, lineNumber, addLineNumbers, digits, fileName, self._program.postConfiguration.extension)
-                Setups.GenerateBody(outputFolder, lineNumber, addLineNumbers, digits, fileName, self._program.postConfiguration.extension)
-                if(Setups.hasOperationWithTail):
-                    Setups.GenerateTail(outputFolder, lineNumber, addLineNumbers, digits, fileName, self._program.postConfiguration.extension)
+            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
+                Setups.SetFileName(initialFileName) # Reset the numeric name
+            Setups.WriteTail()
+
         except Exception as exc:
             raise exc
         finally:
-            self.SetOutputFolder(outputFolder)
-            self.Parameters.Set(Parameters.FILE_NAME, fileName)
-            self.Parameters.Set(Parameters.NAME, name)
-
-    def _writeLine(self, fileHandler: TextIO, line: str, lineNumber: int, addLineNumbers: bool, digits: int) -> int:
-        lineNumber += Settings(Settings.SEQUENCE_INCREMENT)
-        if addLineNumbers:
-            fileHandler.write(f"N{str(lineNumber).rjust(digits, '0')} " + line)
-        else:
-            fileHandler.write(line)
-        return lineNumber
+            self.SetOutputFolder(initialPath)
+            self.Parameters.Set(Parameters.FILE_NAME, initialFileName)
+            self.Parameters.Set(Parameters.NAME, programName)
 
     def DisableOpenInEditor(self):
         """Convenience method for disabling "Open in Editor" option"""
@@ -233,44 +209,3 @@ class Program:
     def GetOutputFolder(self) -> Path:
         """Convenience method to get output folder"""
         return Path(self.Parameters.Get(Parameters.OUTPUT_FOLDER))
-
-    def SetAndCreateOutputFolder(self):
-        """Sets and if needed creates the output folder as defined in the Fusion NCProgram parameters"""
-        rawPath = self.GetOutputFolder()
-
-        # Preserve UNC/network paths as-is; otherwise use pathlib with
-        # expanded user and env vars. Use splitdrive to detect UNC (no ':' in
-        # the drive part) rather than ad-hoc prefix checks.
-        drive = os.path.splitdrive(rawPath)[0]
-        is_unc = False
-        if drive:
-            is_unc = not drive.endswith(':')
-
-        if is_unc: # Windows UNC path
-            outputFolder = Path(rawPath)
-        else: # Local Windows or Posix path, lets get an absolute path
-            outputFolder = Path(os.path.expandvars(os.path.expanduser(rawPath))).resolve(strict=False)
-
-        # Ensure directory exists — check existence as normal flow; only
-        # handle mkdir failures as exceptional cases.
-        if not outputFolder.exists(): 
-            # let's collect exceptions higher up for now. 
-            # A nicer error handling pattern would be nice, 
-            # (like Promise or something) but let's focus 
-            # on other things for now.
-            outputFolder.mkdir(parents=True, exist_ok=True) 
-        elif not outputFolder.is_dir():
-            # Path exists but is not a directory
-            raise Exception(f"Output folder '{outputFolder.as_posix()}' exists and is not a folder.")
-
-        # Compute compact form (use ~ when under user's home) if possible 
-        # and save it both to the Program attributes and user settings
-        # compressedName = (Path('~') / outputFolder.relative_to(Path.home())).as_posix()
-        #self.Attributes.add(Const.ATTR_GROUP, Const.ATTR_COMPRESSED_NAME, compressedName)
-        #Settings.Set(Settings.OUTPUT_FOLDER, compressedName)
-        Settings.Set(Settings.OUTPUT_FOLDER, outputFolder.as_posix())
-
-        Settings.Save(self._attributes)
-        
-        #self._outputFolder = compressedName
-        self._outputFolder = outputFolder
