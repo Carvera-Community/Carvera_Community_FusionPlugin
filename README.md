@@ -10,6 +10,7 @@ This repository contains the Autodesk Fusion add-in by the Makera Community. It 
 - Rotation of the A-axis if one is installed for support of indexed milling.
 - Allows tool changes in a single setup
 - Adds rapid moves when no cut is being made
+- Grouping of operations as a single file, per setup, per setup and tool or one output file per operation
 - ... and more!
 
 ## Acknowledgments
@@ -132,7 +133,7 @@ The next setting is `Combine operations using same tool` (7) and it will make su
 
 If you don't want the output to be in folders it is possible to select `Flat file structure` (8) which will result in an output in the `Output folder` without any sub folders. Instead, each file name will be prepended with the folder structure concatenated. All the other settings still applies, so numbering will happen and all that.
 
-If you're writing the output to a file already containing files and the plugin tries to write to an existing file it will stop and display an error saying which file that already exists. To force the output to overwrite any existing files, select `Overwrite existing files` (9). It is useful if you rerun the plugin after doing changes but it also prevents accidental overwrites of files you didn't plan overwriting. This setting is <u>not</u> stored, as it is a safety feature. Another safety feature is that `Clear output folder` (10) isn't saved either. It will unceremoniously remove all files and folders in the output folder (but not the output folder itself). So, handle with care. It is however useful if you have a folder where you dump out all your NC programs and wants to clear out any previous attempts. 
+If you're writing the output to a file already containing files and the plugin tries to write to an existing file it will stop and display an error saying which file that already exists. To force the output to overwrite any existing files, select `Overwrite existing files` (9). It is useful if you rerun the plugin after doing changes but it also prevents accidental overwrites of files you didn't plan overwriting. If you want to you can `Clear output folder` (10) to remove everything in the output folder and when the g-code is proccessed all files and folders in the output folder will be removed (but not the output folder itself). So, handle with care. It is however useful if you have a folder where you dump out all your NC programs and wants to clear out any previous attempts. 
 
 #### Misc
 
@@ -140,7 +141,9 @@ There is always a `Misc`tab, isn't there? Well, here all the things that didn't 
 
 <img src="resources/readme/usage/misc-tab.png">
 
-You can choose to `Use Python regular expressions` (1) if you want to do some advanced search and replace. Otherwise you just type in whatever you want to replace in `Search for this string`(2) and in `Replace with this string` (3) you enter what you want to have there instead. Rather simple, really. As an extra boon you can also limit the replacement to `Only selected Setups` so that you don't have to do it to all. Once you're happy with your replacement parameters, just press `Search and replace` (5) and Presto! your wish has been granted. An extra little feature is that if you leave the `Search for this string` empty it will actually prepend the names with the string entered in `Replace with this string`. Magic. 
+There is a possibility to change the language of the dialog if you want to do so. it can be done in the `Language` drop down (1).
+
+You can choose to `Use Python regular expressions` (2) if you want to do some advanced search and replace. Otherwise you just type in whatever you want to replace in `Search for this string`(3) and in `Replace with this string` (4) you enter what you want to have there instead. Rather simple, really. As an extra boon you can also limit the replacement to `Only selected Setups` (5) so that you don't have to do it to all. Once you're happy with your replacement parameters, just press `Search and replace` (6) and Presto! your wish has been granted. An extra little feature is that if you leave the `Search for this string` empty it will actually prepend the names with the string entered in `Replace with this string`. Magic. 
 
 ## Development
 - Create a development branch:
