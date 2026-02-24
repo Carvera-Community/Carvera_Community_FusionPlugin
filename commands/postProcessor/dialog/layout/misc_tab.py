@@ -69,7 +69,7 @@ class MiscTab(PostDialogConstants):
         #endregion
 
         #region Replace button
-        replaceButton = group.children.addBoolValueInput(cls._REPLACE_ID, Strings("Search and replace").ljust(3).rjust(3), False) #l-/rjust() to widen the button some
+        replaceButton = group.children.addBoolValueInput(cls._REPLACE_ID, "   " + Strings("Search and replace") + "   ", False) #l-/rjust() to widen the button some
         replaceButton.isFullWidth = True
         replaceButton.tooltip = Strings("TOOLTIP: Search and replace")
         replaceButton.tooltipDescription = Strings("TOOLTIP TEXT: Search and replace")

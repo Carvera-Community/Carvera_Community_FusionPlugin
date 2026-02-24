@@ -7,8 +7,13 @@
       "description": "Swedish translations for post processor command.",
       "languageLocal": "Svenska",
       "languageEnglish": "Swedish",
-      "fileVersion": "1.1.1",
+      "fileVersion": "1.1.2",
       "revisions": [
+        {
+          "version": "1.1.2",
+          "author": "Moinois",
+          "comment": "Added translation for Process and Close."
+        },
         {
           "version": "1.1.1",
           "author": "Moinois",
@@ -217,6 +222,6 @@
   "TOOLTIP: Save as default settings": "Spara som standard",
   "TOOLTIP TEXT: Save as default settings": "Spara nuvarande dialoginställningar som standard för nya dokument.",
 
-  "Process": "Process",
-  "Close": "Close"
+  "Process": "Starta",
+  "Close": "Stäng"
 }
