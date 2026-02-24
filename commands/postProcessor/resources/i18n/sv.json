@@ -7,8 +7,13 @@
       "description": "Swedish translations for post processor command.",
       "languageLocal": "Svenska",
       "languageEnglish": "Swedish",
-      "fileVersion": "1.1.0",
+      "fileVersion": "1.1.1",
       "revisions": [
+        {
+          "version": "1.1.1",
+          "author": "Moinois",
+          "comment": "Added translation for 'G-codes that mark header end' and changed back 'uppsättningar' to 'Setups' where found"
+        },
         {
           "version": "1.1.0",
           "author": "Moinois",
@@ -57,7 +62,7 @@
       "Same": "Samma",
       "Different": "Olika",
       "(reference)": "(referens)",
-      "Some setups will be deselected as they are rotated. <p>Rotated setups:<ul>{rotatedSetups}</ul><p>Do you want to continue?": "Vissa uppsättningar kommer att avmarkeras eftersom de är roterade. <p>Roterade uppsättningar:<ul>{rotatedSetups}</ul><p>Vill du fortsätta?",
+      "Some setups will be deselected as they are rotated. <p>Rotated setups:<ul>{rotatedSetups}</ul><p>Do you want to continue?": "Vissa Setups kommer att avmarkeras eftersom de är roterade. <p>Roterade Setups:<ul>{rotatedSetups}</ul><p>Vill du fortsätta?",
       "The selected NC Program has the following warning:\n{warning}": "Det valda NC-programmet har följande varning:\n{warning}"
     },
   "gcode_tab": {
@@ -85,9 +90,9 @@
       "TOOLTIP: G-codes that mark ending sequence": "G-koder som markerar slutsekvens",
       "TOOLTIP TEXT: G-codes that mark ending sequence": "Ange vilka G-koder som markerar början på slutsekvensen. Den funna sekvensen kommer fogas till slutet av resultatfilen.",
 
-      "G-codes that mark header end": "G-codes that mark header end",
-      "TOOLTIP: G-codes that mark header end": "G-codes that mark header end",
-      "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
+      "G-codes that mark header end": "G-koder som markerar slutet på headern",
+      "TOOLTIP: G-codes that mark header end": "G-koder som markerar slutet på headern",
+      "TOOLTIP TEXT: G-codes that mark header end": "För att skilja headern från programmets huvuddel måste headerns avslutningssekvens hittas. Den här posten är listan över G-koder som markerar slutet på headersektionen.<p>Till exempel är <i>G20</i> eller <i>G21</i> (ställer in måttenheter) normalt den sista koden, men så är det inte alltid så du kan lägga till koder vid behov. Titta på koden från postprocessorn för att avgöra vad som fungerar i ditt fall.<br>Som minimum om inget anges här används verktygsbyteskoden (<i>Tn</i>) som markör för slutet på headern. <p>Headern antas vara allt från programmets början till och med raden som innehåller den av dessa koder som hittas sist före verktygsbyteskoden.<p>Den första headern som hittas placeras i början av varje resulterande fil. Om flera setups kombineras i en enda fil används bara den första headern och efterföljande headers ignoreras.",
 
       "Restore rapid moves": "Återställ snabba förflyttningar",
       "TOOLTIP: Restore rapid moves": "Återställ snabba förflyttningar",
@@ -169,7 +174,7 @@
             "description": "Translations for the Misc tab."
           },
       "Misc": "Misc",
-      "Rename Setups": "Byt namn på uppsättningar",
+      "Rename Setups": "Byt namn på Setups",
       "Language": "Språk",
       "TOOLTIP: Language": "Språkval",
 
@@ -190,9 +195,9 @@
       "TOOLTIP: Search and replace": "Sök och ersätt",
       "TOOLTIP TEXT: Search and replace": "Utför sök-och-ersätt med ovanstående inställningar.",
 
-      "Only selected Setups": "Endast valda uppsättningar",
-      "TOOLTIP: Only selected Setups": "Bara valda uppsättningar",
-      "TOOLTIP TEXT: Only selected Setups": "Endast uppsättningar markerade i webbläsaren kommer bearbetas. En uppsättning måste vara markerad (highlightad), inte bara aktiverad. Att välja enskilda operationer påverkar inte detta; operationer måste undertryckas för att exkluderas."
+      "Only selected Setups": "Endast valda Setups",
+      "TOOLTIP: Only selected Setups": "Bara valda Setups",
+      "TOOLTIP TEXT: Only selected Setups": "Endast Setups markerade i webbläsaren kommer bearbetas. En uppsättning måste vara markerad (highlightad), inte bara aktiverad. Att välja enskilda operationer påverkar inte detta; operationer måste undertryckas för att exkluderas."
     },
   "tools_tab": {
       "ATC Slot": "ATC-plats",
