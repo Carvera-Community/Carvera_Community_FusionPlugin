@@ -37,8 +37,8 @@ class PostDialogLayout(PostDialogConstants):
         #region Save as default button
         separator = inputs.addSeparatorCommandInput('')
 
-        saveButton = inputs.addBoolValueInput(cls._SAVE_ID, f"   {Strings("Save as default settings")}   ", False)
-        saveButton.tooltip = Strings("TOOL TIP: Save as default settings")
+        saveButton = inputs.addBoolValueInput(cls._SAVE_ID, Strings("Save as default settings").ljust(3).rjust(3), False)
+        saveButton.tooltip = Strings("TOOLTIP: Save as default settings")
         saveButton.tooltipDescription = Strings("TOOLTIP TEXT: Save as default settings")
         saveButton.isFullWidth = True
         saveButton.isEnabled = False

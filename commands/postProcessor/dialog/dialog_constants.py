@@ -44,5 +44,6 @@ class PostDialogConstants:
     _GCODE_ANCHORS_TAB_ID = 'gcodeAnchorsTab'
     _RAPID_MOVES_MINIMUM_DISTANCE_ID = 'rapidMovesMinimumDistance'
     _ADD_LINE_NUMBERS_ID = 'addLineNumbers'
+    _LANGUAGE_ID = 'language'
     #endregion
 

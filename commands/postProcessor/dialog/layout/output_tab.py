@@ -30,7 +30,7 @@ class OutputTab(PostDialogConstants):
 
         #region Output folder label, spans 2 columns
         outputFolderLabel = inputs.addStringValueInput(cls._OUTPUT_FOLDER_LABEL_ID, '', Strings("Output folder"))
-        outputFolderLabel.tooltip = Strings("TOOL TIP: Output folder")
+        outputFolderLabel.tooltip = Strings("TOOLTIP: Output folder")
         outputFolderLabel.tooltipDescription = Strings("TOOLTIP TEXT: Output folder")
         outputFolderLabel.isReadOnly = True
         outputFolderTable.addCommandInput(outputFolderLabel, 0, 0, 0, 2)
@@ -40,7 +40,7 @@ class OutputTab(PostDialogConstants):
         #region Output folder string input
 
         outputFolder = inputs.addStringValueInput(cls._OUTPUT_FOLDER_ID, Strings("Output folder"), Strings("<Select program>"))
-        outputFolder.tooltip = Strings("TOOL TIP: Output folder")
+        outputFolder.tooltip = Strings("TOOLTIP: Output folder")
         outputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Output folder")
         outputFolder.isReadOnly = False
 
@@ -89,7 +89,7 @@ class OutputTab(PostDialogConstants):
 
         #region File name string input
         fileName = outputTab.children.addStringValueInput(cls._FILE_NAME_ID, Strings("File name"), Strings("<Select program>"))
-        fileName.tooltip = Strings("TOOL TIP: File name")
+        fileName.tooltip = Strings("TOOLTIP: File name")
         fileName.tooltipDescription = Strings("TOOLTIP TEXT: File name")
 
         def setFilename(stringInput: adsk.core.StringValueCommandInput):
@@ -108,7 +108,7 @@ class OutputTab(PostDialogConstants):
 
         #region Numeric name checkbox
         numericName = outputTab.children.addBoolValueInput(cls._NUMERIC_NAME_ID, Strings("Name must be numeric"), True, "", Settings(Settings.NUMERIC_NAME))
-        numericName.tooltip = Strings("TOOL TIP: Name must be numeric")
+        numericName.tooltip = Strings("TOOLTIP: Name must be numeric")
         numericName.tooltipDescription = Strings("TOOLTIP TEXT: Name must be numeric")
 
         EventRegistry.register(numericName, lambda checkbox: Settings.Set(Settings.NUMERIC_NAME, checkbox.value))
@@ -127,7 +127,7 @@ class OutputTab(PostDialogConstants):
 
         #region Prepend sequence number checkbox
         prependFileNumber = outputTab.children.addBoolValueInput(cls._FILE_SEQUENCE_ID, Strings("Prepend sequence number"), True, "", Settings(Settings.FILE_SEQUENCE))
-        prependFileNumber.tooltip = Strings("TOOL TIP: Prepend file sequence number")
+        prependFileNumber.tooltip = Strings("TOOLTIP: Prepend file sequence number")
         prependFileNumber.tooltipDescription = Strings("TOOLTIP TEXT: Prepend file sequence number")
 
         EventRegistry.register(prependFileNumber, lambda checkbox: Settings.Set(Settings.FILE_SEQUENCE, checkbox.value))
@@ -136,7 +136,7 @@ class OutputTab(PostDialogConstants):
         #region Numbering digits spinner input
         numberingDigits = outputTab.children.addIntegerSliderListCommandInput(cls._FILE_SEQUENCE_DIGITS_ID, Strings("Number of digits"), [1, 2, 3, 4, 5, 6])
         numberingDigits.valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
-        numberingDigits.tooltip = Strings("TOOL TIP: Number of file digits")
+        numberingDigits.tooltip = Strings("TOOLTIP: Number of file digits")
         numberingDigits.tooltipDescription = Strings("TOOLTIP TEXT: Number of file digits")
 
         def setNumberingDigitsEnabled(checkbox: adsk.core.BoolValueCommandInput):
@@ -169,7 +169,7 @@ class OutputTab(PostDialogConstants):
 
         #region Operations grouping dropdown
         operationsGrouping = outputTab.children.addDropDownCommandInput(cls._OPERATIONS_GROUPING_ID, Strings("Operations grouping"), adsk.core.DropDownStyles.TextListDropDownStyle)
-        operationsGrouping.tooltip = Strings("TOOL TIP: Operations grouping")
+        operationsGrouping.tooltip = Strings("TOOLTIP: Operations grouping")
         operationsGrouping.tooltipDescription = Strings("TOOLTIP TEXT: Operations grouping")
 
         operationsGroupingsTexts = {
@@ -186,7 +186,7 @@ class OutputTab(PostDialogConstants):
 
         #region Combine tool checkbox
         combineTools = outputTab.children.addBoolValueInput(cls._COMBINE_TOOLS_ID, Strings('Combine operations using same tool'), True, "", Settings(Settings.COMBINE_TOOL))
-        combineTools.tooltip = Strings("TOOL TIP: Combine operations using same tool")
+        combineTools.tooltip = Strings("TOOLTIP: Combine operations using same tool")
         combineTools.tooltipDescription = Strings("TOOLTIP TEXT: Combine operations using same tool")
 
         EventRegistry.register(cls._COMBINE_TOOLS_ID, lambda checkbox: Settings(Settings.COMBINE_TOOL, checkbox.value)) # Save settings
@@ -196,7 +196,7 @@ class OutputTab(PostDialogConstants):
 
         #region Flat file structure checkbox
         flatFileStructure = outputTab.children.addBoolValueInput(cls._FLAT_FILE_STRUCTURE_ID, Strings("Flat file structure"), True, "", Settings(Settings.FLAT_FILE_STRUCTURE))
-        flatFileStructure.tooltip = Strings("TOOL TIP: Flatten the file structure")
+        flatFileStructure.tooltip = Strings("TOOLTIP: Flatten the file structure")
         flatFileStructure.tooltipDescription = Strings("TOOLTIP TEXT: Flatten the file structure")
 
         EventRegistry.register(flatFileStructure, lambda checkbox: Settings.Set(Settings.FLAT_FILE_STRUCTURE, checkbox.value))
@@ -204,7 +204,7 @@ class OutputTab(PostDialogConstants):
 
         #region Overwrite existing files checkbox
         overwriteExistingFiles = outputTab.children.addBoolValueInput(cls._OVERWRITE_EXISTING_FILES_ID, Strings("Overwrite existing files"),  True, "", False)
-        overwriteExistingFiles.tooltip = Strings("TOOL TIP: Overwrite existing files")
+        overwriteExistingFiles.tooltip = Strings("TOOLTIP: Overwrite existing files")
         overwriteExistingFiles.tooltipDescription = Strings("TOOLTIP TEXT: Overwrite existing files")
         overwriteExistingFiles.isEnabled = True
 
@@ -213,7 +213,7 @@ class OutputTab(PostDialogConstants):
 
         #region Clear output folder checkbox
         clearOutputFolder = outputTab.children.addBoolValueInput(cls._CLEAR_OUTPUT_FOLDER_ID, Strings("Clear output folder"),  True, "", False)
-        clearOutputFolder.tooltip = Strings("TOOL TIP: Clear output folder")
+        clearOutputFolder.tooltip = Strings("TOOLTIP: Clear output folder")
         clearOutputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Clear output folder")
 
         def setClearOutputFolderEnabled(checkbox: adsk.core.BoolValueCommandInput):

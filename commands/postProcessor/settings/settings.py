@@ -42,6 +42,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
         Constants.FILE_SEQUENCE:                False,
         Constants.NUMERIC_NAME:                 False,  
         Constants.FILE_SEQUENCE_DIGITS:         1,
+        Constants.SHOW_LINE_SEQUENCING:         False,
         Constants.LINE_SEQUENCE:                False,
         Constants.LINE_SEQUENCE_DIGITS:         2,
         Constants.LINE_SEQUENCE_INTERVAL:       5,

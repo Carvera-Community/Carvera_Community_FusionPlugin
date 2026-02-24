@@ -33,7 +33,7 @@ class InputTab(PostDialogConstants):
 
         #region Program dropdown
         programDropdown = inputTab.children.addDropDownCommandInput(cls._PROGRAM_DROPDOWN_ID, Strings('NC Program'), DropDownStyles.TextListDropDownStyle)
-        programDropdown.tooltip = Strings("TOOL TIP: NC Program to Use")
+        programDropdown.tooltip = Strings("TOOLTIP: NC Program to Use")
         programDropdown.tooltipDescription = Strings("TOOLTIP TEXT: NC Program to Use")
 
         EventRegistry.register(programDropdown, cls._onProgramChanged)
@@ -47,7 +47,7 @@ class InputTab(PostDialogConstants):
 
         #region Program machine text field
         machineInput = inputTab.children.addStringValueInput(cls._MACHINE_ID, Strings('Machine'), Strings('<Select a program>'))
-        machineInput.tooltip = Strings("TOOL TIP: Machine")
+        machineInput.tooltip = Strings("TOOLTIP: Machine")
         machineInput.tooltipDescription = Strings("TOOLTIP TEXT: Machine")
         machineInput.isReadOnly = True
         machineInput.isEnabled = False
@@ -65,7 +65,7 @@ class InputTab(PostDialogConstants):
 
         #region Post Processor text field
         postProcessorInput = inputTab.children.addStringValueInput(cls._POST_PROCESSOR_ID, Strings('Post Processor'), Strings('<Select a program>'))
-        postProcessorInput.tooltip = Strings("TOOL TIP: Post Processor")
+        postProcessorInput.tooltip = Strings("TOOLTIP: Post Processor")
         postProcessorInput.tooltipDescription = Strings("TOOLTIP TEXT: Post Processor")
         postProcessorInput.isReadOnly = True
         postProcessorInput.isEnabled = False
@@ -81,9 +81,9 @@ class InputTab(PostDialogConstants):
         #endregion
 
         #region Setups table
-        setupsTable = inputTab.children.addTableCommandInput('SetupsTable', '',5, "6:31:21:21:21") # 5 columns with relative widths of 6, 40, 18, 18, 18 (100[%] is easier)
+        setupsTable = inputTab.children.addTableCommandInput('SetupsTable', '',5, "6:31:21:21:21") # 5 columns with relative widths of 6, 31, 21, 21, 21 (100[%] is easier)
         setupsTable.minimumVisibleRows = 3
-        setupsTable.maximumVisibleRows = min(20, max(3, len([setup for setup in Setups if not (setup.hasError or setup.isSuppressed)]) + 1)) # +1 for the header row
+        setupsTable.maximumVisibleRows = min(10, max(3, len([setup for setup in Setups if not (setup.hasError or setup.isSuppressed)]) + 1)) # +1 for the header row
 
         selectAllSetups = inputs.addBoolValueInput(cls._SELECT_ALL_SETUPS_ID, '', True, '', False)
 
@@ -91,7 +91,7 @@ class InputTab(PostDialogConstants):
             for setup in Setups:
                 if not setup.hasError and not setup.isSuppressed:
                     setup.Select(checkbox.value)
-                    cls._updateSetups(checkbox) # Update the table to enable/disable inputs based on the new selection
+            cls._updateSetups(checkbox) # Update the table to enable/disable inputs based on the new selection
             
         EventRegistry.registerWithOnlyChange(selectAllSetups, setAllSetups) # For some reason the checkbox generates duplicate events, so we use a special registry method that ignores duplicates. See EventRegistry for details.
 
@@ -107,7 +107,7 @@ class InputTab(PostDialogConstants):
                 isReadOnly = True
             ), row, 2)
         setupsTable.addCommandInput(
-                init(inputs.addStringValueInput('', '', Strings('X-axis')),
+                init(inputs.addStringValueInput('', '', Strings('Parallel')),
                 isReadOnly = True
             ), row, 3)
         setupsTable.addCommandInput(

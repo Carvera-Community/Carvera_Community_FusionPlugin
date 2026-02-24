@@ -22,12 +22,26 @@ class MiscTab(PostDialogConstants):
         EventRegistry.register(programDropdown, setTabEnabled)
         setTabEnabled(programDropdown) # initialize state based on current program selection
 
+        #region Language dropdown
+        languageDropdown = miscTab.children.addDropDownCommandInput(cls._LANGUAGE_ID, Strings("Language"), adsk.core.DropDownStyles.TextListDropDownStyle)
+        languageDropdown.tooltip = Strings("TOOLTIP: Language")
+        languageDropdown.tooltipDescription = (Strings("TOOLTIP TEXT: Language {fileVersion}")).format(fileVersion = Strings.fileVersion)
+
+        languageTexts = Strings.GetAvailableLanguages()
+
+        for language in languageTexts:
+            languageDropdown.listItems.add(languageTexts[language], language == Settings(Settings.LANGUAGE))
+
+        EventRegistry.register(languageDropdown, lambda dropdown: Settings(Settings.LANGUAGE, Strings.GetLanguageSetting(dropdown.selectedItem.name)))
+        #endregion
+
+
         group = miscTab.children.addGroupCommandInput(cls._RENAME_SETUPS_GROUP_ID, Strings("Rename Setups"))
         group.isExpanded = True
 
         #region Use regex checkbox
         useRegex = group.children.addBoolValueInput(cls._USE_REGEX_ID, Strings("Use Python regular expressions"), True, "", Settings(Settings.USE_REGEX))
-        useRegex.tooltip = Strings("TOOL TIP: Use Python regular expressions")
+        useRegex.tooltip = Strings("TOOLTIP: Use Python regular expressions")
         useRegex.tooltipDescription = Strings("TOOLTIP TEXT: Use Python regular expressions")
 
         EventRegistry.register(useRegex, lambda input: Settings.Set(Settings.USE_REGEX, input.value))
@@ -35,29 +49,29 @@ class MiscTab(PostDialogConstants):
 
         #region Find string input
         findText = group.children.addStringValueInput(cls._FIND_STRING_ID, Strings("Search for this string"), Settings(Settings.FIND_STRING))
-        findText.tooltip = Strings("TOOL TIP: Search for this string")
+        findText.tooltip = Strings("TOOLTIP: Search for this string")
         findText.tooltipDescription = Strings("TOOLTIP TEXT: Search for this string")
         EventRegistry.register(findText, lambda input: Settings.Set(Settings.FIND_STRING, input.value))
         #endregion
 
         #region Replace string input
         replaceText = group.children.addStringValueInput(cls._REPLACE_STRING_ID, Strings("Replace with this string"), Settings(Settings.REPLACE_STRING))
-        replaceText.tooltip = Strings("TOOL TIP: Replace with this string")
+        replaceText.tooltip = Strings("TOOLTIP: Replace with this string")
         replaceText.tooltipDescription = Strings("TOOLTIP TEXT: Replace with this string")
         EventRegistry.register(replaceText, lambda input: Settings.Set(Settings.REPLACE_STRING, input.value))
         #endregion
 
-        #region Clear output folder checkbox
+        #region Only selected Setups checkbox
         replaceOnlySelected = group.children.addBoolValueInput(cls._REPLACE_ONLY_SELECTED_ID, Strings("Only selected Setups"),  True, "", Settings(Settings.REPLACE_ONLY_SELECTED))
-        replaceOnlySelected.tooltip = Strings("TOOL TIP: Only selected Setups")
+        replaceOnlySelected.tooltip = Strings("TOOLTIP: Only selected Setups")
         replaceOnlySelected.tooltipDescription = Strings("TOOLTIP TEXT: Only selected Setups")
         EventRegistry.register(replaceOnlySelected, lambda input: Settings.Set(Settings.REPLACE_ONLY_SELECTED, input.value))
         #endregion
 
         #region Replace button
-        replaceButton = group.children.addBoolValueInput(cls._REPLACE_ID, f"   {Strings("Search and replace")}   ", False)
+        replaceButton = group.children.addBoolValueInput(cls._REPLACE_ID, Strings("Search and replace").ljust(3).rjust(3), False) #l-/rjust() to widen the button some
         replaceButton.isFullWidth = True
-        replaceButton.tooltip = Strings("TOOL TIP: Search and replace")
+        replaceButton.tooltip = Strings("TOOLTIP: Search and replace")
         replaceButton.tooltipDescription = Strings("TOOLTIP TEXT: Search and replace")
         
         def replaceButtonHandler(input: adsk.core.BoolValueCommandInput):

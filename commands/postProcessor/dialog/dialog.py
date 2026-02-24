@@ -32,27 +32,86 @@ class PostDialog(PostDialogLayout):
     def start(cls):
         app = adsk.core.Application.get()
         ui = app.userInterface
-        
-        # Create a command Definition.
-        cmd_def = ui.commandDefinitions.addButtonDefinition( \
-            config.CMD_ID, \
-            config.CMD_NAME, \
-            config.CMD_DESCRIPTION, \
-            cls._ICON_FOLDER \
-        )
-
-        # Define an event handler for the command created event. It will be called when the button is clicked.
-        Events.add(cmd_def.commandCreated, cls.commandCreated)
 
         # ******** Add a button into the UI so the user can run the command. ********
         # Get the target workspace the button will be created in.
         workspace = ui.workspaces.itemById(Const.CAM_WORKSPACE_ID)
-
         # Get the panel the button will be created in.
         panel = workspace.toolbarPanels.itemById(Const.CAM_ACTIONS_PANEL_ID)
 
+        # Always switch to Select to terminate any lingering command dialog from
+        # a previous debug session before trying to delete/recreate definitions.
+        select_command = ui.commandDefinitions.itemById('SelectCommand')
+        if select_command:
+            try:
+                select_command.execute()
+            except Exception:
+                Utils.log(
+                    'PostDialog.start: Failed to execute SelectCommand while resetting stale UI state.',
+                    adsk.core.LogLevels.WarningLogLevel
+                )
+
+        # Hard-reset stale UI objects from previous debug sessions.
+        old_control = panel.controls.itemById(config.CMD_ID)
+        if old_control:
+            try:
+                old_control.deleteMe()
+            except Exception:
+                Utils.log(
+                    'PostDialog.start: Existing command control could not be deleted. '
+                    'A stale control from a previous debug session may remain.',
+                    adsk.core.LogLevels.WarningLogLevel
+                )
+
+        old_definition = ui.commandDefinitions.itemById(config.CMD_ID)
+        if old_definition:
+            try:
+                old_definition.deleteMe()
+            except Exception:
+                Utils.log(
+                    'PostDialog.start: Existing command definition could not be deleted. '
+                    'Fusion may keep it alive while an old dialog/session is still active.',
+                    adsk.core.LogLevels.WarningLogLevel
+                )
+
+        # Create a fresh command definition for this session. If Fusion still keeps
+        # the old one alive, reuse it instead of crashing with duplicate-id.
+        cmd_def = ui.commandDefinitions.itemById(config.CMD_ID)
+        if cmd_def is None:
+            try:
+                cmd_def = ui.commandDefinitions.addButtonDefinition(
+                    config.CMD_ID,
+                    config.CMD_NAME,
+                    config.CMD_DESCRIPTION,
+                    cls._ICON_FOLDER
+                )
+            except RuntimeError:
+                Utils.log(
+                    'PostDialog.start: addButtonDefinition reported duplicate command id. '
+                    'Reusing existing definition (likely stale UI state from previous debug session).',
+                    adsk.core.LogLevels.WarningLogLevel
+                )
+                cmd_def = ui.commandDefinitions.itemById(config.CMD_ID)
+                if cmd_def is None:
+                    Utils.log(
+                        'PostDialog.start: Duplicate-id fallback failed because command definition was not found after addButtonDefinition error.',
+                        adsk.core.LogLevels.ErrorLogLevel
+                    )
+                    raise
+
+        # Define an event handler for the command created event. It will be called when the button is clicked.
+        Events.add(cmd_def.commandCreated, cls.commandCreated)
+
         # Create the button command control in the UI after the specified existing command.
-        control = panel.controls.addCommand(cmd_def, Const.POST_PROCESS_CONTROL_ID, False)
+        control = panel.controls.itemById(config.CMD_ID)
+        if control is None:
+            control = panel.controls.addCommand(cmd_def, Const.POST_PROCESS_CONTROL_ID, False)
+        else:
+            Utils.log(
+                'PostDialog.start: Reusing existing command control. '
+                'If the button does not respond, restart the debug session with the dialog closed.',
+                adsk.core.LogLevels.WarningLogLevel
+            )
 
         # Specify if the command is promoted to the main toolbar. 
         control.isPromoted = True
@@ -206,7 +265,6 @@ class PostDialog(PostDialogLayout):
     @classmethod
     def commandDestroy(cls, args: adsk.core.CommandEventArgs):
         # General logging for debug.
-
         cls._local_handlers = []  # clear out the local handlers list
 
 

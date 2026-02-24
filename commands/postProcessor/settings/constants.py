@@ -18,6 +18,8 @@ class Constants:
     # Number of digits to use in sequence names
     FILE_SEQUENCE_DIGITS:           Final[str] = 'fileSequenceDigits'
 
+    # If the UI should show the ability to number individual lines in the output
+    SHOW_LINE_SEQUENCING:           Final[bool] = "showLineSequence"
     # If sequence numbers should be used in program lines
     LINE_SEQUENCE:                  Final[str] = 'lineSequence'
     # Number of digits to use in line numbers
