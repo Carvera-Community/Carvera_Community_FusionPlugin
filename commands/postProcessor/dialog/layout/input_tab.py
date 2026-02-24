@@ -203,14 +203,8 @@ class InputTab(PostDialogConstants):
                 if(program.hasError):
                     return
 
-                # Save settings of the previously selected program before switching to the new one
-                if Programs.Current is not None:
-                    Settings.Save(Programs.Current.attributes)
-
                 Programs.Current = program
                 Utils.log(f'Selected NC program: {program.name}')
-
-                Settings.Load(Programs.Current.attributes)
 
                 if Programs.Current.hasWarning:
                     app = adsk.core.Application.get()

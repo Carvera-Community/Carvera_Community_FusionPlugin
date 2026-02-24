@@ -150,7 +150,7 @@ class PostDialog(PostDialogLayout):
         doc: adsk.core.Document = app.activeDocument
         cam: adsk.cam.CAM = adsk.cam.CAM.cast(app.activeDocument.products.itemByProductType(Const.CAM_PRODUCT_ID))
 
-        Settings.Load() # Load default settings
+        Settings.Load(doc.attributes) # Load settings from the document
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
         Programs.Load(cam) # Get the list of NCPrograms in the current document
 
@@ -217,15 +217,6 @@ class PostDialog(PostDialogLayout):
                     Utils.log('PostDialog: User cancelled operation due to unsupported A axis rotation.', adsk.core.LogLevels.InfoLogLevel)
                     return
 
-
-        if Programs.Current is not None:
-            Settings.Save(Programs.Current.attributes)  # Save settings for the current project
-        else:
-            app: adsk.core.Application = adsk.core.Application.get()
-            doc: adsk.core.Document = app.activeDocument
-            Settings.Save(doc.attributes)  # Save settings for the current project
-
-
         try:
             # Create a temporary folder to prepare all files in
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -264,7 +255,12 @@ class PostDialog(PostDialogLayout):
     # This event handler is called when the command terminates.
     @classmethod
     def commandDestroy(cls, args: adsk.core.CommandEventArgs):
-        # General logging for debug.
+
+        app: adsk.core.Application = adsk.core.Application.get()
+        doc: adsk.core.Document = app.activeDocument
+        Settings.Save(doc.attributes)  # Save settings for the current document
+
+
         cls._local_handlers = []  # clear out the local handlers list
 
 
