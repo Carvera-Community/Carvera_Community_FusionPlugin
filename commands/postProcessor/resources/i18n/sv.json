@@ -1,156 +1,216 @@
 {
-  "Input Selection": "Inmatningsval",
+  "__meta__": {
+      "metaVersion": 1,
+      "authors": [
+        "Moinois"
+      ],
+      "description": "Swedish translations for post processor command.",
+      "languageLocal": "Svenska",
+      "languageEnglish": "Swedish",
+      "fileVersion": "1.1.0",
+      "revisions": [
+        {
+          "version": "1.1.0",
+          "author": "Moinois",
+          "comment": "Synchronized with English translations"
+        },
+        {
+          "version": "1.0.1",
+          "author": "Moinois",
+          "comment": "Added Language strings."
+        },
+        {
+          "version": "1.0.0",
+          "author": "Moinois",
+          "comment": "Created"
+        }
+      ]
+    },
+  "input_tab": {
+      "__meta__": {
+            "description": "Translations for the Input tab."
+          },
+      "Input Selection": "Inmatningsval",
+      "NC Program": "NC-program",
+      "TOOLTIP: NC Program to Use": "Välj NC-program att använda",
+      "TOOLTIP TEXT: NC Program to Use": "Post Process Utility använder inställningarna från det valda NC-programmet.",
+      "Machine": "Maskin",
+      "TOOLTIP: Machine": "Maskin",
+      "TOOLTIP TEXT: Machine": "Maskindefinitionen kopplad till det valda NC-programmet.",
 
-  "NC Program": "NC-program",
-  "TOOL TIP: NC Program to Use": "Välj NC-program att använda",
-  "TOOLTIP TEXT: NC Program to Use": "Postbearbetning använder inställningarna från det valda NC-programmet.",
+      "Post Processor": "Postprocessor",
+      "TOOLTIP: Post Processor": "Postprocessor",
+      "TOOLTIP TEXT: Post Processor": "Postprocessorn kopplad till det valda NC-programmet.",
 
-  "Setup Name": "Setup Name",
-  "Origin": "Origin",
-  "X-axis": "X-axis",
-  "Rotation": "Rotation",
-  "Aligned": "Aligned",
-  "Misaligned": "Misaligned",
-  "Same": "Same",
-  "Different": "Different",
-  "(reference)": "(reference)",
+      "<Select a program>": "<Välj ett program>",
+      "<Select a program with a machine configuration>": "<Välj ett program med en maskinkonfiguration>",
+      "<Select a program with a post processor>": "<Välj ett program med en postprocessor>",
+      "<li>{name}: {degrees}°</li>": "<li>{name}: {degrees}°</li>",
+      "<no machine selected>": "<ingen maskin vald>",
+      "<no post processor selected>": "<ingen postprocessor vald>",
+      "Setup Name": "Setupnamn",
+      "Origin": "Origo",
+      "Parallel": "Parallella",
+      "Rotation": "Rotation",
+      "Aligned": "Ja",
+      "Misaligned": "Nej",
+      "Same": "Samma",
+      "Different": "Olika",
+      "(reference)": "(referens)",
+      "Some setups will be deselected as they are rotated. <p>Rotated setups:<ul>{rotatedSetups}</ul><p>Do you want to continue?": "Vissa uppsättningar kommer att avmarkeras eftersom de är roterade. <p>Roterade uppsättningar:<ul>{rotatedSetups}</ul><p>Vill du fortsätta?",
+      "The selected NC Program has the following warning:\n{warning}": "Det valda NC-programmet har följande varning:\n{warning}"
+    },
+  "gcode_tab": {
+      "__meta__": {
+            "description": "Translations for the G-code tab."
+          },
+      "G-code Options": "Inställningar för G-kod",
+      "Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
+      "TOOLTIP: Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
+      "TOOLTIP TEXT: Rotate A-Axis between setups": "När aktiverat roteras A-axeln till nödvändig position mellan setups med olika A-orientering. Endast tillgängligt om maskinen har en A-axel.",
 
-  "Only selected setups": "Endast valda uppsättningar",
-  "TOOL TIP: Only selected setups": "Bara valda uppsättningar",
-  "TOOLTIP TEXT: Only selected setups": "Endast uppsättningar markerade i webbläsaren kommer bearbetas. En uppsättning måste vara markerad (highlightad), inte bara aktiverad. Att välja enskilda operationer påverkar inte detta; operationer måste undertryckas för att exkluderas.",
+      "Retract Y on A-axis rotation": "Dra tillbaka Y vid A-axelrotation",
+      "TOOLTIP: Retract Y on A-axis rotation": "Dra tillbaka Y-axeln vid A-axelrotation",
+      "TOOLTIP TEXT: Retract Y on A-axis rotation": "När aktiverat dras även Y-axeln tillbaka till säker position vid A-axelrotation för att undvika kollision om fixturen inte är rund.",
 
-  "G-code options": "Inställningar för G-kod",
+      "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+      "TOOLTIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+      "TOOLTIP TEXT: Safe Y-retraction coordinate (mm)": "The Y coordinate to retract to when rotating the A-axis between setups. This coordinate should be set so that the tool will not collide with the stock when retracting to this position.",
 
-  "Tool change code": "Kod för verktygsbyte",
-  "TOOL TIP: Tool change code": "Kod före verktygsbyte",
-  "TOOLTIP TEXT: Tool change code": "Tillåter att lägga in rader med kod före verktygsbyten, t.ex. <i>M5</i>, <i>M9</i> eller <i>G28</i>/<i>G30</i>. Koden placeras på raden före verktygsbytet.",
+      "Tool change code": "Kod för verktygsbyte",
+      "TOOLTIP: Tool change code": "Kod före verktygsbyte",
+      "TOOLTIP TEXT: Tool change code": "Tillåter att lägga in rader med kod före verktygsbyten, t.ex. <i>M5</i>, <i>M9</i> eller <i>G28</i>/<i>G30</i>. Koden placeras på raden före verktygsbytet.",
 
-  "G-codes that mark ending sequence": "G-koder som markerar slutsekvens",
-  "TOOL TIP: G-codes that mark ending sequence": "G-koder som markerar slutsekvens",
-  "TOOLTIP TEXT: G-codes that mark ending sequence": "Ange vilka G-koder som markerar början på slutsekvensen. Den funna sekvensen kommer fogas till slutet av resultatfilen.",
-  "Restore rapid moves": "Återställ snabba förflyttningar",
-  "TOOL TIP: Restore rapid moves": "Återställ snabba förflyttningar",
-  "TOOLTIP TEXT: Restore rapid moves": "Återställ snabba (rapid) förflyttningar där det är lämpligt under efterbearbetningen.",
+      "G-codes that mark ending sequence": "G-koder som markerar slutsekvens",
+      "TOOLTIP: G-codes that mark ending sequence": "G-koder som markerar slutsekvens",
+      "TOOLTIP TEXT: G-codes that mark ending sequence": "Ange vilka G-koder som markerar början på slutsekvensen. Den funna sekvensen kommer fogas till slutet av resultatfilen.",
 
-  "G-code for tool change": "G-kod för verktygsbyte",
-  "TOOL TIP: G-code for tool change": "G-kod för verktygsbyte",
-  "TOOLTIP TEXT: G-code for tool change": "Tillåter att infoga G-kod före verktygsbyten. Koden infogas ovanför raden med verktygsbytet.",
+      "G-codes that mark header end": "G-codes that mark header end",
+      "TOOLTIP: G-codes that mark header end": "G-codes that mark header end",
+      "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
 
-  "Output Options": "Utmatningsalternativ",
+      "Restore rapid moves": "Återställ snabba förflyttningar",
+      "TOOLTIP: Restore rapid moves": "Återställ snabba förflyttningar",
+      "TOOLTIP TEXT: Restore rapid moves": "Återställ snabba (rapid) förflyttningar där det är lämpligt under efterbearbetningen.",
 
-  "Output folder": "Resultatsökväg",
-  "<Select program>": "<Välj program>",
+      "Minimum rapid move distance (mm)": "Minsta snabbförflyttningsavstånd (mm)",
+      "TOOLTIP: Minimum rapid move distance (mm)": "Minsta avstånd för snabbförflyttning",
+      "TOOLTIP TEXT: Minimum rapid move distance (mm)": "Det minsta förflyttningsavståndet för att använda snabbförflyttning. För att minska ryckighet kan du sätta en gräns för kortaste sträcka där rörelsen ändras från skärrörelse (<i>G1</i>) till snabbförflyttning (<i>G0</i>).",
 
-  "File name": "File name",
-  "TOOL TIP: File name": "File name",
-  "TOOLTIP TEXT: File name": "The name of the output G-code file(s) without extension.",
-  
-  "TOOL TIP: Output folder": "Mapp för utdata",
-  "TOOLTIP TEXT: Output folder": "Välj mappen där genererade G-kodfiler ska sparas.",
+      "Add line numbers": "Lägg till radnummer",
+      "TOOLTIP: Add line numbers": "Lägg till radnummer",
+      "TOOLTIP TEXT: Add line numbers": "Lägg till radnummer på varje rad i varje utdatafil.",
 
-  "Name must be numeric": "Namnet måste vara numeriskt",
-  "TOOL TIP: Name must be numeric": "Namnet måste vara numeriskt",
-  "TOOLTIP TEXT: Name must be numeric": "När aktiverat krävs att programnamn är numeriska.",
+      "G-code Blocks": "G-kodsblock",
+      "Number of digits": "Antal siffror",
+      "TOOLTIP: Number of line digits": "Antal siffror för radnummer",
+      "TOOLTIP TEXT: Numbering interval": "Specify the interval between sequence numbers (e.g., 5 for 005, 010 and so on).",
+      "TOOLTIP: Line numbering interval": "Intervall för radnumrering",
+      "TOOLTIP TEXT: Line numbering interval": "Intervallet som radnumren ökar med per rad. Om det är 5 börjar radnumren på 5 och ökar med 5 för varje rad."
+    },
+  "output_tab": {
+      "__meta__": {
+            "description": "Translations for the Output tab."
+          },
+      "Output Options": "Resultatinställningar",
 
-  "Numbering digits": "Antal siffror i numrering",
-  "TOOL TIP: Numbering digits": "Antal siffror för numrering",
-  "TOOLTIP TEXT: Numbering digits": "Formatera sekvensnummer med angivet antal siffror (t.ex. 3 → 001, 002...).",
+      "Output folder": "Resultatsökväg",
+      "TOOLTIP: Output folder": "Mapp för utdata",
+      "TOOLTIP TEXT: Output folder": "Välj mappen där genererade G-kodfiler ska sparas.",
 
-  "Numbering interval": "Numbering interval",
-  "TOOL TIP: Numbering interval": "The interval between numbers",
-  "TOOLTIP TEXT: Numbering interval": "Specify the interval between sequence numbers (e.g., 5 for 005, 010 and so on).",
+      "<Select program>": "<Välj program>",
+      "File name": "File name",
+      "TOOLTIP: File name": "File name",
+      "TOOLTIP TEXT: File name": "The name of the output G-code file(s) without extension.",
 
-  "Combine operations using same tool": "Slå ihop operationer med samma verktyg",
-  "TOOL TIP: Combine operations using same tool": "Slå ihop operationer med samma verktyg",
-  "TOOLTIP TEXT: Combine operations using same tool": "Slå ihop efterföljande operationer som använder samma verktyg till en enda operation.",
+      "Name must be numeric": "Namnet måste vara numeriskt",
+      "TOOLTIP: Name must be numeric": "Namnet måste vara numeriskt",
+      "TOOLTIP TEXT: Name must be numeric": "När aktiverat krävs att programnamn är numeriska.",
 
-  "Delete existing files": "Radera befintliga filer",
-  "TOOL TIP: Delete existing files": "Radera befintliga filer",
-  "TOOLTIP TEXT: Delete existing files": "Raderar alla filer i varje utdata-mapp innan efterbearbetning för att undvika ansamling av gamla G-kodfiler.",
+      "Numbering interval": "Numbering interval",
+      "Prepend sequence number": "Lägg till sekvensnummer före",
+      "TOOLTIP: Prepend file sequence number": "Inled filnamn med sekvensnummer",
+      "TOOLTIP TEXT: Prepend file sequence number": "Varje filnamn får ett inledande indexnummer enligt ordningen i webbläsaren. Det gör att ordningen bevaras och minskar risken för överskrivning vid ändrade val.",
 
-  "Delete output folder": "Radera utmatningsmappen",
-  "TOOL TIP: Delete output folder": "Radera utdata-mappen",
-  "TOOLTIP TEXT: Delete output folder": "Raderar hela utdata-mappen (filer och undermappar). VAR FÖRSIKTIG — kontrollera inställningen noggrant innan användning.",
+      "TOOLTIP: Number of file digits": "Antal siffror",
+      "TOOLTIP TEXT: Number of file digits": "När filnamn inleds med ett nummer säkerställer denna inställning ett minsta antal siffror. Om värdet är 3 får filerna prefix som 001_, 002_ och så vidare.",
 
-  "Misc": "Misc",
+      "Operations grouping": "Gruppering av operationer",
+      "TOOLTIP: Operations grouping": "Hur operationer grupperas",
+      "TOOLTIP TEXT: Operations grouping": "Välj hur operationer grupperas i utdatafiler. <p><i>En fil:</i> Alla operationer kombineras till en fil. <br><i>Gruppera per setup:</i> Varje setup blir en separat fil. <br><i>Gruppera per setup och verktyg:</i> Varje verktygsbyte skapar en ny fil. <br><i>Ingen, en fil per operation:</i> Varje operation blir en egen fil.",
 
-  "Rename Setups": "Byt namn på uppsättningar",
+      "Single file": "Single file",
+      "Group on setup": "Group on setup",
+      "Group on setup and tool": "Group on setup and tool",
+      "None, one file per operation": "None, one file per operation",
 
-  "Use Python regular expressions": "Använd Python-regex",
-  "TOOL TIP: Use Python regular expressions": "Använd Python-regex",
-  "TOOLTIP TEXT: Use Python regular expressions": "Aktivera Python-stil reguljära uttryck för sök/ersätt.",
+      "The selected NC Program has the following warning:\n{warning}": "Det valda NC-programmet har följande varning:\n{warning}",
 
-  "Search for this string": "Sök efter denna sträng",
-  "TOOL TIP: Search for this string": "Sök efter denna sträng",
-  "TOOLTIP TEXT: Search for this string": "Den bokstavliga texten eller regex-mönstret att söka efter.",
+      "Flat file structure": "Platt filstruktur",
+      "TOOLTIP: Flatten the file structure": "Skapa inte undermappar för setups och operationer",
+      "TOOLTIP TEXT: Flatten the file structure": "Ange om alla utdatafiler skap placeras direkt i utdata-mappen. Filnamn byggs från setup- och operationsnamn separerade med understreck (_) för att undvika konflikter.",
 
-  "Replace with this string": "Ersätt med denna sträng",
-  "TOOL TIP: Replace with this string": "Ersätt med denna sträng",
-  "TOOLTIP TEXT: Replace with this string": "Ersättningstext när ett sökmönster matchar.",
+      "Combine operations using same tool": "Slå ihop operationer med samma verktyg",
+      "TOOLTIP: Combine operations using same tool": "Slå ihop operationer med samma verktyg",
+      "TOOLTIP TEXT: Combine operations using same tool": "Slå ihop efterföljande operationer som använder samma verktyg till en enda operation.",
 
-  "Search and replace": "Sök och ersätt",
-  "TOOL TIP: Search and replace": "Sök och ersätt",
-  "TOOLTIP TEXT: Search and replace": "Utför sök-och-ersätt med ovanstående inställningar.",
+      "Clear output folder": "Rensa utmatningsmappen",
+      "TOOLTIP: Clear output folder": "Rensa utmatningsmappen",
+      "TOOLTIP TEXT: Clear output folder": "Rensar utmatningsmappen innan postprocessning så att gamla filer inte ligger kvar.",
 
-  "Advanced Settings": "Avancerade inställningar",
+      "Overwrite existing files": "Skriv över befintliga filer",
+      "TOOLTIP: Overwrite existing files": "Tillåt överskrivning av befintliga filer",
+      "TOOLTIP TEXT: Overwrite existing files": "Tillåt överskrivning av redan befintliga filer. Om detta inte är valt avbryts genereringen när första existerande fil påträffas.",
 
-  "Initial time allowance": "Initial tidsmarginal",
-  "TOOL TIP: Initial time allowance": "Initial tidsmarginal",
-  "TOOLTIP TEXT: Initial time allowance": "Initial tidsmarginal (sekunder) för bearbetning innan omförsök.",
+      "Select Output Folder": "Välj utmatningsmapp"
+    },
+  "misc_tab": {
+      "__meta__": {
+            "description": "Translations for the Misc tab."
+          },
+      "Misc": "Misc",
+      "Rename Setups": "Byt namn på uppsättningar",
+      "Language": "Språk",
+      "TOOLTIP: Language": "Språkval",
 
-  "Number of retries": "Antal omförsök",
-  "TOOL TIP: Number of retries": "Antal omförsök",
-  "TOOLTIP TEXT: Number of retries": "Antal försök att göra om misslyckade efterbearbetningssteg.",
+      "TOOLTIP TEXT: Language {fileVersion}": "Du kan byta språk i gränssnittet.<p>Välj ett språk från listan och nästa gång du öppnar dialogen så kommer det språket användas istället. Om det finns texter på engelska så betyder det att översättningar saknas på grund av nya funktionalitet eller kodförändringar. <p>Nuvarande version av denna översättning: {fileVersion}",
+      "Use Python regular expressions": "Använd Python-regex",
+      "TOOLTIP: Use Python regular expressions": "Använd Python-regex",
+      "TOOLTIP TEXT: Use Python regular expressions": "Aktivera Python-stil reguljära uttryck för sök/ersätt.",
 
+      "Search for this string": "Sök efter denna sträng",
+      "TOOLTIP: Search for this string": "Sök efter denna sträng",
+      "TOOLTIP TEXT: Search for this string": "Den bokstavliga texten eller regex-mönstret att söka efter.",
+
+      "Replace with this string": "Ersätt med denna sträng",
+      "TOOLTIP: Replace with this string": "Ersätt med denna sträng",
+      "TOOLTIP TEXT: Replace with this string": "Ersättningstext när ett sökmönster matchar.",
+
+      "Search and replace": "Sök och ersätt",
+      "TOOLTIP: Search and replace": "Sök och ersätt",
+      "TOOLTIP TEXT: Search and replace": "Utför sök-och-ersätt med ovanstående inställningar.",
+
+      "Only selected Setups": "Endast valda uppsättningar",
+      "TOOLTIP: Only selected Setups": "Bara valda uppsättningar",
+      "TOOLTIP TEXT: Only selected Setups": "Endast uppsättningar markerade i webbläsaren kommer bearbetas. En uppsättning måste vara markerad (highlightad), inte bara aktiverad. Att välja enskilda operationer påverkar inte detta; operationer måste undertryckas för att exkluderas."
+    },
+  "tools_tab": {
+      "ATC Slot": "ATC-plats",
+      "The slot in the automatic tool changer": "Platsen i den automatiska verktygsväxlaren",
+      "Tool ID": "Verktygs-ID",
+      "Tool Name": "Verktygsnamn",
+      "Tools": "Verktyg"
+    },
+  "operation.py": {
+      "__meta__": {
+            "description": "Translations for operation.py."
+          },
+      "<No tool>": "<Inget verktyg>",
+      "Specify a custom tool number for this tool": "Ange ett anpassat verktygsnummer för detta verktyg"
+    },
   "Save as default settings": "Spara som standard",
-  "TOOL TIP: Save as default settings": "Spara som standard",
+  "TOOLTIP: Save as default settings": "Spara som standard",
   "TOOLTIP TEXT: Save as default settings": "Spara nuvarande dialoginställningar som standard för nya dokument.",
-
-  "Prepend sequence number": "Lägg till sekvensnummer före",
-  "File names only": "Endast filnamn",
-  "Operation steps only": "Endast operationssteg",
-  "File names and operation steps": "Filnamn och operationssteg",
-  "None": "Ingen",
-  "TOOL TIP: Prepend sequence number": "Lägg till sekvensnummer före",
-  "TOOLTIP TEXT: Prepend sequence number": "Börja varje filnamn med ett sekvensnummer. Numreringen följer ordningen i webbläsarträdet; varje mapp har egna nummer från 1.",
-
-  "Operations grouping": "Gruppering av operationer",
-  "Single file": "Single file",
-  "Group on setup": "Group on setup",
-  "Group on setup and tool": "Group on setup and tool",
-  "None, one file per operation": "None, one file per operation",
-  "TOOL TIP: Operations grouping": "Hur operationer grupperas",
-  "TOOLTIP TEXT: Operations grouping": "Välj hur operationer grupperas i utdatafiler. <p><i>En fil:</i> Alla operationer kombineras till en fil. <br><i>Gruppera per setup:</i> Varje setup blir en separat fil. <br><i>Gruppera per setup och verktyg:</i> Varje verktygsbyte skapar en ny fil. <br><i>Ingen, en fil per operation:</i> Varje operation blir en egen fil.",
-
-  "The selected NC Program has the following warning:\n{warning}": "Det valda NC-programmet har följande varning:\n{warning}",
-
-  "Flat file structure": "Platt filstruktur",
-  "TOOL TIP: Flatten the file structure": "Skapa inte undermappar för setups och operationer",
-  "TOOLTIP TEXT: Flatten the file structure": "När aktiverat placeras alla utdatafiler direkt i utdata-mappen. Filnamn byggs från setup- och operationssökväg separerade med understreck (_) för att undvika konflikter.",
-
-  "Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
-  "TOOL TIP: Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
-  "TOOLTIP TEXT: Rotate A-Axis between setups": "När aktiverat roteras A-axeln till nödvändig position mellan setups med olika A-orientering. Endast tillgängligt om maskinen har en A-axel.",
-
-  "Retract Y on A-axis rotation": "Dra tillbaka Y vid A-axelrotation",
-  "TOOL TIP: Retract Y on A-axis rotation": "Dra tillbaka Y-axeln vid A-axelrotation",
-  "TOOLTIP TEXT: Retract Y on A-axis rotation": "När aktiverat dras även Y-axeln tillbaka till säker position vid A-axelrotation för att undvika kollision om fixturen inte är rund.",
-
-  "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
-  "TOOL TIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
-  "TOOLTIP TEXT: Safe Y-retraction coordinate (mm)": "The Y coordinate to retract to when rotating the A-axis between setups. This coordinate should be set so that the tool will not collide with the stock when retracting to this position.",
-
-  "Machine": "Maskin",
-  "TOOL TIP: Machine": "Maskin",
-  "TOOLTIP TEXT: Machine": "Maskindefinitionen kopplad till det valda NC-programmet.",
-
-  "Post Processor": "Postprocessor",
-  "TOOL TIP: Post Processor": "Postprocessor",
-  "TOOLTIP TEXT: Post Processor": "Postprocessorn kopplad till det valda NC-programmet.",
-
-  "G-codes that mark header end": "G-codes that mark header end",
-  "TOOL TIP: G-codes that mark header end": "G-codes that mark header end",
-  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
 
   "Process": "Process",
   "Close": "Close"

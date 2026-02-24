@@ -1,157 +1,206 @@
 {
-  "Input Selection": "Input Selection",
+  "__meta__": {
+      "metaVersion": 1,
+      "authors": [
+        "Moinois"
+      ],
+      "description": "English translations for post processor command.",
+      "languageLocal": "English",
+      "languageEnglish": "English",
+      "fileVersion": "1.1.0",
+      "note": "The hirarchy in this file is just to make it easier to edit the file, keys named __meta__ and anything under it will not be a part of the translations. This section in the root will be used to get more information of the translations if it is available while other __meta__ keys will be ignored, the rest will be flattened into a key/value pair dictionary and used for translations. This means that keys needs to be unique, otherwise they will overwrite each other. Place any common translations directly in the root so that it is easy to see that they aren't for a specific part.",
+      "revisions": [
+        {
+          "version": "1.1.0",
+          "author": "Moinois",
+          "comment": "Added new and missing translations."
+        },
+        {
+          "version": "1.0.0",
+          "author": "Moinois",
+          "comment": "Created"
+        }
+      ]
+    },
+  "input_tab": {
+      "__meta__": {
+            "description": "Translations for the Input tab."
+          },
+      "Input Selection": "Input Selection",
+      "NC Program": "NC Program",
+      "TOOLTIP: NC Program to Use": "NC Program to Use",
+      "TOOLTIP TEXT: NC Program to Use": "Post Process Utility will use the settings from the selected NC Program.",
+      "Machine": "Machine",
+      "TOOLTIP: Machine": "Machine",
+      "TOOLTIP TEXT: Machine": "The machine definition associated with the selected NC Program.",
 
-  "NC Program": "NC Program",
-  "TOOL TIP: NC Program to Use": "NC Program to Use",
-  "TOOLTIP TEXT: NC Program to Use": "Post processing will use the settings from the selected NC Program.",
+      "Post Processor": "Post Processor",
+      "TOOLTIP: Post Processor": "Post Processor",
+      "TOOLTIP TEXT: Post Processor": "The post processor associated with the selected NC Program.",
 
-  "Setup Name": "Setup Name",
-  "Origin": "Origin",
-  "X-axis": "X-axis",
-  "Rotation": "Rotation",
-  "Aligned": "Aligned",
-  "Misaligned": "Misaligned",
-  "Same": "Same",
-  "Different": "Different",
-  "(reference)": "(reference)",
+      "<Select a program>": "<Select a program>",
+      "<Select a program with a machine configuration>": "<Select a program with a machine configuration>",
+      "<Select a program with a post processor>": "<Select a program with a post processor>",
+      "<li>{name}: {degrees}°</li>": "<li>{name}: {degrees}°</li>",
+      "<no machine selected>": "<no machine selected>",
+      "<no post processor selected>": "<no post processor selected>",
+      "Setup Name": "Setup Name",
+      "Origin": "Origin",
+      "Parallel": "Parallel",
+      "Rotation": "Rotation",
+      "Aligned": "Yes",
+      "Misaligned": "No",
+      "Same": "Same",
+      "Different": "Different",
+      "(reference)": "(reference)",
+      "Some setups will be deselected as they are rotated. <p>Rotated setups:<ul>{rotatedSetups}</ul><p>Do you want to continue?": "Some setups will be deselected as they are rotated. <p>Rotated setups:<ul>{rotatedSetups}</ul><p>Do you want to continue?",
+      "The selected NC Program has the following warning:\n{warning}": "The selected NC Program has the following warning:\n{warning}"
+    },
+  "gcode_tab": {
+      "__meta__": {
+            "description": "Translations for the G-code tab."
+          },
+      "G-code Options": "G-code Options",
+      "Rotate A-Axis between setups": "Rotate A-Axis between setups",
+      "TOOLTIP: Rotate A-Axis between setups": "Rotate A-Axis between setups",
+      "TOOLTIP TEXT: Rotate A-Axis between setups": "When enabled, the A-axis will be rotated to the required position between setups that have different A-axis orientations. This is useful for 4-axis machining where the stock may need to be rotated to access different sides.</p>This option is only enabled if the selected program has a machine that has an A-axis. It allows the output to be a single file.",
 
-  "Only selected setups": "Only selected setups",
-  "TOOL TIP: Only selected setups": "Only Process Selected Setups",
-  "TOOLTIP TEXT: Only selected setups": "Only setups selected in the browser will be processed. Note that a selected setup needs to be highlighted, not simply activated. <br>Selecting individual operations within a setup has no effect, to exclude operations they needs to be suppressed.",
+      "Retract Y on A-axis rotation": "Retract Y on A-axis rotation",
+      "TOOLTIP: Retract Y on A-axis rotation": "Retract Y axis when rotating A-axis",
+      "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position before rotating the A-axis but the Y axis will retract as well when rotating between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been selected.",
 
-  "G-code options": "G-code options",
+      "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+      "TOOLTIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
+      "TOOLTIP TEXT: Safe Y-retraction coordinate (mm)": "The Y coordinate to retract to when rotating the A-axis between setups. This coordinate should be set so that the tool will not collide with the stock when retracting to this position.",
 
-  "Tool change code": "Tool change code",
-  "TOOL TIP: Tool change code": "G-code to Precede Tool Change",
-  "TOOLTIP TEXT: Tool change code": "Allows inserting lines of code before tool changes. For example, you might want <i>M5</i> (spindle stop), <i>M9</i> (coolant stop), and/or <i>G28</i> or <i>G30</i> (return to home). The code will be placed on the line before the tool change.",
+      "Tool change code": "Tool change code",
+      "TOOLTIP: Tool change code": "G-code to Precede Tool Change",
+      "TOOLTIP TEXT: Tool change code": "Allows inserting lines of code before tool changes. For example, you might want <i>M5</i> (spindle stop), <i>M9</i> (coolant stop), and/or <i>G28</i> or <i>G30</i> (return to home). The code will be placed on the line before the tool change.",
 
-  "G-codes that mark ending sequence": "G-codes that mark ending sequence",
-  "TOOL TIP: G-codes that mark ending sequence": "G-codes that mark ending sequence",
-  "TOOLTIP TEXT: G-codes that mark ending sequence": "To combine operations generated individually, the ending sequence (which should only appear once) must be found. This entry is the list of G-codes that start this ending sequence. <p>For example, <i>M30</i> (end program) would normally be here, but it may not be the first G-code of the ending sequence. <i>M5</i> (spindle stop), <i>M9</i> (coolant stop) and <i>G28</i>/<i>G30</i> (move home) are also candidates, but you should look at the code from your post processor to determine what will work in your case. Either of the G-codes you enter here will mark the start of ending sequence, whichever comes first.<p>The found sequence that follows, beginning with whichever of these codes that was found first, will be attached at the end of the resulting file(s).",
+      "G-codes that mark ending sequence": "G-codes that mark ending sequence",
+      "TOOLTIP: G-codes that mark ending sequence": "G-codes that mark ending sequence",
+      "TOOLTIP TEXT: G-codes that mark ending sequence": "To combine operations generated individually, the ending sequence (which should only appear once) must be found. This entry is the list of G-codes that start this ending sequence. <p>For example, <i>M30</i> (end program) would normally be here, but it may not be the first G-code of the ending sequence. <i>M5</i> (spindle stop), <i>M9</i> (coolant stop) and <i>G28</i>/<i>G30</i> (move home) are also candidates, but you should look at the code from your post processor to determine what will work in your case. Either of the G-codes you enter here will mark the start of ending sequence, whichever comes first.<p>The found sequence that follows, beginning with whichever of these codes that was found first, will be attached at the end of the resulting file(s).",
 
-  "G-codes that mark header end": "G-codes that mark header end",
-  "TOOL TIP: G-codes that mark header end": "G-codes that mark header end",
-  "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code or the first G or M code that is not in this list, whichever comes first.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
+      "G-codes that mark header end": "G-codes that mark header end",
+      "TOOLTIP: G-codes that mark header end": "G-codes that mark header end",
+      "TOOLTIP TEXT: G-codes that mark header end": "To separate the header from the body of the program, the ending sequence of the header must be found. This entry is the list of G-codes that mark the end of the header section.<p>For example, <i>G20</i> or <i>G21</i> (set units) would normally be the last code, but it may not always be the case so you can add codes as needed. Look at the code from the post processor to determine what will work in your case.<br>At the minimum, if nothing is entered here, the tool change code will be used as a marker for ending the header. <p>The header is assumed to be everything from the start of the program up to and including the line containing whichever of these codes is found last before the tool change (<i>Tn</i>) code or the first G or M code that is not in this list, whichever comes first.<p>The first header that has been found will be placed at the start of each resulting file. If multiple setups are combined into a single file, only the first header will be used and subsequent headers will be ignored.",
 
-  "Restore rapid moves": "Restore rapid moves",
-  "TOOL TIP: Restore rapid moves": "Restore rapid moves",
-  "TOOLTIP TEXT: Restore rapid moves": "Restore rapid (rapid traverse) moves where appropriate during post-processing.",
+      "Restore rapid moves": "Restore rapid moves",
+      "TOOLTIP: Restore rapid moves": "Restore rapid moves",
+      "TOOLTIP TEXT: Restore rapid moves": "Restore rapid (rapid traverse) moves where appropriate. This will find where the movement can be a rapid movement (<i>G0</i>) rather than a cutting move (<i>G1</i>) and change the output so that it rapid movements will be used.",
 
-  "G-code for tool change": "G-code for tool change",
-  "TOOL TIP: G-code for tool change": "G-code for tool change",
-  "TOOLTIP TEXT: G-code for tool change": "Allows inserting lines of g-code before tool changes. For example, you might want <i>M5</i> (spindle stop), <i>M9</i> (coolant stop), and/or <i>G28</i> or <i>G30</i> (return to home). The code will be inserted above the line with the tool change.",
+      "Minimum rapid move distance (mm)": "Minimum rapid move distance (mm)",
+      "TOOLTIP: Minimum rapid move distance (mm)": "Minimum rapid move distance",
+      "TOOLTIP TEXT: Minimum rapid move distance (mm)": "The minimum movement distance to add rapid movements to. To limit the jerkyness of the machine you can set a limit of the shortest distance the machine needs to move to change from a cutting move (<i>G1</i>) to a rapid move (<i>G0</i>).",
 
-  "Output Options": "Output Options",
+      "Add line numbers": "Add line numbers",
+      "TOOLTIP: Add line numbers": "Add line numbers",
+      "TOOLTIP TEXT: Add line numbers": "Add line numbers to each line of each output file.",
 
-  "Output folder": "Output folder",
-  "<Select program>": "<Select program>",
+      "G-code Blocks": "G-code Blocks",
+      "Number of digits": "Number of digits",
+      "TOOLTIP: Number of line digits": "The number of digits to use",
+      "TOOLTIP TEXT: Numbering interval": "Specify the number of digits that the file numbering should use. So if it is set to 3, the files will be prepended by 001_, 002_ and so on.",
+      "TOOLTIP: Line numbering interval": "Line numbering interval",
+      "TOOLTIP TEXT: Line numbering interval": "The interval which the line numbers will increase per line. So if it is 5 the line numbers will start at 5 and increase with 5 for each line, so the next line will be 10 and so on."
+    },
+  "output_tab": {
+      "__meta__": {
+            "description": "Translations for the Output tab."
+          },
+      "Output Options": "Output Options",
+      "Output folder": "Output folder",
+      "TOOLTIP: Output folder": "Output folder",
+      "TOOLTIP TEXT: Output folder": "Select the folder where generated G-code files will be saved.",
 
-  "File name": "File name",
-  "TOOL TIP: File name": "File name",
-  "TOOLTIP TEXT: File name": "The name of the output G-code file(s) without extension.",
-  
-  "TOOL TIP: Output folder": "Output folder",
-  "TOOLTIP TEXT: Output folder": "Select the folder where generated G-code files will be saved.",
+      "<Select program>": "<Select program>",
+      "File name": "File name",
+      "TOOLTIP: File name": "File name",
+      "TOOLTIP TEXT: File name": "The name of the output G-code file(s) without extension.",
 
-  "Name must be numeric": "Name must be numeric",
-  "TOOL TIP: Name must be numeric": "Name must be numeric",
-  "TOOLTIP TEXT: Name must be numeric": "When enabled, program names will be required to be numeric.",
+      "Name must be numeric": "Name must be numeric",
+      "TOOLTIP: Name must be numeric": "Name must be numeric",
+      "TOOLTIP TEXT: Name must be numeric": "When enabled, program names will be required to be numeric.",
 
-  "Numbering digits": "Numbering digits",
-  "TOOL TIP: Numbering digits": "The count of digits for numbering",
-  "TOOLTIP TEXT: Numbering digits": "Format sequence numbers with the specified number of digits (e.g., 3 for 001, 002 and so on).",
+      "Numbering interval": "Numbering interval",
+      "Prepend sequence number": "Prepend sequence number",
+      "TOOLTIP: Prepend file sequence number": "Prepend file name with number",
+      "TOOLTIP TEXT: Prepend file sequence number": "Each file will be prepended with their index number according to the order of the browser. This is to make sure that the order of the setups or operations is kept so that they won't overwrite each other if a different selection is made and the output isn't empty.",
+      "TOOLTIP: Number of file digits": "Number of digits",
+      "TOOLTIP TEXT: Number of file digits": "When prepending a file name with a number, this setting will make sure that the number of digits used for the prepended number is no less than specified here. So if this value is 3, the file names will all start with three digits and an underscore (_), so 001_, 002_ and so on will be prepended.",
+      "Operations grouping": "Operations grouping",
+      "TOOLTIP: Operations grouping": "How to group the operations into output files",
+      "TOOLTIP TEXT: Operations grouping": "Choose how operations are grouped into output files.<p><i>Single file:</i> All operations are combined into a single G-code file. This option is only available if the origin of all setups are the same.<br>If the setups are rotated on the X-axis it also requires that the <i>Rotate A-Axis between setups</i> option is selected and that the X-axes of all the selected setups are parallel.<br><i>Group on setup:</i> Each setup is output as a separate G-code file. This option is only available if there is multiple setups that will be processed.<br><i>Group on setup and tool:</i> Operations are grouped by setup and tool, so each time the tool changes within a setup a new file is created.<br><i>None, one file per operation:</i> Each operation is output as its own G-code file.",
 
-  "Numbering interval": "Numbering interval",
-  "TOOL TIP: Numbering interval": "The interval between numbers",
-  "TOOLTIP TEXT: Numbering interval": "Specify the interval between sequence numbers (e.g., 5 for 005, 010 and so on).",
+      "Single file": "Single file",
+      "Group on setup": "Group on setup",
+      "Group on setup and tool": "Group on setup and tool",
+      "None, one file per operation": "None, one file per operation",
+      "The selected NC Program has the following warning:\n{warning}": "The selected NC Program has the following warning:\n{warning}",
+      "Flat file structure": "Flat file structure",
+      "TOOLTIP: Flatten the file structure": "Do not create subfolders for setups and operations",
+      "TOOLTIP TEXT: Flatten the file structure": "When enabled, all output files will be placed directly in the output folder without any subfolders.<p>The files will be named according to the full path of their setup and operation to avoid name conflicts, separated by an underscore (_).",
+      "Combine operations using same tool": "Combine operations using same tool",
+      "TOOLTIP: Combine operations using same tool": "Combine consecutive operations using same tool",
+      "TOOLTIP TEXT: Combine operations using same tool": "Combine operations following each other that use the same tool into a single operation.",
 
-  "Combine operations using same tool": "Combine operations using same tool",
-  "TOOL TIP: Combine operations using same tool": "Combine consecutive operations using same tool",
-  "TOOLTIP TEXT: Combine operations using same tool": "Combine operations following each other that use the same tool into a single operation.",
+      "Clear output folder": "Clear output folder",
+      "TOOLTIP: Clear output folder": "TOOLTIP: Clear output folder",
+      "TOOLTIP TEXT: Clear output folder": "TOOLTIP TEXT: Clear output folder",
 
-  "Delete existing files": "Delete existing files",
-  "TOOL TIP: Delete existing files": "Delete existing files",
-  "TOOLTIP TEXT: Delete existing files": "Delete all files in each output folder before post processing. This will help prevent accumulation of G-code files which are no longer used. <p>For example, you could decide to add sequence numbers after already post processing without them. If this option is not checked, you will have two of each file, a newer one with a sequence number and older one without. With this option checked, all previous files will be deleted so only current results will be present. <p>This option will only delete the files in folders in which new G-code files are being written. If you change the name of a folder, for example, it will not be deleted.",
+      "Overwrite existing files": "Overwrite existing files",
+      "TOOLTIP: Overwrite existing files": "Allow overwriting existing files",
+      "TOOLTIP TEXT: Overwrite existing files": "To allow overwriting already existing files this setting should be selected. Otherwise the plugin will stop the output when the first existing file is found.",
 
-  "Delete output folder": "Delete output folder",
-  "TOOL TIP: Delete output folder": "Delete output folder",
-  "TOOLTIP TEXT: Delete output folder": "Delete the entire output folder before post processing. This deletes all files and subfolders regardless of whether or not new G-code files are written to a particular folder.<p><i><u>WARNING!</u></i> Be absolutely sure the output folder is set correctly before selecting this option. Run the command once before setting this option and verify the results are in the correct folder. An incorrect setting of the output folder with this option selected could result in unintentionally wiping out a vast number of files.",
+      "Select Output Folder": "Select Output Folder"
+    },
+  "misc_tab": {
+      "__meta__": {
+            "description": "Translations for the Misc tab."
+          },
+      "Misc": "Misc",
+      "Rename Setups": "Rename Setups",
+      "Language": "Language",
+      "TOOLTIP: Language": "Change language",
 
-  "Misc": "Misc",
+      "TOOLTIP TEXT: Language {fileVersion}": "You can change the language in the user interface.<p>Select a language from the list and the next time you open the dialog it will use that language instead. If there are texts in English still it means that there are translations missing due to new feature och code changes and it needs to be added.<p>Current version of this translation: {fileVersion}",
+      "Use Python regular expressions": "Use Python regular expressions",
+      "TOOLTIP: Use Python regular expressions": "Use Python regular expressions",
+      "TOOLTIP TEXT: Use Python regular expressions": "Enable Python-style regular expressions for search/replace operations.",
 
-  "Rename Setups": "Rename Setups",
+      "Search for this string": "Search for this string",
+      "TOOLTIP: Search for this string": "Search for this string",
+      "TOOLTIP TEXT: Search for this string": "The literal or regex pattern to search for.",
 
-  "Use Python regular expressions": "Use Python regular expressions",
-  "TOOL TIP: Use Python regular expressions": "Use Python regular expressions",
-  "TOOLTIP TEXT: Use Python regular expressions": "Enable Python-style regular expressions for search/replace operations.",
+      "Replace with this string": "Replace with this string",
+      "TOOLTIP: Replace with this string": "Replace with this string",
+      "TOOLTIP TEXT: Replace with this string": "Replacement text to use when a search pattern matches.",
 
-  "Search for this string": "Search for this string",
-  "TOOL TIP: Search for this string": "Search for this string",
-  "TOOLTIP TEXT: Search for this string": "The literal or regex pattern to search for.",
+      "Search and replace": "Search and replace",
+      "TOOLTIP: Search and replace": "Search and replace",
+      "TOOLTIP TEXT: Search and replace": "Execute search-and-replace using the above settings.",
 
-  "Replace with this string": "Replace with this string",
-  "TOOL TIP: Replace with this string": "Replace with this string",
-  "TOOLTIP TEXT: Replace with this string": "Replacement text to use when a search pattern matches.",
-
-  "Search and replace": "Search and replace",
-  "TOOL TIP: Search and replace": "Search and replace",
-  "TOOLTIP TEXT: Search and replace": "Execute search-and-replace using the above settings.",
-
-  "Advanced Settings": "Advanced Settings",
-
-  "Initial time allowance": "Initial time allowance",
-  "TOOL TIP: Initial time allowance": "Initial time allowance",
-  "TOOLTIP TEXT: Initial time allowance": "Initial time allowance (seconds) to allow for processing before retries.",
-
-  "Number of retries": "Number of retries",
-  "TOOL TIP: Number of retries": "Number of retries",
-  "TOOLTIP TEXT: Number of retries": "Number of attempts to retry failed post-processing steps.",
-
+      "Only selected Setups": "Only selected Setups",
+      "TOOLTIP: Only selected Setups": "Only process selected Setups",
+      "TOOLTIP TEXT: Only selected Setups": "When selected the Search and replace will only be performed on the Setups selected on the Input Selections tab."
+    },
+  "tools_tab": {
+      "ATC Slot": "ATC Slot",
+      "The slot in the automatic tool changer": "The slot in the automatic tool changer",
+      "Tool ID": "Tool ID",
+      "Tool Name": "Tool Name",
+      "Tools": "Tools"
+    },
+  "operation.py": {
+      "__meta__": {
+            "description": "Translations for operation.py."
+          },
+      "<No tool>": "<No tool>",
+      "Specify a custom tool number for this tool": "Specify a custom tool number for this tool"
+    },
   "Save as default settings": "Save as default settings",
-  "TOOL TIP: Save as default settings": "Save as default settings",
+  "TOOLTIP: Save as default settings": "Save as default settings",
   "TOOLTIP TEXT: Save as default settings": "Save current dialog settings as the default for new documents.",
-
-  "Prepend sequence number": "Prepend sequence number",
-  "File names only": "File names only",
-  "Operation steps only": "Operation steps only",
-  "File names and operation steps": "File names and operation steps",
-  "None": "None",
-  "TOOL TIP: Prepend sequence number": "Prepend numbers of file names and/or operation steps",
-  "TOOLTIP TEXT: Prepend sequence number": "Begin each file name with a sequence number. The numbering represents the order that the setups appear in the browser tree. Each folder has its own sequence numbers starting with 1.",
-
-  "Operations grouping": "Operations grouping",
-  "Single file": "Single file",
-  "Group on setup": "Group on setup",
-  "Group on setup and tool": "Group on setup and tool",
-  "None, one file per operation": "None, one file per operation",
-  "TOOL TIP: Operations grouping": "How to group the operations into output files",
-  "TOOLTIP TEXT: Operations grouping": "Choose how operations are grouped into output files.<p><i>Single file:</i> All operations are combined into a single G-code file. This option is only available if the origin of all setups are the same.<br>If the setups are rotated on the X-axis it also requires that the <i>Rotate A-Axis between setups</i> option is selected and that the X-axes of all the selected setups are parallel.<br><i>Group on setup:</i> Each setup is output as a separate G-code file. This option is only available if there is multiple setups that will be processed.<br><i>Group on setup and tool:</i> Operations are grouped by setup and tool, so each time the tool changes within a setup a new file is created.<br><i>None, one file per operation:</i> Each operation is output as its own G-code file.",
-
-  "The selected NC Program has the following warning:\n{warning}": "The selected NC Program has the following warning:\n{warning}",
-
-  "Flat file structure": "Flat file structure",
-  "TOOL TIP: Flatten the file structure": "Do not create subfolders for setups and operations",
-  "TOOLTIP TEXT: Flatten the file structure": "When enabled, all output files will be placed directly in the output folder without any subfolders.<p>The files will be named according to the full path of their setup and operation to avoid name conflicts, separated by an underscore (_).",
-
-  "Rotate A-Axis between setups": "Rotate A-Axis between setups",
-  "TOOL TIP: Rotate A-Axis between setups": "Rotate A-Axis between setups",
-  "TOOLTIP TEXT: Rotate A-Axis between setups": "When enabled, the A-axis will be rotated to the required position between setups that have different A-axis orientations. This is useful for 4-axis machining where the stock may need to be rotated to access different sides.</p>This option is only enabled if the selected program has a machine that has an A-axis. It allows the output to be a single file.",
-
-  "Retract Y on A-axis rotation": "Retract Y on A-axis rotation",
-  "TOOL TIP: Retract Y on A-axis rotation": "Retract Y axis when rotating A-axis",
-  "TOOLTIP TEXT: Retract Y on A-axis rotation": "When enabled, not only the Z-axis will retract to a safe position before rotating the A-axis but the Y axis will retract as well when rotating between setups. This is useful if the stock in the 4th axis is not round and have potential to collide with the tool when rotating the A-axis.<p>This option is only enabled if the selected program has a machine that has an A-axis and the option to rotate the A-axis between setups has been selected.",
-
-  "Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
-  "TOOL TIP: Safe Y-retraction coordinate (mm)": "Safe Y-retraction coordinate (mm)",
-  "TOOLTIP TEXT: Safe Y-retraction coordinate (mm)": "The Y coordinate to retract to when rotating the A-axis between setups. This coordinate should be set so that the tool will not collide with the stock when retracting to this position.",
-
-  "Machine": "Machine",
-  "TOOL TIP: Machine": "Machine",
-  "TOOLTIP TEXT: Machine": "The machine definition associated with the selected NC Program.",
-
-  "Post Processor": "Post Processor",
-  "TOOL TIP: Post Processor": "Post Processor",
-  "TOOLTIP TEXT: Post Processor": "The post processor associated with the selected NC Program.",
 
   "Process": "Process",
   "Close": "Close"
