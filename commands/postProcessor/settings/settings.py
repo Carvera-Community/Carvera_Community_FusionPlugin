@@ -36,8 +36,8 @@ class Settings(Constants, metaclass=_SettingsMeta):
     # See above definitions for details
     _defaultSettings = {
         Constants.END_CODES:                    "M5\nM9\nM30",
-        Constants.OVERWRITE_FILES:                    False,
-        Constants.CLEAR_FOLDER:                   False,
+        Constants.OVERWRITE_FILES:              False,
+        Constants.CLEAR_FOLDER:                 False,
         Constants.OUTPUT_FOLDER:                "",
         Constants.FILE_SEQUENCE:                False,
         Constants.NUMERIC_NAME:                 False,  
@@ -74,7 +74,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
         if attr and attr.count > 0:
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
-                if cls._items[Constants.VERSION] == config.SETTINGS_VERSION:
+                if cls._items(Constants.VERSION) is not None and cls._items[Constants.VERSION] == config.SETTINGS_VERSION:
                     return  # settings are valid for this version
             except Exception:
                 pass
@@ -87,9 +87,6 @@ class Settings(Constants, metaclass=_SettingsMeta):
             if path.exists and path.is_file():
                     with open(path) as file:
                         cls._default = json.load(file)
-                # never allow delFiles or delFolder to default to True
-                    cls._default[Constants.OVERWRITE_FILES] = False
-                    cls._default[Constants.CLEAR_FOLDER] = False
                     if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
                         cls.Update(Settings._defaultSettings, cls._default)
             else:
@@ -105,9 +102,6 @@ class Settings(Constants, metaclass=_SettingsMeta):
     def SaveDefault(cls):
         cls._fMustSave = False
         cls._default = dict(cls._items)
-        # never allow delFiles or delFolder to default to True
-        cls._default[Constants.OVERWRITE_FILES] = False
-        cls._default[Constants.CLEAR_FOLDER] = False
         try:
             strSettings = json.dumps(cls._items, indent=4, sort_keys=True)
             file = open(cls._getPath(), "w")

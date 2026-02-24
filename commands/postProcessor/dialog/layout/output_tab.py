@@ -203,23 +203,26 @@ class OutputTab(PostDialogConstants):
         #endregion
 
         #region Overwrite existing files checkbox
-        overwriteExistingFiles = outputTab.children.addBoolValueInput(cls._OVERWRITE_EXISTING_FILES_ID, Strings("Overwrite existing files"),  True, "", False)
+        overwriteExistingFiles = outputTab.children.addBoolValueInput(cls._OVERWRITE_EXISTING_FILES_ID, Strings("Overwrite existing files"),  True, "", Settings(Settings.OVERWRITE_FILES))
         overwriteExistingFiles.tooltip = Strings("TOOLTIP: Overwrite existing files")
         overwriteExistingFiles.tooltipDescription = Strings("TOOLTIP TEXT: Overwrite existing files")
         overwriteExistingFiles.isEnabled = True
 
-        EventRegistry.register(overwriteExistingFiles, lambda checkbox: Settings.Set(Settings.OVERWRITE_FILES, checkbox.value))
+        EventRegistry.register(overwriteExistingFiles, lambda checkbox: Settings(Settings.OVERWRITE_FILES, checkbox.value))
         #endregion
 
         #region Clear output folder checkbox
-        clearOutputFolder = outputTab.children.addBoolValueInput(cls._CLEAR_OUTPUT_FOLDER_ID, Strings("Clear output folder"),  True, "", False)
+        clearOutputFolder = outputTab.children.addBoolValueInput(cls._CLEAR_OUTPUT_FOLDER_ID, Strings("Clear output folder"),  True, "", Settings(Settings.CLEAR_FOLDER))
         clearOutputFolder.tooltip = Strings("TOOLTIP: Clear output folder")
         clearOutputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Clear output folder")
 
         def setClearOutputFolderEnabled(checkbox: adsk.core.BoolValueCommandInput):
-            checkbox.parentCommand.commandInputs.itemById(cls._CLEAR_OUTPUT_FOLDER_ID).isEnabled = checkbox.value
+            clearFolderCheckbox = checkbox.parentCommand.commandInputs.itemById(cls._CLEAR_OUTPUT_FOLDER_ID)
+            clearFolderCheckbox.isEnabled = checkbox.value
+
             if not checkbox.value:
-                Settings.Set(Settings.CLEAR_FOLDER, False) # Uncheck "Clear output folder" when "Overwrite existing files" is disabled, as it doesn't make sense to clear the output folder if we're not overwriting existing files
+                Settings(Settings.CLEAR_FOLDER, False) # Uncheck "Clear output folder" when "Overwrite existing files" is disabled, as it doesn't make sense to clear the output folder if we're not overwriting existing files
+                clearFolderCheckbox.value = False
 
         EventRegistry.register(clearOutputFolder, lambda checkbox: Settings.Set(Settings.CLEAR_FOLDER, checkbox.value))
         EventRegistry.register(overwriteExistingFiles, setClearOutputFolderEnabled) # Enable "Clear output folder" when "Overwrite existing files" is enabled
