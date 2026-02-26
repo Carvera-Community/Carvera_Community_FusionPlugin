@@ -43,7 +43,11 @@ class GCodeTab(PostDialogConstants):
         def setSafeYRetractionEnabled(checkbox: adsk.core.BoolValueCommandInput):
             inputs = checkbox.parentCommand.commandInputs
             rotateAAxisCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(cls._ROTATE_A_AXIS_ID)
-            inputs.itemById(cls._SAFE_Y_RETRACTION_ID).isEnabled = rotateAAxisCheckbox.value
+            safeYRetractionCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(cls._SAFE_Y_RETRACTION_ID)
+            if safeYRetractionCheckbox is not None:
+                safeYRetractionCheckbox.isEnabled = rotateAAxisCheckbox is not None \
+                    and rotateAAxisCheckbox.isEnabled \
+                    and rotateAAxisCheckbox.value 
 
         EventRegistry.register(safeYRetraction, lambda checkbox: Settings(Settings.SAFE_Y_RETRACTION, checkbox.value)) # Save settings
         EventRegistry.register(rotateAAxis, setSafeYRetractionEnabled) # Register handler to enable/disable based on Rotate A-Axis value
@@ -64,8 +68,11 @@ class GCodeTab(PostDialogConstants):
             rotateAAxisCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(cls._ROTATE_A_AXIS_ID)
             safeYRetractionCheckbox: adsk.core.BoolValueCommandInput = inputs.itemById(cls._SAFE_Y_RETRACTION_ID)
             yRetractionCoordinateInput: adsk.core.IntegerSpinnerCommandInput = inputs.itemById(cls._Y_RETRACTION_COORDINATE_ID)
-            if rotateAAxisCheckbox is not None and yRetractionCoordinateInput is not None and safeYRetractionCheckbox is not None:
-                yRetractionCoordinateInput.isEnabled = rotateAAxisCheckbox.value and safeYRetractionCheckbox.value
+            if rotateAAxisCheckbox is not None and safeYRetractionCheckbox is not None and yRetractionCoordinateInput is not None:
+                yRetractionCoordinateInput.isEnabled = rotateAAxisCheckbox.isEnabled \
+                    and rotateAAxisCheckbox.value \
+                    and safeYRetractionCheckbox.isEnabled \
+                    and safeYRetractionCheckbox.value
 
         EventRegistry.register(rotateAAxis, setYRetractionCoordinateEnabled) # Register handler to enable/disable based on Rotate A-Axis value
         EventRegistry.register(safeYRetraction, setYRetractionCoordinateEnabled) # Register handler to enable/disable based on Safe Y-Retraction value
@@ -79,6 +86,15 @@ class GCodeTab(PostDialogConstants):
         rapidMoves.tooltipDescription = Strings("TOOLTIP TEXT: Restore rapid moves")
 
         EventRegistry.register(rapidMoves, lambda checkbox: Settings(Settings.RESTORE_RAPID_MOVES, checkbox.value))
+        #endregion
+
+        #region Rapid moves max steps inbetween spinner input
+        rapidMovesMaxSteps = gCodeTab.children.addIntegerSliderListCommandInput(cls._RAPID_MOVES_MAX_STEPS_ID, Strings("Max steps for rapid move"), [3, 4, 5, 6, 7, 8, 9, 10])
+        rapidMovesMaxSteps.valueOne = Settings(Settings.RAPID_MOVES_MAX_STEPS)
+        rapidMovesMaxSteps.tooltip = Strings("TOOLTIP: Max steps for rapid move")
+        rapidMovesMaxSteps.tooltipDescription = Strings("TOOLTIP TEXT: Max steps for rapid move")
+
+        EventRegistry.register(rapidMovesMaxSteps, lambda spinner: Settings(Settings.RAPID_MOVES_MAX_STEPS, spinner.valueOne))
         #endregion
 
         #region Minimum rapid restore distance

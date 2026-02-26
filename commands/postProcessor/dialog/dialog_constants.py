@@ -6,6 +6,7 @@ class PostDialogConstants:
     _TOOL_CHANGE_ID = 'toolChange'
     _END_CODES_ID = 'endCodes'
     _RESTORE_RAPID_MOVES_ID = 'restoreRapidMoves'
+    _RAPID_MOVES_MAX_STEPS_ID = 'rapidMovesMaxSteps'
     _CLEAR_OUTPUT_FOLDER_ID = 'deleteOutputFolder'
     _OPERATIONS_GROUPING_ID = 'operationsGrouping'
     _OVERWRITE_EXISTING_FILES_ID = 'deleteExistingFiles'

@@ -36,8 +36,11 @@ class OperationParser(Line):
 
         if Settings(Settings.RESTORE_RAPID_MOVES):
             minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE) | 20
-            self._rapidsAnalysis = {seg["startLine"]: seg["endLine"]
-                    for seg in RapidsParser().analyze(RapidsParser().parseFile(filePath), minDist = minDist)
+            maxStepsInbetween = Settings(Settings.RAPID_MOVES_MAX_STEPS) | 3
+            self._rapidsAnalysis = {seg["startLine"]: { 
+                "endLine": seg["endLine"], 
+                "startHasFeed": seg["startHasFeed"]}
+                    for seg in RapidsParser().analyze(RapidsParser().parseFile(filePath, maxStepsInbetween = maxStepsInbetween), minDist = minDist)
                     if seg.get("isValid") and "startLine" in seg and "endLine" in seg}
         
         with filePath.open("r") as operationFile:

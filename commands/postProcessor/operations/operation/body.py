@@ -1,3 +1,4 @@
+import re
 from typing import Optional, TextIO
 
 from ...file_modes import FileModes
@@ -5,6 +6,9 @@ from ...settings.settings import Settings
 from ...line import Line
 
 class OperationBody(Line):
+
+    _RE_FEED = re.compile(r'(^|\s)F[+-]?\d+(?:\.\d*)?(?=\s|$)', re.IGNORECASE)
+
     def WriteBody(self, fileHandler: TextIO, rotationAngle: Optional[float] = None, preserveRotation: Optional[bool] = False):
         with self._tempFilePath.open(FileModes.READ) as operationFile:
             line = operationFile.readline()
@@ -23,9 +27,12 @@ class OperationBody(Line):
                             fileHandler.write('\n') # keep blank line before operation start
                         self._lineNumber = self._writeLine(fileHandler, f"({self.name})", self._lineNumber)
                     if row + 1 in self._rapidsAnalysis: # Add rapids comments if this line is the start of a rapid move
-                        rapidsEnds = self._rapidsAnalysis[row + 1]
+                        rapidsEnds = self._rapidsAnalysis[row + 1]["endLine"]
+                        startHasFeed = self._rapidsAnalysis[row + 1]["startHasFeed"]
                         lineMatch = OperationBody._PARSE_LINE_RE.match(line)
                         if lineMatch:
+                            if startHasFeed: 
+                                line = self._stripFeed(line)
                             if lineMatch.group("G") is not None:
                                 if int(lineMatch.group("G")) == 1:
                                     gStart, gEnd = lineMatch.span("G")
@@ -48,6 +55,26 @@ class OperationBody(Line):
                 row += 1
                 if row >= self._tailStartLine:                            
                     break
+
+    def _stripFeed(self, line: str) -> str:
+        # Preserve newline exactly as it was
+        hasNewline = line.endswith("\n")
+        s = line[:-1] if hasNewline else line
+
+        # If you allow comments like "(...)" and want to avoid touching inside them:
+        commentStart = s.find("(")
+        if commentStart >= 0:
+            prefix = s[:commentStart]
+            suffix = s[commentStart:]
+        else:
+            prefix = s
+            suffix = ""
+
+        # Remove feed(s) from the non-comment part
+        prefix = self._RE_FEED.sub(r'\1', prefix).strip()
+
+        out = (prefix + (" " if (prefix and suffix and not suffix.startswith(" ")) else "") + suffix).rstrip()
+        return out + ("\n" if hasNewline else "")        
 
     def _matchLine(self, fileHandler: TextIO, line: str, row: int, rotationAngle: Optional[float], preserveRotation: Optional[bool] = False) -> bool:
         lineMatch = OperationBody._PARSE_LINE_RE.match(line)

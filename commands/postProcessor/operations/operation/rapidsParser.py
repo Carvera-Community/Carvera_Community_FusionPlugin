@@ -425,6 +425,7 @@ class RapidsParser:
     KEY_MIDDLE = "middle"
     KEY_Z_DIST = "zDist"
     KEY_EFFECTIVE_DIST = "effectiveDist"
+    KEY_START_HAS_FEED = "startHasFeed"
     REASON_ARC_IN_MIDDLE = "arc_in_middle"
     REASON_FEED_IN_MIDDLE = "feed_in_middle"
     REASON_END_HAS_FEED_AND_NO_MIDDLE = "end_has_feed_and_no_middle"
@@ -475,6 +476,12 @@ class RapidsParser:
         for segment in segments:
             segment[cls.KEY_IS_VALID] = True
             segment[cls.KEY_REASONS] = []
+
+            # Check if the first line has a feed
+            # Start is eligible even if it is G1 + F (Fusion transition)
+            # But if startHasFeed, mark it so writeBody can strip feed when injecting G0
+            tokens = _tokenize(segment[cls.O_START])
+            segment[cls.KEY_START_HAS_FEED] = _hasFeed(tokens)
 
             # Rule: disqualify if middle steps contain arc/feed tokens
             for line in (segment.get(cls.KEY_MIDDLE, []) or []):

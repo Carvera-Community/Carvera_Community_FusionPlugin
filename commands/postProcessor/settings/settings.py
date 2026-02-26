@@ -55,6 +55,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
         Constants.TOOL_CHANGE:                  "M9",
         Constants.RESTORE_RAPID_MOVES:          False,
         Constants.RAPID_MOVES_MINIMUM_DISTANCE: 20,
+        Constants.RAPID_MOVES_MAX_STEPS:        3,
         Constants.INITIAL_DELAY:                0.2,
         Constants.POST_RETRIES:                 3,
         Constants.ROTATE_A_AXIS:                False,

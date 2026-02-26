@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import TextIO
 
+from ...settings.settings import Settings
+
 from .....config import PLUGIN_VERSION
 from ...config import CMD_NAME
 from ...file_modes import FileModes
@@ -12,7 +14,12 @@ class OperationHeader():
             file = Path(fileHandler.name).stem
             self._lineNumber = self._writeLine(fileHandler, "({fileName})".format(fileName = file), 0)
             self._lineNumber = self._writeLine(fileHandler, "(Generated with {pluginName} version {pluginVersion})".format(pluginName = CMD_NAME, pluginVersion = PLUGIN_VERSION), self._lineNumber)
-
+            if Settings(Settings.RESTORE_RAPID_MOVES):
+                self._lineNumber = self._writeLine(fileHandler, "(Restore rapid moves enabled: {restoreRapidMoves}, maximum steps inbetween start and stop: {maximumSteps}, minimum travel distance: {minimumDistance}mm)".format(
+                    restoreRapidMoves = Settings(Settings.RESTORE_RAPID_MOVES),
+                    maximumSteps = Settings(Settings.RAPID_MOVES_MAX_STEPS),
+                    minimumDistance = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
+                ), self._lineNumber)
             line = operationFile.readline()
             row = 0
 

@@ -62,7 +62,9 @@ class Line():
         :rtype: int
         """
         # Check if the line is numbered
-        addLineNumbers = Settings(Settings.LINE_SEQUENCE) 
+        # Removed feature
+        # addLineNumbers = Settings(Settings.LINE_SEQUENCE) 
+        addLineNumbers = False
         digits = Settings(Settings.LINE_SEQUENCE_DIGITS) if addLineNumbers else 0
         match = cls._BODY_RE.match(line)
         if match and match.group("N") is not None: # line is numbered
