@@ -89,6 +89,10 @@
       "TOOLTIP: Restore rapid moves": "Restore rapid moves",
       "TOOLTIP TEXT: Restore rapid moves": "Restore rapid (rapid traverse) moves where appropriate. This will find where the movement can be a rapid movement (<i>G0</i>) rather than a cutting move (<i>G1</i>) and change the output so that it rapid movements will be used.",
 
+      "Max steps for rapid moves": "Max steps for rapid moves",
+      "TOOLTIP: Max steps for rapid moves": "Maximum steps to count as a rapid move",
+      "TOOLTIP TEXT: Max steps for rapid moves": "To limit the scope in the search for a candidate to swap to a rapid move you can now set the maximum number of program steps to search for the end of the rapid move.<p>This can be useful if you use the shortest path option when setting type of rapid movements as they can be done using several steps and sometimes it could be quite a few, so if you notice that the rapid moves doesn't work everywhere and you use shortest path as strategy, try increasing this value.",
+
       "Minimum rapid move distance (mm)": "Minimum rapid move distance (mm)",
       "TOOLTIP: Minimum rapid move distance (mm)": "Minimum rapid move distance",
       "TOOLTIP TEXT: Minimum rapid move distance (mm)": "The minimum movement distance to add rapid movements to. To limit the jerkyness of the machine you can set a limit of the shortest distance the machine needs to move to change from a cutting move (<i>G1</i>) to a rapid move (<i>G0</i>).",

@@ -103,6 +103,10 @@
       "TOOLTIP: Restore rapid moves": "Återställ snabba förflyttningar",
       "TOOLTIP TEXT: Restore rapid moves": "Återställ snabba (rapid) förflyttningar där det är lämpligt under efterbearbetningen.",
 
+      "Max steps for rapid moves": "Maximalt antal steg för rapid-rörelse",
+      "TOOLTIP: Max steps for rapid moves": "Maximalt antal programsteg som får räknas som en rapid-rörelse",
+      "TOOLTIP TEXT: Max steps for rapid moves": "För att begränsa omfattningen av sökningen efter en kandidat som kan bytas till en rapid-rörelse kan du nu ange det maximala antalet programsteg som ska genomsökas för att hitta slutet på rapid-rörelsen.<p>Detta kan vara användbart om du använder alternativet kortaste väg vid val av typ av rapid-rörelser, eftersom dessa kan bestå av flera steg - ibland ganska många.<p>Om du märker att rapid-rörelserna inte fungerar överallt och du använder kortaste väg som strategi, kan du prova att öka detta värde.",
+
       "Minimum rapid move distance (mm)": "Minsta snabbförflyttningsavstånd (mm)",
       "TOOLTIP: Minimum rapid move distance (mm)": "Minsta avstånd för snabbförflyttning",
       "TOOLTIP TEXT: Minimum rapid move distance (mm)": "Det minsta förflyttningsavståndet för att använda snabbförflyttning. För att minska ryckighet kan du sätta en gräns för kortaste sträcka där rörelsen ändras från skärrörelse (<i>G1</i>) till snabbförflyttning (<i>G0</i>).",

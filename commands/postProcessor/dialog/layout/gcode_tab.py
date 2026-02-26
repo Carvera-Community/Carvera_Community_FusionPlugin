@@ -89,10 +89,10 @@ class GCodeTab(PostDialogConstants):
         #endregion
 
         #region Rapid moves max steps inbetween spinner input
-        rapidMovesMaxSteps = gCodeTab.children.addIntegerSliderListCommandInput(cls._RAPID_MOVES_MAX_STEPS_ID, Strings("Max steps for rapid move"), [3, 4, 5, 6, 7, 8, 9, 10])
+        rapidMovesMaxSteps = gCodeTab.children.addIntegerSliderListCommandInput(cls._RAPID_MOVES_MAX_STEPS_ID, Strings("Max steps for rapid moves"), [3, 4, 5, 6, 7, 8, 9, 10])
         rapidMovesMaxSteps.valueOne = Settings(Settings.RAPID_MOVES_MAX_STEPS)
-        rapidMovesMaxSteps.tooltip = Strings("TOOLTIP: Max steps for rapid move")
-        rapidMovesMaxSteps.tooltipDescription = Strings("TOOLTIP TEXT: Max steps for rapid move")
+        rapidMovesMaxSteps.tooltip = Strings("TOOLTIP: Max steps for rapid moves")
+        rapidMovesMaxSteps.tooltipDescription = Strings("TOOLTIP TEXT: Max steps for rapid moves")
 
         EventRegistry.register(rapidMovesMaxSteps, lambda spinner: Settings(Settings.RAPID_MOVES_MAX_STEPS, spinner.valueOne))
         #endregion
