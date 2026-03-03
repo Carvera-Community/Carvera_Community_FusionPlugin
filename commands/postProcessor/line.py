@@ -25,7 +25,7 @@ class Line():
     
     _GCODES_RE: Final = re.compile(r"G([0-9]+(?:\.[0-9]*)?)")
 
-    _TOOL_COMMENT_REG: Final = re.compile(r"\((T[0-9])+\s")
+    _TOOL_COMMENT_REG: Final = re.compile(r"\(T[0-9]+\s.*\)$")
 
     _COMMENT_REG: Final = re.compile(r"^(?:\s*)\((.*)\)(?:\s*)$")
 
