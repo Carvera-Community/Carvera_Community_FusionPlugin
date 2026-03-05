@@ -1,5 +1,9 @@
 from pathlib import Path
-from adsk import cam
+from typing import Iterator
+from adsk.cam import (
+    Setups as adskSetups,
+    Tool
+)
 
 from ....lib.fusionAddInUtils.general_utils import Utils
 from ..settings.settings import Settings
@@ -23,14 +27,7 @@ class SetupsContext:
     def hasSelected(self) -> bool:
         return any(self.selected)
 
-    @property
-    def tools(self) -> list[cam.Tool]:
-        tools = list[cam.Tool]()
-        for setup in self.selected:
-            tools.extend(setup.tools)
-        return tools
-
-    def load(self, setups: cam.Setups) -> None:
+    def load(self, setups: adskSetups) -> None:
         # If there is no setup currently selected that is a valid setup, select all setups as default
         selectAll = not any((setup.isSelected for setup in setups if not setup.isSuppressed and not setup.hasError))
         # Intentionally loading all setups to make sure that the order is preserved
@@ -71,3 +68,8 @@ class SetupsContext:
     def setFileExtension(self, extension: str) -> None:
         for setup in self.selected:
             setup.SetFileExtension(extension)
+
+    def getTools(self) -> Iterator[Tool]:
+        for setup in self.selected:
+            for tool in setup.ctx.getTools():
+                yield tool

@@ -5,11 +5,16 @@ from pathlib import Path
 import re
 
 from typing import (
+    Iterator,
     Optional, 
     Union
 )
 
-from adsk import cam
+from adsk.cam import (
+    Setup as adskSetup,
+    Operation as adskOperation,
+    Tool as adskTool
+)
 from adsk.core import (
     Point3D,
     Vector3D
@@ -29,7 +34,7 @@ from .body_writer import writeBody
 from .tail_writer import writeTail
 
 class Setup():
-    def __init__(self, ctx: SetupContext, setup: cam.Setup, index: int, isDefaultSelected: bool = False):
+    def __init__(self, ctx: SetupContext, setup: adskSetup, index: int, isDefaultSelected: bool = False):
         self.ctx = ctx
         ctx.setup = setup
         ctx.index = index
@@ -85,9 +90,13 @@ class Setup():
     def hasMachine(self) -> bool:
         return self.ctx.setup.machine is not None
 
-    @property
-    def tools(self) -> list[cam.Tool]:
-        return self.ctx.operations.tools if self.ctx.operations is not None else []
+    # As the operations aren't loaded until parse is called the tools
+    # is read dynamically from the adsk object directly.
+    def getTools(self) -> Iterator[adskTool]:
+        for x in self.ctx.setup.allOperations:
+            operation = adskOperation.cast(x)
+            if operation.isValid and not operation.hasError:
+                yield operation.tool
 
     def SetOutputPath(self, path: Path):
         path.mkdir(parents=True, exist_ok=True)
@@ -219,7 +228,7 @@ class Setup():
                                not (self.ctx.isSelected
                                     and not (self.ctx.isSuppressed or self.ctx.hasError))
                                else Operations(OperationsContext(), [operation for x in self.ctx.setup.allOperations 
-                                                                     if (operation := cam.Operation.cast(x)) is not None]))
+                                                                     if (operation := adskOperation.cast(x)) is not None]))
 
 
         if self.ctx.operations is None:

@@ -1,6 +1,10 @@
-from typing import Optional
+from typing import Iterator, Optional
 from adsk.core import Point3D
-from adsk.cam import Setup as adskSetup
+from adsk.cam import (
+    Setup as adskSetup, 
+    Operation as adskOperation,
+    Tool
+)
 
 from ...operations.operations import Operations
 
@@ -46,3 +50,11 @@ class SetupContext:
     def SetFileName(self, fileName: str):
         if self.operations is not None:
             self.operations.SetFileName(fileName)
+
+    def getTools(self) -> Iterator[Tool]:
+        for x in self.setup.allOperations:
+            if ((operation := adskOperation.cast(x)) is not None 
+                                                         and operation.isValid 
+                                                         and not operation.hasError):
+                if operation.tool is not None:
+                    yield operation.tool

@@ -46,5 +46,7 @@ class Constants:
     RAPID_MOVES_MINIMUM_DISTANCE_ID = 'rapidMovesMinimumDistance'
     ADD_LINE_NUMBERS_ID = 'addLineNumbers'
     LANGUAGE_ID = 'language'
-    #endregion
+
+    TOOLS_GROUP_ID = 'toolsTab'
+    TOOLS_TABLE_ID = 'toolsTable'
 

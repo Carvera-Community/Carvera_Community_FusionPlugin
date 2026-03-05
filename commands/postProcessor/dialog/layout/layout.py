@@ -33,7 +33,7 @@ class PostDialogLayout(Constants):
         InputTab.create(inputs, ctx)
         GCodeTab.create(inputs)
         OutputTab.create(inputs)
-        # cls.createToolsTab(inputs) To be added soon(tm). Hi Fae! :)
+        ToolsTab.create(ctx, inputs)
         MiscTab.create(inputs, ctx)
 
         InputTab._updateSetups(inputs.itemById(cls.PROGRAM_DROPDOWN_ID), ctx) # initialize table state based on current program selection

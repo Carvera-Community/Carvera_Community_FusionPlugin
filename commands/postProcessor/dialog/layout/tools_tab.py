@@ -3,12 +3,14 @@ from __future__ import annotations
 from typing import cast
 
 from adsk.core import (
+    CommandInput,
     CommandInputs,
     DropDownCommandInput,
     DropDownStyles
 )
 
 from adsk.cam import Tool
+from ...dialog.event_registry import EventRegistry
 
 from .....lib.fusionParameters.cast_cam_param import castCAMParam
 
@@ -20,11 +22,8 @@ from ..constants import Constants
 
 class ToolsTab(Constants):
 
-    _TOOLS_GROUP_ID = 'toolsTab'
-    _TOOLS_TABLE_ID = 'toolsTable'
-
     @classmethod
-    def createToolsTab(cls, inputs: CommandInputs, ctx: SetupsContext):
+    def create(cls, ctx: SetupsContext, inputs: CommandInputs):
         
         # helper method to make the syntax a little easier for adding 
         # items to a table.
@@ -34,10 +33,17 @@ class ToolsTab(Constants):
             return obj
 
         #region ----- [ Tools tab ] -----
-        toolsTab = inputs.addTabCommandInput(cls._TOOLS_GROUP_ID, Strings("Tools"))
-        toolsTab.isEnabled = True
+        toolsTab = inputs.addTabCommandInput(cls.TOOLS_GROUP_ID, Strings("Tools"))
 
-        input = toolsTab.children.addTableCommandInput(cls._TOOLS_TABLE_ID, '',4, "10:65:5:20")
+        def _setTabEnabled(input: CommandInput):
+            input.parentCommand.commandInputs.itemById(cls.TOOLS_GROUP_ID).isEnabled = Programs.Current is not None
+
+        EventRegistry.register(cls.PROGRAM_DROPDOWN_ID, _setTabEnabled)
+        _setTabEnabled(inputs.itemById(cls.PROGRAM_DROPDOWN_ID)) # initialize state based on current program selection
+
+
+
+        input = toolsTab.children.addTableCommandInput(cls.TOOLS_TABLE_ID, '',4, "10:65:5:20") # 100% is easier to handle when redistributing the width
         input.minimumVisibleRows = 2
         input.maximumVisibleRows = 12
         input.hasGrid = False
@@ -72,7 +78,7 @@ class ToolsTab(Constants):
         def _getToolDescription(tool: Tool) -> str:
             return castCAMParam.ToStr(tool.parameters.itemByName('tool_description'))
 
-        for tool in ctx.tools:
+        for tool in ctx.getTools():
             toolNumber = _getToolNumber(tool)
             dropdown = DropDownCommandInput.cast(inputs.addDropDownCommandInput(f"toolDropdown_{row}", '', cast(DropDownStyles, DropDownStyles.TextListDropDownStyle)))
             if Programs.Current is not None and Programs.Current.machineHasATC and not _requiresManualToolChange(tool):
