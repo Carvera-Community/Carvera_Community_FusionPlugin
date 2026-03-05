@@ -29,8 +29,10 @@ class Line():
 
     _COMMENT_REG: Final = re.compile(r"^(?:\s*)\((.*)\)(?:\s*)$")
 
+    _RE_FEED = re.compile(r'(^|\s)F[+-]?\d+(?:\.\d*)?(?=\s|$)', re.IGNORECASE)
+
     @classmethod
-    def _writeLine(cls, fileHandler: TextIO, line: str, lineNumber: int) -> int:
+    def writeLine(cls, fileHandler: TextIO, line: str) -> None:
         """
         Writes the line to the fileHandler and terminates it with a newline (\\n), adding line numbers if needed and returns the new line number
         
@@ -44,10 +46,10 @@ class Line():
         :return: Description
         :rtype: int
         """
-        return cls._write(fileHandler, line + "\n", lineNumber)
+        return cls.write(fileHandler, line + "\n")
 
     @classmethod
-    def _write(cls, fileHandler: TextIO, line: str, lineNumber: int) -> int:
+    def write(cls, fileHandler: TextIO, line: str) -> None:
         """
         Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
         
@@ -62,16 +64,12 @@ class Line():
         :rtype: int
         """
         # Check if the line is numbered
-        # Removed feature
-        # addLineNumbers = Settings(Settings.LINE_SEQUENCE) 
-        addLineNumbers = False
-        digits = Settings(Settings.LINE_SEQUENCE_DIGITS) if addLineNumbers else 0
         match = cls._BODY_RE.match(line)
         if match and match.group("N") is not None: # line is numbered
-            # Replace or remove the line number            
-            line = re.sub(r"^N[0-9]+", f"N{str(lineNumber).rjust(digits, '0')}" if addLineNumbers else "", line, count=1)
-        elif addLineNumbers: # Line is not numbered, add it
-            lineNumber += Settings(Settings.LINE_SEQUENCE_INTERVAL)
-            line = f"N{str(lineNumber).rjust(digits, '0')} " + line
+            # Remove the line number            
+            line = re.sub(r"^N[0-9]+", "", line, count=1)
         fileHandler.write(line)
-        return lineNumber
+
+    @classmethod
+    def removeFeedFromLine(cls, line: str) -> str:
+        return cls._RE_FEED.sub(r'\1', line).strip()

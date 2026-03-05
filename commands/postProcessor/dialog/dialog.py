@@ -1,11 +1,28 @@
 from __future__ import annotations
 from pathlib import Path
 import tempfile
-import adsk.core
+from typing import cast
+from adsk.core import (
+    Application,
+    BoolValueCommandInput,
+    CommandControl,
+    CommandCreatedEventArgs,
+    CommandEventArgs,
+    DialogResults,
+    Document,
+    LogLevels,
+    MessageBoxButtonTypes,
+    MessageBoxIconTypes,
+    ValidateInputsEventArgs
+)
+from adsk.cam import CAM
 import os
 
 
-from ..setups.setups import Setups
+from ..setups.setups import (
+    aAxisRotationRequired,
+    getWCSAlignmentIssues
+)
 from ..programs import Programs
 from ..settings.settings import Settings
 from ..strings import Strings
@@ -14,6 +31,7 @@ from ..const import Const
 from ....lib.fusionAddInUtils.general_utils import Utils
 from ....lib.fusionAddInUtils.event_utils import Events
 from .. import config
+from ..setups.setups_context import SetupsContext
 
 from .layout.layout import PostDialogLayout
 from .event_registry import EventRegistry
@@ -24,14 +42,18 @@ class PostDialog(PostDialogLayout):
     # they are not released and garbage collected.
     _local_handlers = []
 
+    _ctx: SetupsContext
+
     # Resource location for command icons, here we assume a sub folder in this directory named "resources".
     _ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', '')
 
     # Executed when add-in is started.
     @classmethod
     def start(cls):
-        app = adsk.core.Application.get()
+        app = Application.get()
         ui = app.userInterface
+
+        cls._ctx = SetupsContext()
 
         # ******** Add a button into the UI so the user can run the command. ********
         # Get the target workspace the button will be created in.
@@ -48,7 +70,7 @@ class PostDialog(PostDialogLayout):
             except Exception:
                 Utils.log(
                     'PostDialog.start: Failed to execute SelectCommand while resetting stale UI state.',
-                    adsk.core.LogLevels.WarningLogLevel
+                    LogLevels.WarningLogLevel
                 )
 
         # Hard-reset stale UI objects from previous debug sessions.
@@ -60,7 +82,7 @@ class PostDialog(PostDialogLayout):
                 Utils.log(
                     'PostDialog.start: Existing command control could not be deleted. '
                     'A stale control from a previous debug session may remain.',
-                    adsk.core.LogLevels.WarningLogLevel
+                    LogLevels.WarningLogLevel
                 )
 
         old_definition = ui.commandDefinitions.itemById(config.CMD_ID)
@@ -71,7 +93,7 @@ class PostDialog(PostDialogLayout):
                 Utils.log(
                     'PostDialog.start: Existing command definition could not be deleted. '
                     'Fusion may keep it alive while an old dialog/session is still active.',
-                    adsk.core.LogLevels.WarningLogLevel
+                    LogLevels.WarningLogLevel
                 )
 
         # Create a fresh command definition for this session. If Fusion still keeps
@@ -89,13 +111,13 @@ class PostDialog(PostDialogLayout):
                 Utils.log(
                     'PostDialog.start: addButtonDefinition reported duplicate command id. '
                     'Reusing existing definition (likely stale UI state from previous debug session).',
-                    adsk.core.LogLevels.WarningLogLevel
+                    LogLevels.WarningLogLevel
                 )
                 cmd_def = ui.commandDefinitions.itemById(config.CMD_ID)
                 if cmd_def is None:
                     Utils.log(
                         'PostDialog.start: Duplicate-id fallback failed because command definition was not found after addButtonDefinition error.',
-                        adsk.core.LogLevels.ErrorLogLevel
+                        LogLevels.ErrorLogLevel
                     )
                     raise
 
@@ -103,14 +125,14 @@ class PostDialog(PostDialogLayout):
         Events.add(cmd_def.commandCreated, cls.commandCreated)
 
         # Create the button command control in the UI after the specified existing command.
-        control = panel.controls.itemById(config.CMD_ID)
+        control = CommandControl.cast(panel.controls.itemById(config.CMD_ID))
         if control is None:
             control = panel.controls.addCommand(cmd_def, Const.POST_PROCESS_CONTROL_ID, False)
         else:
             Utils.log(
                 'PostDialog.start: Reusing existing command control. '
                 'If the button does not respond, restart the debug session with the dialog closed.',
-                adsk.core.LogLevels.WarningLogLevel
+                LogLevels.WarningLogLevel
             )
 
         # Specify if the command is promoted to the main toolbar. 
@@ -120,8 +142,11 @@ class PostDialog(PostDialogLayout):
     @classmethod
     def stop(cls):
         # Get the various UI elements for this command
-        app = adsk.core.Application.get()
+        app = Application.get()
         ui = app.userInterface
+
+        doc: Document = app.activeDocument
+        Settings.Save(doc.attributes)  # Save settings for the current document
 
         workspace = ui.workspaces.itemById(Const.CAM_WORKSPACE_ID)
         panel = workspace.toolbarPanels.itemById(Const.CAM_ACTIONS_PANEL_ID)
@@ -136,6 +161,9 @@ class PostDialog(PostDialogLayout):
         if command_definition:
             command_definition.deleteMe()
 
+        cls._local_handlers = []  # clear out the local handlers list
+        del cls._ctx # Clear out the current Setups context
+
     #
     # Event handlers
     #
@@ -143,26 +171,25 @@ class PostDialog(PostDialogLayout):
     # Function that is called when a user clicks the corresponding button in the UI.
     # This defines the contents of the command dialog and connects to the command related events.
     @classmethod
-    def commandCreated(cls, args: adsk.core.CommandCreatedEventArgs):
+    def commandCreated(cls, args: CommandCreatedEventArgs):
         # General logging for debug.
 
-        app: adsk.core.Application = adsk.core.Application.get()
-        doc: adsk.core.Document = app.activeDocument
-        cam: adsk.cam.CAM = adsk.cam.CAM.cast(app.activeDocument.products.itemByProductType(Const.CAM_PRODUCT_ID))
+        app: Application = Application.get()
+        doc: Document = app.activeDocument
+        cam = CAM.cast(app.activeDocument.products.itemByProductType(Const.CAM_PRODUCT_ID))
 
         Settings.Load(doc.attributes) # Load settings from the document
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
-        Programs.Load(cam) # Get the list of NCPrograms in the current document
+        Programs.Load(cls._ctx, cam) # Get the list of NCPrograms in the current document
 
         command = args.command
 
-        cls.createLayout(command) # Create the the dialog inputs and structure
+        cls.createLayout(command, cls._ctx) # Create the the dialog inputs and structure
 
         #region Hook up events
         Events.add(command.execute, cls.commandExecute, local_handlers = cls._local_handlers)
         Events.add(command.inputChanged, cls.commandInputChanged, local_handlers = cls._local_handlers)
         Events.add(command.validateInputs, cls.commandValidateInput, local_handlers = cls._local_handlers)
-        Events.add(command.destroy, cls.commandDestroy, local_handlers = cls._local_handlers)
         #endregion
 
     @classmethod
@@ -172,76 +199,76 @@ class PostDialog(PostDialogLayout):
     # This event handler is called when the user clicks the OK button in the command dialog or 
     # is immediately called after the created event not command inputs were created for the dialog.
     @classmethod
-    def commandExecute(cls, args: adsk.core.CommandEventArgs):
+    def commandExecute(cls, args: CommandEventArgs):
         # General logging for debug.
 
-        app: adsk.core.Application = adsk.core.Application.get()
+        app: Application = Application.get()
         ui = app.userInterface
         command = args.command
 
-        alignedWCS, badOrigins, badXAxes = Setups.getWCSAlignmentIssues()
+        alignedWCS, badOrigins, badXAxes = getWCSAlignmentIssues(cls._ctx)
         if not alignedWCS:
-            Utils.log(f'PostDialog: WCS are not aligned for setups: {badOrigins}', adsk.core.LogLevels.ErrorLogLevel)
+            Utils.log(f'PostDialog: WCS are not aligned for setups: {badOrigins}', LogLevels.ErrorLogLevel)
             msg = '<i><u>Warning:</u></i><p>'
-            if command.commandInputs.itemById(cls._ROTATE_A_AXIS_ID).value:
+            if BoolValueCommandInput.cast(command.commandInputs.itemById(cls.ROTATE_A_AXIS_ID)).value:
                 msg += "Using 4th axis rotation while all Work Coordinate Systems isn't aligned properly may result in unexpected results, including damage to property and person.<p>"
             else:
                 msg += "Some Work Coordinate Systems aren't aligned properly which may result in unexpected results, including damage to property and person.<p>"
             msg += "Do NOT use the result from this plug-in unless you have personally verified that the result can be used.<p>" 
-            res = ui.messageBox(msg,
+            res = cast(DialogResults, ui.messageBox(msg,
             "WARNING! Do not proceed!", 
-            adsk.core.MessageBoxButtonTypes.OKCancelButtonType,
-            adsk.core.MessageBoxIconTypes.CriticalIconType)
+            cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKCancelButtonType),
+            cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType)))
         
-            if res != adsk.core.DialogResults.DialogOK:
-                Utils.log('PostDialog: User cancelled operation due to unaligned WCS.', adsk.core.LogLevels.InfoLogLevel)
+            if res != DialogResults.DialogOK:
+                Utils.log('PostDialog: User cancelled operation due to unaligned WCS.', LogLevels.InfoLogLevel)
                 return
 
 
-        if not Programs.Current.machineHasAAxis:
-            needAAxisRotation, setups = Setups.AAxisRotationRequired()
+        if Programs.Current is not None and not Programs.Current.machineHasAAxis:
+            needAAxisRotation, setups = aAxisRotationRequired(cls._ctx)
             if needAAxisRotation:
-                Utils.log(f'PostDialog: Machine {Programs.Current.MachineName} does not support A axis but setups {setups} require A axis rotation.', adsk.core.LogLevels.WarningLogLevel)
+                Utils.log(f'PostDialog: Machine {Programs.Current.machineName} does not support A axis but setups {setups} require A axis rotation.', LogLevels.WarningLogLevel)
                 msg = '<i><u>Warning:</u></i><p>'
-                msg += f"The selected machine '{Programs.Current.MachineName}' does not support A axis rotation, but the following setups require A axis rotation:<p>"
+                msg += f"The selected machine '{Programs.Current.machineName}' does not support A axis rotation, but the following setups require A axis rotation:<p>"
                 for setupName, angle in setups:
                     msg += f"{setupName} ({angle}°)<p>"
                 msg += "Using 4th axis rotation while the machine doesn't support it may result in unexpected results, including damage to property and person.<p>"
                 msg += "Do NOT use the result from this plug-in unless you have personally verified that the result can be used.<p>" 
                 res = ui.messageBox(msg,
                 "WARNING! Do not proceed!", 
-                adsk.core.MessageBoxButtonTypes.OKCancelButtonType,
-                adsk.core.MessageBoxIconTypes.CriticalIconType)
+                cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKCancelButtonType),
+                cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
             
-                if res != adsk.core.DialogResults.DialogOK:
-                    Utils.log('PostDialog: User cancelled operation due to unsupported A axis rotation.', adsk.core.LogLevels.InfoLogLevel)
+                if res != DialogResults.DialogOK:
+                    Utils.log('PostDialog: User cancelled operation due to unsupported A axis rotation.', LogLevels.InfoLogLevel)
                     return
 
         try:
             # Create a temporary folder to prepare all files in
-            with tempfile.TemporaryDirectory() as tmpdir:
-                Programs.Current.Process(Path(tmpdir))
-                Programs.Current.Generate()
+            if Programs.Current is not None:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    Programs.Current.Process(cls._ctx, Path(tmpdir))
+                    Programs.Current.WriteOutput(cls._ctx)
         except FileExistsError as e:
-            Utils.log(f'PostDialog: {str(e)}', adsk.core.LogLevels.ErrorLogLevel)
-            ui.messageBox(str(e), "File already exists!", adsk.core.MessageBoxButtonTypes.OKButtonType, adsk.core.MessageBoxIconTypes.CriticalIconType)
+            Utils.log(f'PostDialog: {str(e)}', LogLevels.ErrorLogLevel)
+            ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
+            ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
         except Exception as e:
-            Utils.log(f'PostDialog: An error occurred during post processing: {str(e)}', adsk.core.LogLevels.ErrorLogLevel)
-            ui.messageBox(f"An error occurred during post processing: {str(e)}", "Error!", adsk.core.MessageBoxButtonTypes.OKButtonType, adsk.core.MessageBoxIconTypes.CriticalIconType)
+            Utils.log(f'PostDialog: An error occurred during post processing: {str(e)}', LogLevels.ErrorLogLevel)
+            ui.messageBox(f"An error occurred during post processing: {str(e)}", "Error!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
 
     # This event handler is called when the user interacts with any of the inputs in the dialog
     # which allows you to verify that all of the inputs are valid and enables the OK button.
     @classmethod
-    def commandValidateInput(cls, args: adsk.core.ValidateInputsEventArgs):
+    def commandValidateInput(cls, args: ValidateInputsEventArgs):
         # General logging for debug.
 
-        inputs = args.inputs
-        
-        args.areInputsValid = Programs.Current is not None \
-            and Programs.Current.hasMachine \
-            and Setups.hasSelected \
-            and all(not setup.hasError for setup in Setups.selected) \
-            and (Programs.Current.machineHasAAxis or not Setups.AAxisRotationRequired()[0])
+        args.areInputsValid = (Programs.Current is not None 
+            and Programs.Current.hasMachine 
+            and cls._ctx.hasSelected 
+            and all(not setup.ctx.hasError for setup in cls._ctx.selected) 
+            and (Programs.Current.machineHasAAxis or not aAxisRotationRequired(cls._ctx)[0]))
 
         # TODO: Set up so that the Process button is only enabled when things are set up properly
 
@@ -251,17 +278,3 @@ class PostDialog(PostDialogLayout):
         #     args.areInputsValid = True
         # else:
         #     args.areInputsValid = False
-            
-    # This event handler is called when the command terminates.
-    @classmethod
-    def commandDestroy(cls, args: adsk.core.CommandEventArgs):
-
-        app: adsk.core.Application = adsk.core.Application.get()
-        doc: adsk.core.Document = app.activeDocument
-        Settings.Save(doc.attributes)  # Save settings for the current document
-
-
-        cls._local_handlers = []  # clear out the local handlers list
-
-
-    

@@ -1,113 +1,104 @@
 from __future__ import annotations
+
 import math
 from pathlib import Path
 import re
-from typing import Optional, TextIO, Union, overload
 
-import adsk.cam
+from typing import (
+    Optional, 
+    Union
+)
 
-from ...file_modes import FileModes
-from ...settings.settings import Settings
+from adsk import cam
+from adsk.core import (
+    Point3D,
+    Vector3D
+)
+from ...operations.operations_context import OperationsContext
+from .setup_context import SetupContext
+
 from ...operations.operations import Operations
-from .....lib.fusionAddInUtils.general_utils import Utils
 
-from .header import SetupHeader
-from .body import SetupBody
-from .tail import SetupTail
+from .header_writer import (
+    writeHeader,
+    writeHeaderStart,
+    writeToolComments,
+    writeHeaderEnd
+)
+from .body_writer import writeBody
+from .tail_writer import writeTail
 
-class Setup(SetupHeader, SetupBody, SetupTail):
-    def __init__(self, setup: adsk.cam.Setup, index: int, markSelected: bool = False):
-        self._setup: adsk.cam.Setup = setup
-        self._index: int = index
-        self._isSelected: bool = markSelected or self._setup.isSelected
-        self._operations: Optional[Operations] = None
-        self._origin: Optional[adsk.core.Point3D] = None
-        self._lineNumber: int = 0
+class Setup():
+    def __init__(self, ctx: SetupContext, setup: cam.Setup, index: int, isDefaultSelected: bool = False):
+        self.ctx = ctx
+        ctx.setup = setup
+        ctx.index = index
+        ctx.isSelected = isDefaultSelected
 
-    @property
-    def hasError(self) -> bool:
-        return self._setup is None or self._setup.hasError
-    
     @property
     def index(self) -> int:
-        return self._index
-
-    @property
-    def isSuppressed(self) -> bool:
-        return self._setup is None or self._setup.isSuppressed
+        return self.ctx.index
     
-    @property
-    def lineNumber(self) -> int:
-        return self._lineNumber
-    
-    def SetLineNumber(self, lineNumber: int):
-        self._lineNumber = lineNumber
-
     @property
     def isSelected(self) -> bool:
-        return self._isSelected
+        return self.ctx.isSelected
 
     def Select(self, value: bool):
-        self._isSelected = value
+        self.ctx.isSelected = value
 
     @property
     def name(self) -> str:
-        return self._setup.name
+        return self.ctx.setup.name
     
-    @property 
-    def hasOperationWithTail(self) -> bool:
-        return self._operations.hasTail if self._operations is not None else False
-
     @property
     def hasOperationWithHeader(self) -> bool:
-        return self._operations.hasHeader if self._operations is not None else False
+        return self.ctx.operations.hasHeader if self.ctx.operations is not None else False
 
     @property
-    def origin(self) -> adsk.core.Point3D:
-        origin = adsk.core.Point3D.create(0,0,0)
-        origin.transformBy(self._setup.workCoordinateSystem)
+    def origin(self) -> Point3D:
+        origin = Point3D.create(0,0,0)
+        origin.transformBy(self.ctx.setup.workCoordinateSystem)
         return origin
 
     @property
-    def zNormal(self) -> adsk.core.Vector3D:
-        zAxis = adsk.core.Vector3D.create(0,0,1)
-        zAxis.transformBy(self._setup.workCoordinateSystem)
+    def zNormal(self) -> Vector3D:
+        zAxis = Vector3D.create(0,0,1)
+        zAxis.transformBy(self.ctx.setup.workCoordinateSystem)
         zAxis.normalize()
         return zAxis
     
     @property
-    def xNormal(self) -> adsk.core.Vector3D:
-        xAxis = adsk.core.Vector3D.create(1,0,0)
-        xAxis.transformBy(self._setup.workCoordinateSystem)
+    def xNormal(self) -> Vector3D:
+        xAxis = Vector3D.create(1,0,0)
+        xAxis.transformBy(self.ctx.setup.workCoordinateSystem)
         xAxis.normalize()
         return xAxis
 
     @property
-    def yNormal(self) -> adsk.core.Vector3D:
-        yAxis = adsk.core.Vector3D.create(0,1,0)
-        yAxis.transformBy(self._setup.workCoordinateSystem)
+    def yNormal(self) -> Vector3D:
+        yAxis = Vector3D.create(0,1,0)
+        yAxis.transformBy(self.ctx.setup.workCoordinateSystem)
         yAxis.normalize()
         return yAxis
 
     @property
     def hasMachine(self) -> bool:
-        return self._setup.machine is not None
+        return self.ctx.setup.machine is not None
 
     @property
-    def tools(self) -> list[adsk.cam.Tool]:
-        return self._operations.tools if self._operations is not None else []
+    def tools(self) -> list[cam.Tool]:
+        return self.ctx.operations.tools if self.ctx.operations is not None else []
 
     def SetOutputPath(self, path: Path):
         path.mkdir(parents=True, exist_ok=True)
-        self._operations.SetOutputPath(path)
-
-    def SetFileName(self, fileName: str):
-        self._operations.SetFileName(fileName)
+        if self.ctx.operations is not None:
+            self.ctx.operations.SetOutputPath(path)
 
     def SetFileExtension(self, fileExtension: str):
-        self._operations.SetFileExtension(fileExtension)
+        if self.ctx.operations is not None:
+            self.ctx.operations.SetFileExtension(fileExtension)
 
-    # Compute signed rotation around the setup's X axis.
+    #region Compute signed rotation around the setup's X axis.
     #
     # Behavior:
     # - `GetAbsoluteRotationAroundXAxis()` returns the signed rotation (radians)
@@ -137,18 +128,20 @@ class Setup(SetupHeader, SetupBody, SetupTail):
     # - The implementation works with supplied normal vectors and does not
     #   depend on a precomputed global rotation value; the absolute wrapper
     #   simply supplies global axes.
+    #endregion
+
     def GetAbsoluteRotationAroundXAxis(self) -> float:
-        gZNormal = adsk.core.Vector3D.create(0, 0, 1)
-        gYNormal = adsk.core.Vector3D.create(0, 1, 0)
+        gZNormal = Vector3D.create(0, 0, 1)
+        gYNormal = Vector3D.create(0, 1, 0)
         return self.GetRotationAroundXAxisRelativeTo(gZNormal, gYNormal)
     
     def GetAbsoluteRotationAroundXAxisDeg(self) -> float:
         return math.degrees(self.GetAbsoluteRotationAroundXAxis())
     
-    @overload
-    def GetRotationAroundXAxisRelativeTo(self, otherSetup: Setup) -> float: ...
+    def GetRotationAroundXAxisRelativeToSetup(self, otherSetup: Setup) -> float:
+        return self.GetRotationAroundXAxisRelativeTo(otherSetup)
     
-    def GetRotationAroundXAxisRelativeTo(self, zNormalOrSetup: Union[adsk.core.Vector3D, Setup], yNormal = None) -> float:
+    def GetRotationAroundXAxisRelativeTo(self, zNormalOrSetup: Union[Vector3D, Setup], yNormal: Optional[Vector3D] = None) -> float:
         # Compute the signed rotation around this setup's X axis that
         # transforms this setup's local Z into the other setup's local Z.
         #
@@ -161,16 +154,20 @@ class Setup(SetupHeader, SetupBody, SetupTail):
         #   back to project the Y normals instead.
 
         xNormal = self.xNormal
-
+        zNormal: Vector3D
         if isinstance(zNormalOrSetup, Setup) and yNormal is None: # unwrap if a Setup is given
             yNormal = zNormalOrSetup.yNormal
             zNormal = zNormalOrSetup.zNormal
-        else:
+        elif isinstance(zNormalOrSetup, Vector3D):
             zNormal = zNormalOrSetup
+            if yNormal is None:
+                raise ValueError("yNormal can not be None")
+        else:
+            raise TypeError("Expected Setup or Vector3D")
 
-        def project(v: adsk.core.Vector3D, n: adsk.core.Vector3D) -> adsk.core.Vector3D:
+        def project(v: Vector3D, n: Vector3D) -> Vector3D:
             d = n.dotProduct(v)
-            return adsk.core.Vector3D.create(v.x - n.x * d, v.y - n.y * d, v.z - n.z * d)
+            return Vector3D.create(v.x - n.x * d, v.y - n.y * d, v.z - n.z * d)
 
         p1 = project(self.zNormal, xNormal)
         p2 = project(zNormal, xNormal)
@@ -198,16 +195,16 @@ class Setup(SetupHeader, SetupBody, SetupTail):
     
     def Rename(self, find, replace, isRegex):
         if isRegex:
-            newName = re.sub(find, replace, self._setup.name)
+            newName = re.sub(find, replace, self.ctx.setup.name)
         else:
             if find == "":
                 # special case, prepend
-                newName = replace + self._setup.name
+                newName = replace + self.ctx.setup.name
             else:
-                newName = self._setup.name.replace(find, replace)
+                newName = self.ctx.setup.name.replace(find, replace)
 
-        if self._setup.name != newName:
-            self._setup.name = newName
+        if self.ctx.setup.name != newName:
+            self.ctx.setup.name = newName
     
     def Parse(self, tmpPath: Path):
         from ...programs import Programs
@@ -218,20 +215,28 @@ class Setup(SetupHeader, SetupBody, SetupTail):
         # Also, avoids parsing operations for setups that are not 
         # selected or are suppressed, which can speed up processing 
         # and avoid creating temporary files for those setups.
-        self._operations = None if \
-                self.isSuppressed \
-                and not self.hasError \
-                and not self.isSelected \
-            else Operations(list(operation for operation in self._setup.allOperations))
+        self.ctx.operations = (None if 
+                               not (self.ctx.isSelected
+                                    and not (self.ctx.isSuppressed or self.ctx.hasError))
+                               else Operations(OperationsContext(), [operation for x in self.ctx.setup.allOperations 
+                                                                     if (operation := cam.Operation.cast(x)) is not None]))
 
 
-        if self._operations is None:
+        if self.ctx.operations is None:
             return # Don't process this setup.
 
         # Don't spam the user with temporary files that will be deleted anyway
-        Programs.Current.DisableOpenInEditor()
+        if Programs.Current is not None:
+            Programs.Current.DisableOpenInEditor()
 
         # Make sure that the setup has all its toolpaths generated
-        Programs.CheckAndGenerateToolpath(self._setup)
+        Programs.CheckAndGenerateToolpath(self.ctx.setup)
 
-        self._operations.Parse(tmpPath)
+        self.ctx.operations.Parse(tmpPath)
+
+    def WriteHeader(self) -> None: writeHeader(self.ctx)
+    def WriteHeaderStart(self) -> None: writeHeaderStart(self.ctx)
+    def WriteToolComments(self) -> None: writeToolComments(self.ctx)
+    def WriteHeaderEnd(self) -> None: writeHeaderEnd(self.ctx)
+    def WriteBody(self) -> None: writeBody(self.ctx)
+    def WriteTail(self) -> None: writeTail(self.ctx)

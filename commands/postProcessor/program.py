@@ -1,20 +1,24 @@
 from __future__ import annotations
 import os
 import shutil
-import adsk
-import adsk.cam
+from adsk import cam
 from pathlib import Path
 
 from .strings import Strings
 from .attributes import Attributes
-from .setups.setups import Setups
+
+from .setups.setups_context import SetupsContext 
+from .setups.header_writer import writeHeader as writeSetupsHeader
+from .setups.body_writer import writeBody as writeSetupsBody
+from .setups.tail_writer import writeTail as writeSetupsTail
+
 from .settings.settings import Settings
 from .parameters import Parameters
 
 class Program():
-    def __init__(self, program: adsk.cam.NCProgram):
-        self._program: adsk.cam.NCProgram = program
-        self._outputFolder: Path = None
+    def __init__(self, program: cam.NCProgram):
+        self._program: cam.NCProgram = program
+        self._outputFolder: Path | None = None
         self._attributes: Attributes = Attributes(program.attributes)
         self._parameters: Parameters = Parameters(program.parameters)
 
@@ -74,23 +78,22 @@ class Program():
     @property
     def machineHasATC(self):
         """Returns whether the machine of the NCProgram has an ATC."""
-        return self._program.machine.elements.itemById('tooling','default').isToolChangerAutomatic if self.hasMachine else False
+        return cam.ToolingCapabilitiesMachineElement.cast(self._program.machine.elements.itemById('tooling','default')).isToolChangerAutomatic if self.hasMachine else False
     
     @property
     def machineToolSlots(self):
         """Returns the number of ATC slots of the machine of the NCProgram."""
-        return self._program.machine.elements.itemById('tooling','default').maxToolCount if self.machineHasATC else 1
+        return cam.ToolingCapabilitiesMachineElement.cast(self._program.machine.elements.itemById('tooling','default')).maxToolCount if self.machineHasATC else 1
 
-    @property
-    def machineATCSlots(self) -> int:
-        return self._program
+    # @property
+    # def machineATCSlots(self) -> int:
+    #     return self._program
 
     @property
     def machineHasAAxis(self):
         """Returns whether the machine has A axis."""
-        return self._program.machine.elements.defaultItemByType('controller').axisConfigurations.itemById('U') is not None \
-            if self._program.machine is not None \
-            else False
+        return (cam.ControllerConfigurationMachineElement.cast(self._program.machine.elements.defaultItemByType('controller')).axisConfigurations.itemById('U') is not None 
+            if self._program.machine is not None else False)
     
     @property
     def hasPostProcessor(self):
@@ -105,7 +108,7 @@ class Program():
     @property
     def fileName(self):
         """Returns the file name of the NCProgram."""
-        return self.Parameters.Get(Parameters.FILE_NAME)
+        return self.Parameters.Get(Parameters.FILE_NAME, str)
 
     def SetFileName(self, fileName: str):
         """Sets the file name of the NCProgram."""
@@ -116,7 +119,7 @@ class Program():
         """Returns the file extension of the NCProgram."""
         return self._program.postConfiguration.extension if self._program.postConfiguration else None
 
-    def Process(self, tmpPath: Path):
+    def Process(self, ctx: SetupsContext, tmpPath: Path):
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
         oldOutputFolder = self.GetOutputFolder()
@@ -126,23 +129,25 @@ class Program():
 
         outputFolder = self.GetOutputFolder()
         fileName = self.fileName
-        name = self.Parameters.Get(Parameters.NAME)
+        name = self.Parameters.Get(Parameters.NAME, str)
 
         try:
-            Setups.Parse(tmpPath)
+            ctx.parse(tmpPath)
         finally:
             self.SetOutputFolder(outputFolder)
-            self.Parameters.Set(Parameters.FILE_NAME, fileName)
-            self.Parameters.Set(Parameters.NAME, name)
+            if fileName is not None:
+                self.Parameters.Set(Parameters.FILE_NAME, fileName)
+            if name is not None:
+                self.Parameters.Set(Parameters.NAME, name)
 
         # Restore the output folder in the NC Program parameters
         self.SetOutputFolder(oldOutputFolder)
 
-    def Generate(self):
-        """Generate the final G-code files from the results of the post processing."""
+    def WriteOutput(self, ctx: SetupsContext):
+        """Write the final G-code files from the results of the post processing."""
         initialPath = self.GetOutputFolder()
         initialFileName = self.fileName
-        programName = self.Parameters.Get(Parameters.NAME)
+        programName = self.Parameters.Get(Parameters.NAME, str)
 
         try:
             if initialPath.exists() and not initialPath.is_dir():
@@ -159,34 +164,36 @@ class Program():
                         return # File/folder could not be deleted, likely due to permissions. Need to notify the user about this.
             
             # Setting the base parameters for the output.
-            Setups.SetFileExtension(self._program.postConfiguration.extension)
-            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE \
-                or Settings(Settings.FLAT_FILE_STRUCTURE) \
-                or (Settings(Settings.NUMERIC_NAME) \
-                    and initialFileName.isnumeric()): # numeric name is a special case where we want to keep a single file name and just increment it, so we treat it like single file grouping even if the user has selected otherwise
-                # Flat file structure or single file
-                Setups.SetPath(initialPath)
-                Setups.SetFileName(initialFileName)
+            ctx.setFileExtension(self._program.postConfiguration.extension)
+            if (Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE 
+                or Settings(Settings.FLAT_FILE_STRUCTURE) 
+                or (Settings(Settings.NUMERIC_NAME) 
+                    and initialFileName is not None 
+                    and initialFileName.isnumeric())): # numeric name is a special case where we want to keep a single file name and just increment it, so we treat it like single file grouping even if the user has selected otherwise
+                # Flat file structure / single file / numeric filename
+                ctx.setPath(initialPath)
+                ctx.setFileName(str(initialFileName))
             else:
-                Setups.SetPath(initialPath / initialFileName)
+                ctx.setPath(initialPath / str(initialFileName))
 
-            Setups.SetLineNumber(0)
-            Setups.WriteHeader()
+            writeSetupsHeader(ctx)
 
-            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
-                Setups.SetFileName(initialFileName) # Reset the numeric name
-            Setups.WriteBody()
+            if Settings(Settings.NUMERIC_NAME) and initialFileName is not None and initialFileName.isnumeric():
+                ctx.setFileName(initialFileName) # Reset the numeric name
+            writeSetupsBody(ctx)
 
-            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
-                Setups.SetFileName(initialFileName) # Reset the numeric name
-            Setups.WriteTail()
+            if Settings(Settings.NUMERIC_NAME) and initialFileName is not None and initialFileName.isnumeric():
+                ctx.setFileName(initialFileName) # Reset the numeric name
+            writeSetupsTail(ctx)
 
         except Exception as exc:
             raise exc
         finally:
             self.SetOutputFolder(initialPath)
-            self.Parameters.Set(Parameters.FILE_NAME, initialFileName)
-            self.Parameters.Set(Parameters.NAME, programName)
+            if initialFileName is not None:
+                self.Parameters.Set(Parameters.FILE_NAME, initialFileName)
+            if programName is not None:
+                self.Parameters.Set(Parameters.NAME, programName)
 
     def DisableOpenInEditor(self):
         """Convenience method for disabling "Open in Editor" option"""
@@ -196,16 +203,16 @@ class Program():
         if len(operations) == 0:
             return False # Nothing to process
         self._program.operations = operations
-        return self._program.postProcess(adsk.cam.NCProgramPostProcessOptions.create())
+        return self._program.postProcess(cam.NCProgramPostProcessOptions.create())
 
     def SetOutputFolder(self, folder: Path):
         """Convenience method to set and verify output folder"""
         self.Parameters.Set(Parameters.OUTPUT_FOLDER, folder.as_posix())
         result = self.GetOutputFolder()
-        if result != folder and folder[0:2] == "\\\\":
-            self.Parameters.Set(Parameters.OUTPUT_FOLDER, "\\\\" + folder)    # double up leading "\"
+        if result != folder and str(folder)[0:2] == "\\\\":
+            self.Parameters.Set(Parameters.OUTPUT_FOLDER, "\\\\" + str(folder))    # double up leading "\"
         return None
 
     def GetOutputFolder(self) -> Path:
         """Convenience method to get output folder"""
-        return Path(self.Parameters.Get(Parameters.OUTPUT_FOLDER))
+        return Path(str(self.Parameters.Get(Parameters.OUTPUT_FOLDER, str)))

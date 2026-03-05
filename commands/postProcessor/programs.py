@@ -2,16 +2,22 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, ClassVar, Optional
 
-import adsk.cam
+from adsk import cam
+from adsk.cam import Setup as adskSetup
 
 from .program import Program
-from .setups.setups import Setups
+from .setups.setups_context import SetupsContext
 from .settings.settings import Settings
 from ...lib.fusionAddInUtils.general_utils import classproperty
 
 class _ProgramsMeta(type):
+    # Just to help Pylance to understand the code.
+    _items: ClassVar[list[Program]]
+    _current: Program | None
+
     def __iter__(cls):
         return iter(cls._items)
+
     def __setattr__(cls, name, value):
         # If the attribute is a classproperty with a registered setter, call it.
         desc = cls.__dict__.get(name)
@@ -19,17 +25,22 @@ class _ProgramsMeta(type):
             desc.fset(cls, value)
             return
         return super().__setattr__(name, value)
+
+    @property
+    def Current(cls) -> Program | None:
+        return cls._current
+    
+    @Current.setter
+    def Current(cls, value: Program | None) -> None:
+        cls._current = value
     
 class Programs(metaclass=_ProgramsMeta):
-    _current: Optional[Program] = None
+    _current: Program | None = None
     _items: list[Program] = []
-    _cam: adsk.cam.CAM = None
-    if TYPE_CHECKING:
-        # Help type checkers/IDE infer the type of Programs.Current (runtime uses @classproperty)
-        Current: ClassVar[Optional["Program"]]
+    _cam: cam.CAM | None = None
 
     @classmethod
-    def Load(cls, cam: adsk.cam.CAM):
+    def Load(cls, ctx: SetupsContext, cam: cam.CAM):
         """Loads all NCPrograms from the current document."""
         cls._cam = cam
         cls._items = [Program(program) for program in cam.ncPrograms]
@@ -42,22 +53,12 @@ class Programs(metaclass=_ProgramsMeta):
                     cls.Current = program
                     break
 
-        Setups.Load(cam.setups)
-
-    @classproperty
-    def Current(cls) -> Optional["Program"]:
-        """Returns the current NCProgram."""
-        return cls._current
-    
-    @Current.setter
-    def Current(cls, program: Optional["Program"]):
-        """Sets the current NCProgram."""
-        cls._current = program
+        ctx.load(cam.setups)
 
     @classmethod
-    def CheckAndGenerateToolpath(cls, setup):
+    def CheckAndGenerateToolpath(cls, setup: adskSetup):
         """Ensure that the toolpath for the given setup is generated."""
-        if not cls._cam.checkToolpath(setup):
+        if cls._cam is not None and not cls._cam.checkToolpath(setup):
             genStat = cls._cam.generateToolpath(setup)
             while not genStat.isGenerationCompleted:
                 time.sleep(.1)

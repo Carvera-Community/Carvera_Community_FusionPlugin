@@ -1,209 +1,255 @@
+from enum import StrEnum
 import math
 import re
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Callable, Generator
 
+# G/M words (letters)
+class WORD(StrEnum):
+    G = "G"
+    X = "X"
+    Y = "Y"
+    Z = "Z"
+    F = "F"
+
+
+@dataclass
+class ParseResult:
+    words: list[tuple[str, float]] = field(default_factory=list)
+    sawX: bool = False
+    sawY: bool = False
+    sawZ: bool = False
+    localMotion: WORD | None = None
+
+    def setLocalMotion(self, localMotion) -> None:
+        self.localMotion = localMotion
+
+@dataclass
+class LineResult:
+    def __init__(self, lineParser: Callable[[str], ParseResult], index: int, original: str, prevX: float | None, prevY: float | None, prevZ: float | None):
+        self._lineParser = lineParser
+        self.index = index
+        self.lineNumber = index + 1
+        self.original = original.rstrip("\n")
+        self.parseResult = self._lineParser(self.original)
+        self.prevX = prevX
+        self.prevY = prevY
+        self.prevZ = prevZ
+
+    x: float | None = None
+    y: float | None = None
+    z: float | None = None
+    effectiveMotion: str | None = None
+
+    def setEffectiveMotion(self, motion: str|None) -> None:
+        self.effectiveMotion = self.parseResult.localMotion or motion
+
+@dataclass()
+class ModalState:
+    motion: str | None = None
+    x: float | None = 0
+    y: float | None = 0
+    z: float | None = 0
+    feed: float | None = None
+
+# Motions (modal values)
+class MOTIONS:
+        G0 = "G0"
+        G1 = "G1"
+        G2 = "G2"
+        G3 = "G3"
+        SUPPORTED = (G0, G1, G2, G3)
+
+@dataclass 
+class XYStepDetail:
+    def __init__(self, lineResult: LineResult, roundDecimals: int):
+        self.lineNumber = lineResult.lineNumber
+        self.text = lineResult.original
+        if lineResult.x is not None:
+            self.x = lineResult.x
+        if lineResult.y is not None:
+            self.y = lineResult.y
+        self.prevX = lineResult.prevX
+        self.prevY = lineResult.prevY
+        self.prevZ = lineResult.prevZ
+
+        dX = (lineResult.x - lineResult.prevX) if (lineResult.x is not None and lineResult.prevX is not None) else 0.0
+        dY = (lineResult.y - lineResult.prevY) if (lineResult.y is not None and lineResult.prevY is not None) else 0.0
+        self.deltaX = round(dX, roundDecimals)
+        self.deltaY = round(dY, roundDecimals)
+        self.distance = round(math.hypot(dX, dY), roundDecimals)
+        self.hasZ = lineResult.parseResult.sawZ
+
+    lineNumber: int
+    text: str
+    x: float
+    y: float
+    deltaX: float
+    deltaY: float
+    prevX: float | None
+    prevY: float | None
+    prevZ: float | None
+    distance: float
+    hasZ: bool
+
+@dataclass
+class ParseSegment:
+    def __init__(self, 
+                 start: LineResult, 
+                 end: LineResult, 
+                 middleLineNumbers: list[int],
+                 middleTexts: list[str],
+                 middleStepsCount: int,
+                 xySteps: list[XYStepDetail],
+                 roundDecimals: int
+                ):
+        self.startLineNumber: int = start.lineNumber
+        self.startText: str = start.original
+        self.endLineNumber: int = end.lineNumber
+        self.endText: str = end.original
+
+        self.middleLineNumbers: list[int] = middleLineNumbers
+        self.middleTexts: list[str] = middleTexts
+        self.middleStepsCount: int = middleStepsCount
+        self.xySteps: list[XYStepDetail] = xySteps
+
+        totaldXRaw = 0.0
+        totaldYRaw = 0.0
+        totalXYDistRaw = 0.0
+        for s in xySteps:
+            totaldXRaw += s.deltaX
+            totaldYRaw += s.deltaY
+            totalXYDistRaw += s.distance
+
+        self.totalDeltaX: float = round(totaldXRaw, roundDecimals)
+        self.totalDeltaY: float = round(totaldYRaw, roundDecimals)
+        self.totalXYDistance: float = round(totalXYDistRaw, roundDecimals)
+
+        netdX = None
+        netdY = None
+        netDist = None
+        if xySteps:
+            first = xySteps[0]
+            last = xySteps[-1]
+
+            netdX = last.x - (first.prevX if first.prevX is not None else 0.0)
+            netdY = last.y - (first.prevY if first.prevY is not None else 0.0)
+            netDist = math.hypot(netdX or 0.0, netdY or 0.0)
+
+        self.netDeltaX: float|None = None if netdX is None else round(netdX, roundDecimals)
+        self.netDeltaY: float|None = None if netdY is None else round(netdY, roundDecimals)
+        self.netXYDistance: float|None = None if netDist is None else round(netDist, roundDecimals)
+
+        self.deltaZUp = round(start.z - start.prevZ, roundDecimals) if start.z is not None and start.prevZ is not None else 0.0
+        self.deltaZDown = round(end.prevZ - end.z, roundDecimals) if end.z is not None and end.prevZ is not None else 0.0
 
 class RapidsParser:
     # Regex
     WORD_RE = re.compile(r'([A-Za-z])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))')
     COMMENT_RE = re.compile(r'\([^)]*\)')
-
-    # G/M words (letters)
-    class WORD:
-        G = "G"
-        X = "X"
-        Y = "Y"
-        Z = "Z"
-        F = "F"
     
-    # Motions (modal values)
-    class MOTION:
-            G0 = "G0"
-            G1 = "G1"
-            G2 = "G2"
-            G3 = "G3"
-            SUPPORTED = (G0, G1, G2, G3)
-
-    # perLine dict keys
-    K_IDX = "idx"
-    K_LINENO = "lineno"
-    K_ORIGINAL = "original"
-    K_WORDS = "words"
-    K_SAW_X = "sawX"
-    K_SAW_Y = "sawY"
-    K_SAW_Z = "sawZ"
-    K_PREV_X = "prevX"
-    K_PREV_Y = "prevY"
-    K_PREV_Z = "prevZ"
-    K_X = "x"
-    K_Y = "y"
-    K_Z = "z"
-    K_EFFECTIVE_MOTION = "effectiveMotion"
-
-    # Segment output keys
-    O_SEGMENTS = "segments"
-    O_START_LINE = "startLine"
-    O_START = "start"
-    O_END_LINE = "endLine"
-    O_END = "end"
-    O_MIDDLE_LINES = "middleLines"
-    O_MIDDLE = "middle"
-    O_MIDDLE_STEPS_COUNT = "middleStepsCount"
-    O_DZ_UP = "dZUp"
-    O_DZ_DOWN = "dZDown"
-    O_XY_STEPS = "xySteps"
-    O_TOTAL_DX = "totaldX"
-    O_TOTAL_DY = "totaldY"
-    O_TOTAL_XY_DIST = "totalXYDist"
-    O_NET_DX = "netdX"
-    O_NET_DY = "netdY"
-    O_NET_XY_DIST = "netXYDist"
-
-    # XY step detail keys
-    S_LINE = "line"
-    S_TEXT = "text"
-    S_DX = "dX"
-    S_DY = "dY"
-    S_DIST = "dist"
-    S_HAS_Z = "hasZ"
-    S_PREV_X = "prevX"
-    S_PREV_Y = "prevY"
-    S_X = "x"
-    S_Y = "y"
-
-    @dataclass
-    class ModalState:
-        motion: str | None = None
-        x: float | None = None
-        y: float | None = None
-        z: float | None = None
-        feed: float | None = None
-
     @classmethod
-    def _parseLine(cls, line: str):
+    def _parseLine(cls, line: str) -> ParseResult:
+        result = ParseResult()
         clean = cls.COMMENT_RE.sub("", line)
         raw = cls.WORD_RE.findall(clean)
         if not raw:
-            return [], False, False, False, None
-
-        words: list[tuple[str, float]] = []
-        sawX = sawY = sawZ = False
-        localMotion = None
+            return result
 
         for letter, value in raw:
             letter = letter.upper()
             value = float(value)
-            words.append((letter, value))
+            result.words.append((letter, value))
 
-            if letter == cls.WORD.G:
-                g = f"{cls.WORD.G}{int(value)}"
-                if g in cls.MOTION.SUPPORTED:
-                    localMotion = g
-            elif letter == cls.WORD.X:
-                sawX = True
-            elif letter == cls.WORD.Y:
-                sawY = True
-            elif letter == cls.WORD.Z:
-                sawZ = True
+            if letter == WORD.G:
+                g = f"{WORD.G}{int(value)}"
+                if g in MOTIONS.SUPPORTED:
+                    result.setLocalMotion(g)
+            elif letter == WORD.X:
+                result.sawX = True
+            elif letter == WORD.Y:
+                result.sawY = True
+            elif letter == WORD.Z:
+                result.sawZ = True
 
-        return words, sawX, sawY, sawZ, localMotion
+        return result
 
     @classmethod
     def _motionOk(cls, effectiveMotion: str | None, requireG1: bool) -> bool:
         if not requireG1:
             return True
-        return effectiveMotion == cls.MOTION.G1
+        return effectiveMotion == MOTIONS.G1
 
     @classmethod
-    def _isZOnlyUp(cls, row, requireG1: bool) -> bool:
-        if not cls._motionOk(row[cls.K_EFFECTIVE_MOTION], requireG1):
+    def _isZOnlyUp(cls, line: LineResult, requireG1: bool) -> bool:
+        if not cls._motionOk(line.effectiveMotion, requireG1):
             return False
-        if not (row[cls.K_SAW_Z] and not (row[cls.K_SAW_X] or row[cls.K_SAW_Y])):
+        if not (line.parseResult.sawZ and not (line.parseResult.sawX or line.parseResult.sawY)):
             return False
-        if row[cls.K_PREV_Z] is None or row[cls.K_Z] is None:
-            return False
-        return row[cls.K_Z] > row[cls.K_PREV_Z]
+        return False if line.prevZ is None or line.z is None else line.z > line.prevZ
 
     @classmethod
-    def _isZOnlyDown(cls, row, requireG1: bool) -> bool:
-        if not cls._motionOk(row[cls.K_EFFECTIVE_MOTION], requireG1):
+    def _isZOnlyDown(cls, line: LineResult, requireG1: bool) -> bool:
+        if not cls._motionOk(line.effectiveMotion, requireG1):
             return False
-        if not (row[cls.K_SAW_Z] and not (row[cls.K_SAW_X] or row[cls.K_SAW_Y])):
+        if not (line.parseResult.sawZ and not (line.parseResult.sawX or line.parseResult.sawY)):
             return False
-        if row[cls.K_PREV_Z] is None or row[cls.K_Z] is None:
-            return False
-        return row[cls.K_Z] < row[cls.K_PREV_Z]
+        return False if line.prevZ is None or line.z is None else line.z < line.prevZ
 
     @classmethod
-    def _isXYOnly(cls, row, requireG1: bool) -> bool:
-        if not cls._motionOk(row[cls.K_EFFECTIVE_MOTION], requireG1):
+    def _isXYOnly(cls, line: LineResult, requireG1: bool) -> bool:
+        if not cls._motionOk(line.effectiveMotion, requireG1):
             return False
-        return (row[cls.K_SAW_X] or row[cls.K_SAW_Y]) and (not row[cls.K_SAW_Z])
+        return (line.parseResult.sawX or line.parseResult.sawY) and (not line.parseResult.sawZ)
 
     @classmethod
-    def _isXYZAny(cls, row, requireG1: bool) -> bool:
-        if not cls._motionOk(row[cls.K_EFFECTIVE_MOTION], requireG1):
+    def _isXYZAny(cls, row: LineResult, requireG1: bool) -> bool:
+        if not cls._motionOk(row.effectiveMotion, requireG1):
             return False
-        return row[cls.K_SAW_Z] and (row[cls.K_SAW_X] or row[cls.K_SAW_Y])
+        return row.parseResult.sawZ and (row.parseResult.sawX or row.parseResult.sawY)
 
     @classmethod
-    def _iterPerLine(cls, path: Path):
-        state = cls.ModalState()
+    def _iterPerLine(cls, path: Path, lineParser: Callable[[str], ParseResult]) -> Generator[LineResult]:
+        state = ModalState()
 
         with path.open("r", encoding="utf-8", errors="replace") as f:
             for i, original in enumerate(f):
-                words, sawX, sawY, sawZ, localMotion = cls._parseLine(original)
+                line = LineResult(lineParser, i, original, state.x, state.y, state.z)
 
-                prev_x = state.x
-                prev_y = state.y
-                prev_z = state.z
-
-                if words:
-                    for letter, value in words:
-                        if letter == cls.WORD.G:
-                            g = f"{cls.WORD.G}{int(value)}"
-                            if g in cls.MOTION.SUPPORTED:
+                if line.parseResult.words:
+                    for letter, value in line.parseResult.words:
+                        if letter == WORD.G:
+                            g = f"{WORD.G}{int(value)}"
+                            if g in MOTIONS.SUPPORTED:
                                 state.motion = g
-                        elif letter == cls.WORD.X:
+                        elif letter == WORD.X:
                             state.x = value
-                        elif letter == cls.WORD.Y:
+                        elif letter == WORD.Y:
                             state.y = value
-                        elif letter == cls.WORD.Z:
+                        elif letter == WORD.Z:
                             state.z = value
-                        elif letter == cls.WORD.F:
+                        elif letter == WORD.F:
                             state.feed = value
 
-                effectiveMotion = (localMotion or state.motion)
+                line.x = state.x
+                line.y = state.y
+                line.z = state.z
+                line.setEffectiveMotion(state.motion)
 
-                yield {
-                    cls.K_IDX: i,
-                    cls.K_LINENO: i + 1,
-                    cls.K_ORIGINAL: original.rstrip("\n"),
-                    cls.K_WORDS: words,
-                    cls.K_SAW_X: sawX,
-                    cls.K_SAW_Y: sawY,
-                    cls.K_SAW_Z: sawZ,
-                    cls.K_PREV_X: prev_x,
-                    cls.K_PREV_Y: prev_y,
-                    cls.K_PREV_Z: prev_z,
-                    cls.K_X: state.x,
-                    cls.K_Y: state.y,
-                    cls.K_Z: state.z,
-                    cls.K_EFFECTIVE_MOTION: effectiveMotion,
-                }
+                yield line
 
     class _BufferWindow:
         """
         Holds streaming buffer state.
         """
-        def __init__(self, iterator, *, bufferSize: int):
-            self.iterator = iterator
-            self.bufferSize = bufferSize
-            self.buffer = deque()
-            self.baseIndex = 0
-            self.eof = False
+        def __init__(self, iterator: Generator[LineResult], *, bufferSize: int):
+            self.iterator: Generator[LineResult] = iterator
+            self.bufferSize: int = bufferSize
+            self.buffer:deque[LineResult] = deque()
+            self.baseIndex: int = 0
+            self.eof: bool = False
 
         def _fillTo(self, globalIndex: int) -> None:
             if self.eof:
@@ -215,7 +261,7 @@ class RapidsParser:
                     self.eof = True
                     break
 
-        def peek(self, globalIndex: int):
+        def peek(self, globalIndex: int) -> LineResult | None:
             if globalIndex < self.baseIndex:
                 return None
             self._fillTo(globalIndex)
@@ -245,13 +291,14 @@ class RapidsParser:
         roundDecimals: int = 6,
         maxStepsInbetween: int = 3,
         bufferSize: int = 20,
-    ):
+    ) -> list[ParseSegment]:
+        
         if maxStepsInbetween < 0:
             raise ValueError("maxStepsInbetween must be >= 0")
 
         bufferSize = max(bufferSize, maxStepsInbetween + 8)
 
-        it = cls._iterPerLine(path)
+        it = cls._iterPerLine(path, cls._parseLine)
         window = cls._BufferWindow(it, bufferSize=bufferSize)
 
         def _nextNonEmpty(currentLineIndex: int) -> int | None:
@@ -260,14 +307,15 @@ class RapidsParser:
                 row = window.peek(nextNonBlankLine)
                 if row is None:
                     return None
-                if row[cls.K_WORDS]:
+                if row.parseResult.words:
                     return nextNonBlankLine
                 if not allowBlankBetween:
                     return None
                 nextNonBlankLine += 1
 
-        segments = []
         i = 0
+
+        segments: list[ParseSegment] = []
 
         while True:
             window.trimTo(i)
@@ -275,14 +323,14 @@ class RapidsParser:
             if start is None:
                 break
 
-            if (not start[cls.K_WORDS]) or (not cls._isZOnlyUp(start, requireG1)):
+            if (not start.parseResult.words) or (not cls._isZOnlyUp(start, requireG1)):
                 i += 1
                 continue
 
+            xyStepDetails: list[XYStepDetail] = []
             middleLineIndexes: list[int] = []
-            XYStepDetails = []
 
-            nextLineIndex = _nextNonEmpty(start[cls.K_IDX])
+            nextLineIndex = _nextNonEmpty(start.index)
             if nextLineIndex is None:
                 break
 
@@ -292,46 +340,29 @@ class RapidsParser:
             sawAnyXY = False
 
             while nextLineIndex is not None:
-                row = window.peek(nextLineIndex)
-                if row is None:
+                line = window.peek(nextLineIndex)
+                if line is None:
                     aborted = True
                     break
 
-                if cls._isZOnlyDown(row, requireG1):
+                if cls._isZOnlyDown(line, requireG1):
                     endLineIndex = nextLineIndex
                     break
 
-                if cls._isXYOnly(row, requireG1) or cls._isXYZAny(row, requireG1):
+                if cls._isXYOnly(line, requireG1) or cls._isXYZAny(line, requireG1):
                     middleLineIndexes.append(nextLineIndex)
                     stepsTaken += 1
 
-                    if row[cls.K_SAW_X] or row[cls.K_SAW_Y]:
+                    if line.parseResult.sawX or line.parseResult.sawY:
                         sawAnyXY = True
 
-                        dx_raw = (row[cls.K_X] - row[cls.K_PREV_X]) if (row[cls.K_X] is not None and row[cls.K_PREV_X] is not None) else 0.0
-                        dy_raw = (row[cls.K_Y] - row[cls.K_PREV_Y]) if (row[cls.K_Y] is not None and row[cls.K_PREV_Y] is not None) else 0.0
-                        dist_raw = math.hypot(dx_raw, dy_raw)
-
-                        XYStepDetails.append(
-                            {
-                                cls.S_LINE: row[cls.K_LINENO],
-                                cls.S_TEXT: row[cls.K_ORIGINAL],
-                                cls.S_DX: round(dx_raw, roundDecimals),
-                                cls.S_DY: round(dy_raw, roundDecimals),
-                                cls.S_DIST: round(dist_raw, roundDecimals),
-                                cls.S_HAS_Z: bool(row[cls.K_SAW_Z]),
-                                cls.S_PREV_X: row[cls.K_PREV_X],
-                                cls.S_PREV_Y: row[cls.K_PREV_Y],
-                                cls.S_X: row[cls.K_X],
-                                cls.S_Y: row[cls.K_Y],
-                            }
-                        )
+                        xyStepDetails.append(XYStepDetail(line, roundDecimals))
 
                     if stepsTaken > maxStepsInbetween:
                         aborted = True
                         break
 
-                    nextLineIndex = _nextNonEmpty(row[cls.K_IDX])
+                    nextLineIndex = _nextNonEmpty(line.index)
                     continue
 
                 aborted = True
@@ -342,105 +373,40 @@ class RapidsParser:
                 if end is None:
                     break
 
-                dZUp = round(start[cls.K_Z] - start[cls.K_PREV_Z], roundDecimals)
-                dZDown = round(end[cls.K_PREV_Z] - end[cls.K_Z], roundDecimals)
-
-                totaldXRaw = 0.0
-                totaldYRaw = 0.0
-                totalXYDistRaw = 0.0
-                for s in XYStepDetails:
-                    dxr = (s[cls.S_X] - s[cls.S_PREV_X]) if (s[cls.S_X] is not None and s[cls.S_PREV_X] is not None) else 0.0
-                    dyr = (s[cls.S_Y] - s[cls.S_PREV_Y]) if (s[cls.S_Y] is not None and s[cls.S_PREV_Y] is not None) else 0.0
-                    totaldXRaw += dxr
-                    totaldYRaw += dyr
-                    totalXYDistRaw += math.hypot(dxr, dyr)
-
-                netdX = None
-                netdY = None
-                netDist = None
-                if XYStepDetails:
-                    first = XYStepDetails[0]
-                    last = XYStepDetails[-1]
-
-                    if first[cls.S_PREV_X] is not None and last[cls.S_X] is not None:
-                        netdX = last[cls.S_X] - first[cls.S_PREV_X]
-                    if first[cls.S_PREV_Y] is not None and last[cls.S_Y] is not None:
-                        netdY = last[cls.S_Y] - first[cls.S_PREV_Y]
-                    if (netdX is not None) or (netdY is not None):
-                        netDist = math.hypot(netdX or 0.0, netdY or 0.0)
-
-                    for s in XYStepDetails:
-                        s.pop(cls.S_PREV_X, None)
-                        s.pop(cls.S_PREV_Y, None)
-                        s.pop(cls.S_X, None)
-                        s.pop(cls.S_Y, None)
-
                 middleLines = []
                 middleTexts = []
                 for k in middleLineIndexes:
-                    r = window.peek(k)
-                    if r is None:
+                    result = window.peek(k)
+                    if result is None:
                         aborted = True
                         break
-                    middleLines.append(r[cls.K_LINENO])
-                    middleTexts.append(r[cls.K_ORIGINAL])
+                    middleLines.append(result.lineNumber)
+                    middleTexts.append(result.original)
                 if aborted:
                     i += 1
                     continue
 
-                segments.append(
-                    {
-                        cls.O_START_LINE: start[cls.K_LINENO],
-                        cls.O_START: start[cls.K_ORIGINAL],
-                        cls.O_END_LINE: end[cls.K_LINENO],
-                        cls.O_END: end[cls.K_ORIGINAL],
-                        cls.O_MIDDLE_LINES: middleLines,
-                        cls.O_MIDDLE: middleTexts,
-                        cls.O_MIDDLE_STEPS_COUNT: stepsTaken,
-                        cls.O_DZ_UP: dZUp,
-                        cls.O_DZ_DOWN: dZDown,
-                        cls.O_XY_STEPS: XYStepDetails,
-                        cls.O_TOTAL_DX: round(totaldXRaw, roundDecimals),
-                        cls.O_TOTAL_DY: round(totaldYRaw, roundDecimals),
-                        cls.O_TOTAL_XY_DIST: round(totalXYDistRaw, roundDecimals),
-                        cls.O_NET_DX: None if netdX is None else round(netdX, roundDecimals),
-                        cls.O_NET_DY: None if netdY is None else round(netdY, roundDecimals),
-                        cls.O_NET_XY_DIST: None if netDist is None else round(netDist, roundDecimals),
-                    }
-                )
+                segments.append(ParseSegment(start, end, middleLines, middleTexts, stepsTaken, xyStepDetails, roundDecimals))
 
                 i = endLineIndex + 1
                 continue
 
-            i = start[cls.K_IDX] + 1
+            i = start.index + 1
 
         return segments
 
-
-    KEY_IS_VALID = "isValid"
-    KEY_REASONS = "reasons"
-    KEY_DZ_UP = "dZUp"
-    KEY_DZ_DOWN = "dZDown"
-    KEY_TOTAL_XY_DIST = "totalXYDist"
-    KEY_MIDDLE = "middle"
-    KEY_Z_DIST = "zDist"
-    KEY_EFFECTIVE_DIST = "effectiveDist"
-    KEY_START_HAS_FEED = "startHasFeed"
     REASON_ARC_IN_MIDDLE = "arc_in_middle"
     REASON_FEED_IN_MIDDLE = "feed_in_middle"
     REASON_END_HAS_FEED_AND_NO_MIDDLE = "end_has_feed_and_no_middle"
     REASON_TOO_SHORT_EFFECTIVE_DIST = "too_short_effectiveDist"
 
     @classmethod
-    def analyze(cls, segments, minDist: float = 20.0):
+    def analyze(cls, segments: list[ParseSegment], minDist: float = 20.0) -> Generator[dict[str, Any]]:
         """
-        Mutates the segment list (from parseFile) by setting:
-        - isValid: bool
-        - reasons: list[str]
-        - zDist: float
-        - effectiveDist: float
+        Generates a list of dictionaries containing the start and end line of all 
+        the candidates for rapid moves and a flag if it is deemed a valid rapid movement.
 
-        Rules:
+        Rules for rejections:
         - Reject if any middle-step line contains G2/G3 (arc) or F (feed).
         - Reject if ending line contains feed, move back one line until it is valid or run out of middle lines.
         - Reject if effectiveDist < minDist, where:
@@ -448,10 +414,10 @@ class RapidsParser:
                 effectiveDist = max(totalXYDist, zDist)
         """
 
-        def _tokenize(line: str):
+        def _tokenize(line: str) -> list[str]:
             tokens = []
             for t in [t.strip().upper() for t in line.replace("\t", " ").split() if t.strip()]:
-                if t.startswith(cls.WORD.G) and len(t) > 1 and t[1:].isdigit():
+                if t.startswith(WORD.G) and len(t) > 1 and t[1:].isdigit():
                     # Normalize G-codes: G02 → G2, G03 → G3, G00 → G0, etc.
                     number = int(t[1:])
                     tokens.append(f"G{number}")
@@ -459,75 +425,100 @@ class RapidsParser:
                     tokens.append(t)
             return tokens
         
-        def _hasArc(tokens):
+        def _hasArc(tokens: list[str]) -> bool:
             for token in tokens:
-                if token == cls.MOTION.G2 or token == cls.MOTION.G3:
+                if token == MOTIONS.G2 or token == MOTIONS.G3:
                     return True
             return False
 
-        def _hasFeed(tokens):
+        def _hasFeed(tokens: list[str]) -> bool:
             # Feed usually appears as "F333.3". We look for tokens starting with 'F' and having digits after it.
             for token in tokens:
-                if len(token) >= 2 and token[0] == cls.WORD.F:
+                if len(token) >= 2 and token[0] == WORD.F:
                     if any(ch.isdigit() for ch in token[1:]):
                         return True
             return False
 
         for segment in segments:
-            segment[cls.KEY_IS_VALID] = True
-            segment[cls.KEY_REASONS] = []
+            result = AnalysisSegment(segment)
 
             # Check if the first line has a feed
             # Start is eligible even if it is G1 + F (Fusion transition)
-            # But if startHasFeed, mark it so writeBody can strip feed when injecting G0
-            tokens = _tokenize(segment[cls.O_START])
-            segment[cls.KEY_START_HAS_FEED] = _hasFeed(tokens)
-
-            # Rule: disqualify if middle steps contain arc/feed tokens
-            for line in (segment.get(cls.KEY_MIDDLE, []) or []):
-                tokens = _tokenize(line)
-
-                if _hasArc(tokens):
-                    segment[cls.KEY_IS_VALID] = False
-                    segment[cls.KEY_REASONS].append(cls.REASON_ARC_IN_MIDDLE)
-
-                if _hasFeed(tokens):
-                    segment[cls.KEY_IS_VALID] = False
-                    segment[cls.KEY_REASONS].append(cls.REASON_FEED_IN_MIDDLE)
+            # But if start has a feed token, mark it so writeBody can strip feed when injecting G0
+            tokens = _tokenize(segment.startText)
+            result.hasStartHasFeed = _hasFeed(tokens)
 
             # Rule: If ending line contains feed, move back one line until it is valid or run out of middle lines.
-            tokens = _tokenize(segment[cls.O_END])
-            if _hasFeed(tokens):
-                middle = segment.get(cls.O_MIDDLE, [])
-                middleLines = segment.get(cls.O_MIDDLE_LINES, [])
-                while _hasFeed(tokens) and len(middleLines) > 0:
-                    segment[cls.O_END] = middle[-1]
-                    segment[cls.O_END_LINE] = middleLines[-1]
-                    middle.pop()
-                    middleLines.pop()
-                    tokens = _tokenize(segment[cls.O_END])
-                
-                segment[cls.O_MIDDLE] = middle
-                segment[cls.O_MIDDLE_LINES] = middleLines
-                segment[cls.O_MIDDLE_STEPS_COUNT] = len(segment[cls.O_MIDDLE_LINES])
+            result.trimEndUntilValidOrNoMiddle(_tokenize, _hasFeed, cls.REASON_END_HAS_FEED_AND_NO_MIDDLE)
 
-                if _hasFeed(tokens) and (len(segment.get(cls.O_MIDDLE_LINES, [])) == 0):
-                    segment[cls.KEY_IS_VALID] = False
-                    segment[cls.KEY_REASONS].append(cls.REASON_END_HAS_FEED_AND_NO_MIDDLE)
+            # Rule: disqualify if middle steps contain arc/feed tokens
+            for line in segment.middleTexts:
+                tokens = _tokenize(line)
+                if _hasArc(tokens):
+                    result.isValid = False
+                    result.addRejectReason(cls.REASON_ARC_IN_MIDDLE)
+                
+                if _hasFeed(tokens):
+                    result.isValid = False
+                    result.addRejectReason(cls.REASON_FEED_IN_MIDDLE)
 
             # Rule: calculate effective distance and disqualify if too short
-            dZUp = float(segment.get(cls.KEY_DZ_UP, 0.0) or 0.0)
-            dZDown = float(segment.get(cls.KEY_DZ_DOWN, 0.0) or 0.0)
-            totalXYDist = float(segment.get(cls.KEY_TOTAL_XY_DIST, 0.0) or 0.0)
+            if result.getEffectiveLength() < float(minDist):
+                result.isValid = False
+                result.addRejectReason(cls.REASON_TOO_SHORT_EFFECTIVE_DIST)
 
-            zDist = abs(dZUp) + abs(dZDown)
-            effectiveDist = totalXYDist + zDist
+            yield result.asDict()
+    
+@dataclass
+class AnalysisSegment:
+    def __init__(self, lineResult: ParseSegment) -> None:
+        self.lineResult = lineResult
+        self.startLineNumber = lineResult.startLineNumber
+        self.startText = lineResult.startText
+        self.endLineNumber = lineResult.endLineNumber
+        self.endText = lineResult.endText
+        self.middleTexts = lineResult.middleTexts
+        self.middleLineNumbers = lineResult.middleLineNumbers
+        self.deltaZUp = lineResult.deltaZUp
+        self.deltaZDown = lineResult.deltaZDown
+        self.totalXYDistance = lineResult.totalXYDistance
+        self.isValid: bool = True
+        self.hasStartHasFeed: bool = False
 
-            segment[cls.KEY_Z_DIST] = zDist
-            segment[cls.KEY_EFFECTIVE_DIST] = effectiveDist
+        self._rejectReason: list[str] = []
 
-            if effectiveDist < float(minDist):
-                segment[cls.KEY_IS_VALID] = False
-                segment[cls.KEY_REASONS].append(cls.REASON_TOO_SHORT_EFFECTIVE_DIST)
 
-        return segments
+    @property
+    def middleStepsCount(self) -> int:
+        return len(self.middleTexts)
+
+    def addRejectReason(self, rejectReason: str) -> None:
+        self._rejectReason.append(rejectReason)
+
+    def trimEndUntilValidOrNoMiddle(self, tokenizer: Callable[[str], list[str]], validator: Callable[[list[str]], bool], rejectionReason: str) -> None: 
+        tokens = tokenizer(self.endText)
+        if validator(tokens):
+            while validator(tokens) and len(self.middleTexts) > 0:
+                self.endText = self.middleTexts[-1]
+                self.endLineNumber = self.middleLineNumbers[-1]
+                self.middleTexts.pop()
+                self.middleLineNumbers.pop()
+                tokens = tokenizer(self.endText)
+
+            if validator(tokens) and self.middleStepsCount == 0:
+                self.isValid = False
+                self.addRejectReason(rejectionReason)
+
+    def getEffectiveLength(self) -> float:
+        zDist = abs(self.deltaZUp) + abs(self.deltaZDown)
+        return zDist + zDist
+
+    def asDict(self) -> dict[str, Any]:
+        d: dict[str, Any] = {}
+
+        d['startLine'] = self.startLineNumber
+        d['endLine'] = self.endLineNumber
+        d['startHasFeed'] = self.hasStartHasFeed
+        d['isValid'] = self.isValid
+
+        return d
