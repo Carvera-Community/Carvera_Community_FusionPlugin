@@ -1,4 +1,4 @@
-import enum
+from enum import IntEnum
 from typing import Final
 
 class Constants:
@@ -18,19 +18,8 @@ class Constants:
     # Number of digits to use in sequence names
     FILE_SEQUENCE_DIGITS:               Final[str] = 'fileSequenceDigits'
 
-    # If the UI should show the ability to number individual lines in the output
-    SHOW_LINE_SEQUENCING:               Final[bool] = "showLineSequence"
-    # If sequence numbers should be used in program lines
-    LINE_SEQUENCE:                      Final[str] = 'lineSequence'
-    # Number of digits to use in line numbers
-    LINE_SEQUENCE_DIGITS:               Final[str] = 'lineSequenceDigits'
-    # The interval that the line numbering should increment by
-    LINE_SEQUENCE_INTERVAL:             Final[str] = 'lineSequenceInterval'
-
-
     # If the name should be numeric
     NUMERIC_NAME:                       Final[str] = 'numericName'
-
 
     # If setups should be split into separate files
     OPERATIONS_GROUPING:                Final[str] = 'operationsGrouping'
@@ -82,9 +71,9 @@ class Constants:
     HEADER_END_CODES:                   Final[str] = 'headerEndCodes'
     #endregion
 
-    class OperationsGroupings():
+    class OperationsGroupings(IntEnum):
         __doc__ = "Contains constant values for operation grouping options."
-        SINGLE_FILE:    Final[int] = 0
-        SETUP:          Final[int] = 1
-        SETUP_AND_TOOL: Final[int] = 2
-        PER_OPERATION:  Final[int] = 3
+        SINGLE_FILE    = 0
+        SETUP          = 1
+        SETUP_AND_TOOL = 2
+        PER_OPERATION  = 3

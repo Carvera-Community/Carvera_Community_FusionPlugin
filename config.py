@@ -17,4 +17,4 @@ DEBUG = True
 ADDIN_NAME = os.path.basename(os.path.dirname(__file__))
 COMPANY_NAME = 'Makera Community'
 
-PLUGIN_VERSION = '0.9.0'
+PLUGIN_VERSION = '0.9.1'

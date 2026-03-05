@@ -1,11 +1,13 @@
-import adsk.core
+from adsk.core import Attributes as CoreAttributes
 
 class _AttributesMeta(type):
+    _attributes: CoreAttributes
+    
     def __iter__(cls):
         return iter(cls._attributes)
 
 class Attributes(metaclass=_AttributesMeta):
-    def __init__(self, attributes: adsk.core.Attributes):
+    def __init__(self, attributes: CoreAttributes):
         self._attributes = attributes
 
     def add(self, group, name, value):

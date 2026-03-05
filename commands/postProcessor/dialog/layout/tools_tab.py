@@ -1,18 +1,31 @@
-import adsk
+from __future__ import annotations
+
+from typing import cast
+
+from adsk.core import (
+    CommandInputs,
+    DropDownCommandInput,
+    DropDownStyles
+)
+
+from adsk.cam import Tool
+
+from .....lib.fusionParameters.cast_cam_param import castCAMParam
+
 from ...programs import Programs
-from ...setups.setups import Setups
+from ...setups.setups_context import SetupsContext
 from ...strings import Strings
 
-from ..dialog_constants import PostDialogConstants
+from ..constants import Constants
 
-class ToolsTab(PostDialogConstants):
+class ToolsTab(Constants):
 
     _TOOLS_GROUP_ID = 'toolsTab'
     _TOOLS_TABLE_ID = 'toolsTable'
 
     @classmethod
-    def createToolsTab(cls, inputs: adsk.core.CommandInputs):
-
+    def createToolsTab(cls, inputs: CommandInputs, ctx: SetupsContext):
+        
         # helper method to make the syntax a little easier for adding 
         # items to a table.
         def init(obj, **attrs):
@@ -50,23 +63,29 @@ class ToolsTab(PostDialogConstants):
             ),row, 2, 0, 2)
         row += 1
 
+        def _getToolNumber(tool: Tool) -> int:
+            return castCAMParam.ToInt(tool.parameters.itemByName("tool_number"))
 
+        def _requiresManualToolChange(tool: Tool) -> bool:
+            return castCAMParam.ToBool(tool.parameters.itemByName('tool_manualToolChange'))
+        
+        def _getToolDescription(tool: Tool) -> str:
+            return castCAMParam.ToStr(tool.parameters.itemByName('tool_description'))
 
-        for tool in Setups.tools:
-            toolNumber = tool.parameters.itemByName("tool_number").value.value
-            dropdown: adsk.core.DropDownCommandInput = inputs.addDropDownCommandInput(f"toolDropdown_{row}", '', adsk.core.DropDownStyles.TextListDropDownStyle)
-            if Programs.Current is not None and Programs.Current.machineHasATC and tool.parameters.itemByName('tool_manualToolChange').value.value == False:
+        for tool in ctx.tools:
+            toolNumber = _getToolNumber(tool)
+            dropdown = DropDownCommandInput.cast(inputs.addDropDownCommandInput(f"toolDropdown_{row}", '', cast(DropDownStyles, DropDownStyles.TextListDropDownStyle)))
+            if Programs.Current is not None and Programs.Current.machineHasATC and not _requiresManualToolChange(tool):
                 for i in range(1, Programs.Current.machineToolSlots + 1):
                     dropdown.listItems.add(str(i), toolNumber == i)
             dropdown.isEnabled = True
-            dropdown.isReadOnly = True
 
             input.addCommandInput(
                     init(inputs.addStringValueInput(f"toolNumber_{row}", '', str(toolNumber)),
                         isReadOnly = True
                 ),row,0)
             input.addCommandInput(
-                    init(inputs.addStringValueInput(f"tool_description_{row}", '', tool.parameters.itemByName("tool_description").value.value),
+                    init(inputs.addStringValueInput(f"tool_description_{row}", '', _getToolDescription(tool)),
                         isReadOnly = True
                 ),row,1)
             input.addCommandInput(init(inputs.addBoolValueInput(f"toolCheckbox_{row}", '', True, '', False),

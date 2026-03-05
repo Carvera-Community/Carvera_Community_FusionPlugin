@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, overload
 
+from adsk.core import Attributes as adskAttributes
 
 from .. import config
-from ..attributes import Attributes
 from ..const import *
 from ....config import PLUGIN_VERSION as GLOBAL_PLUGIN_VERSION
 from ....lib.fusionAddInUtils.general_utils import *
@@ -13,10 +14,23 @@ from .constants import Constants
 _UNSET = object()
 
 class _SettingsMeta(type):
+    # Just to help Pylance to understand the code.
+    _items: ClassVar[dict[str, Any]]
+
+    # Just to help Pylance to understand the code.
+    if TYPE_CHECKING:
+        def Get(cls, key: str) -> Any: ...
+        def Set(cls, key: str, value: Any) -> None: ...
     
     def __iter__(cls):
         return iter(cls._items)
-    
+
+    if TYPE_CHECKING:
+        @overload
+        def __call__(cls, key: str, /) -> Any: ...
+        @overload
+        def __call__(cls, key: str, value: Any, /) -> Any: ...
+
     def __call__(cls, key, /, value = _UNSET):
         if value is _UNSET:
             return cls.Get(key)
@@ -30,10 +44,10 @@ class Settings(Constants, metaclass=_SettingsMeta):
     _path = None
     _fMustSave = False
     _inputs = None
-    _items = {}
+    _items: dict[str, Any] = {}
 
     #region Initial default values of settings
-    # See above definitions for details
+    # See constants.py for details
     _defaultSettings = {
         Constants.END_CODES:                    "M5\nM9\nM30",
         Constants.OVERWRITE_FILES:              False,
@@ -42,10 +56,6 @@ class Settings(Constants, metaclass=_SettingsMeta):
         Constants.FILE_SEQUENCE:                False,
         Constants.NUMERIC_NAME:                 False,  
         Constants.FILE_SEQUENCE_DIGITS:         1,
-        Constants.SHOW_LINE_SEQUENCING:         False,
-        Constants.LINE_SEQUENCE:                False,
-        Constants.LINE_SEQUENCE_DIGITS:         2,
-        Constants.LINE_SEQUENCE_INTERVAL:       5,
         Constants.OPERATIONS_GROUPING:          Constants.OperationsGroupings.SETUP,
         Constants.COMBINE_TOOL:                 False,
         Constants.VERSION:                      config.SETTINGS_VERSION,
@@ -71,7 +81,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
     #endregion
 
     @classmethod
-    def Load(cls, attr: Attributes = None):
+    def Load(cls, attr: Optional[adskAttributes] = None):
         if attr and attr.count > 0:
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
@@ -112,7 +122,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
             pass
 
     @classmethod
-    def Save(cls, attr: Attributes):
+    def Save(cls, attr: adskAttributes):
         if cls._fMustSave:
             cls.SaveDefault()
         attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._items))
@@ -134,10 +144,10 @@ class Settings(Constants, metaclass=_SettingsMeta):
         return Path(cls._path)
     
     @classmethod
-    def Get(cls, key):
+    def Get(cls, key) -> Any:
         return cls._items.get(key, None)
     
     @classmethod
-    def Set(cls, key, value):
+    def Set(cls, key: str, value: Any):
         cls._items[key] = value
         cls._fMustSave = True
