@@ -16,12 +16,16 @@ class SetupsContext:
     fileName: str | None
 
     @property
-    def valid(self) -> list[Setup]:
-        return [setup for setup in self._items if setup.ctx.isValid]
+    def valid(self) -> Iterator[Setup]:
+        for setup in self._items:
+            if setup.ctx.isValid:
+                yield setup
 
     @property
-    def selected(self) -> list[Setup]: 
-        return [setup for setup in self.valid if setup.isSelected]
+    def selected(self) -> Iterator[Setup]: 
+        for setup in self.valid:
+            if setup.isSelected:
+                yield setup
 
     @property
     def hasSelected(self) -> bool:

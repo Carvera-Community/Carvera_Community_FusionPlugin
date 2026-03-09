@@ -105,15 +105,14 @@ def parseFile(ctx: OperationContext):
                     return True # File analysis complete
         return False
 
-
     if Settings(Settings.RESTORE_RAPID_MOVES):
         minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE) | 20
         maxStepsInbetween = Settings(Settings.RAPID_MOVES_MAX_STEPS) | 3
-        ctx.rapidsAnalysis = {seg["startLine"]: { 
-            "endLine": seg["endLine"], 
-            "startHasFeed": seg["startHasFeed"]}
-                for seg in RapidsParser().analyze(RapidsParser().parseFile(ctx.tempFilePath, maxStepsInbetween = maxStepsInbetween), minDist = minDist)
-                if seg.get("isValid") and "startLine" in seg and "endLine" in seg}
+        ctx.rapidsAnalysis = {segment["startLine"]: { 
+            "endLine": segment["endLine"], 
+            "startHasFeed": segment["startHasFeed"]}
+                for segment in RapidsParser().analyze(RapidsParser().parseFile(ctx.tempFilePath, maxStepsInbetween = maxStepsInbetween), minDist = minDist)
+                if segment.get("isValid") and "startLine" in segment and "endLine" in segment and "startHasFeed" in segment }
     
     with ctx.tempFilePath.open("r") as operationFile:
         line = operationFile.readline()

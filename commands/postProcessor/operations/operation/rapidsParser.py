@@ -4,7 +4,7 @@ import re
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Iterator
 
 # G/M words (letters)
 class WORD(StrEnum):
@@ -45,6 +45,34 @@ class LineResult:
 
     def setEffectiveMotion(self, motion: str|None) -> None:
         self.effectiveMotion = self.parseResult.localMotion or motion
+
+    def _motionOk(self, requireG1: bool) -> bool:
+        return True if not requireG1 else self.effectiveMotion == MOTIONS.G1
+    
+    def isZOnlyUp(self, requireG1: bool) -> bool:
+        if not self._motionOk(requireG1):
+            return False
+        if not (self.parseResult.sawZ and not (self.parseResult.sawX or self.parseResult.sawY)):
+            return False
+        return False if self.prevZ is None or self.z is None else self.z > self.prevZ
+
+    def isZOnlyDown(self, requireG1: bool) -> bool:
+        if not self._motionOk(requireG1):
+            return False
+        if not (self.parseResult.sawZ and not (self.parseResult.sawX or self.parseResult.sawY)):
+            return False
+        return False if self.prevZ is None or self.z is None else self.z < self.prevZ
+
+    def isXYOnly(self, requireG1: bool) -> bool:
+        if not self._motionOk(requireG1):
+            return False
+        return (self.parseResult.sawX or self.parseResult.sawY) and (not self.parseResult.sawZ)
+
+    def isXYZAny(self, requireG1: bool) -> bool:
+        if not self._motionOk(requireG1):
+            return False
+        return self.parseResult.sawZ and (self.parseResult.sawX or self.parseResult.sawY)
+
 
 @dataclass()
 class ModalState:
@@ -177,40 +205,6 @@ class RapidsParser:
         return result
 
     @classmethod
-    def _motionOk(cls, effectiveMotion: str | None, requireG1: bool) -> bool:
-        if not requireG1:
-            return True
-        return effectiveMotion == MOTIONS.G1
-
-    @classmethod
-    def _isZOnlyUp(cls, line: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(line.effectiveMotion, requireG1):
-            return False
-        if not (line.parseResult.sawZ and not (line.parseResult.sawX or line.parseResult.sawY)):
-            return False
-        return False if line.prevZ is None or line.z is None else line.z > line.prevZ
-
-    @classmethod
-    def _isZOnlyDown(cls, line: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(line.effectiveMotion, requireG1):
-            return False
-        if not (line.parseResult.sawZ and not (line.parseResult.sawX or line.parseResult.sawY)):
-            return False
-        return False if line.prevZ is None or line.z is None else line.z < line.prevZ
-
-    @classmethod
-    def _isXYOnly(cls, line: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(line.effectiveMotion, requireG1):
-            return False
-        return (line.parseResult.sawX or line.parseResult.sawY) and (not line.parseResult.sawZ)
-
-    @classmethod
-    def _isXYZAny(cls, row: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(row.effectiveMotion, requireG1):
-            return False
-        return row.parseResult.sawZ and (row.parseResult.sawX or row.parseResult.sawY)
-
-    @classmethod
     def _iterPerLine(cls, path: Path, lineParser: Callable[[str], ParseResult]) -> Generator[LineResult]:
         state = ModalState()
 
@@ -291,7 +285,7 @@ class RapidsParser:
         roundDecimals: int = 6,
         maxStepsInbetween: int = 3,
         bufferSize: int = 20,
-    ) -> list[ParseSegment]:
+    ) -> Iterator[ParseSegment]:
         
         if maxStepsInbetween < 0:
             raise ValueError("maxStepsInbetween must be >= 0")
@@ -315,15 +309,13 @@ class RapidsParser:
 
         i = 0
 
-        segments: list[ParseSegment] = []
-
         while True:
             window.trimTo(i)
             start = window.peek(i)
             if start is None:
                 break
 
-            if (not start.parseResult.words) or (not cls._isZOnlyUp(start, requireG1)):
+            if (not start.parseResult.words) or (not start.isZOnlyUp(requireG1)):
                 i += 1
                 continue
 
@@ -345,11 +337,11 @@ class RapidsParser:
                     aborted = True
                     break
 
-                if cls._isZOnlyDown(line, requireG1):
+                if line.isZOnlyDown(requireG1):
                     endLineIndex = nextLineIndex
                     break
 
-                if cls._isXYOnly(line, requireG1) or cls._isXYZAny(line, requireG1):
+                if line.isXYOnly(requireG1) or line.isXYZAny(requireG1):
                     middleLineIndexes.append(nextLineIndex)
                     stepsTaken += 1
 
@@ -386,14 +378,12 @@ class RapidsParser:
                     i += 1
                     continue
 
-                segments.append(ParseSegment(start, end, middleLines, middleTexts, stepsTaken, xyStepDetails, roundDecimals))
+                yield ParseSegment(start, end, middleLines, middleTexts, stepsTaken, xyStepDetails, roundDecimals)
 
                 i = endLineIndex + 1
                 continue
 
             i = start.index + 1
-
-        return segments
 
     REASON_ARC_IN_MIDDLE = "arc_in_middle"
     REASON_FEED_IN_MIDDLE = "feed_in_middle"
@@ -401,7 +391,7 @@ class RapidsParser:
     REASON_TOO_SHORT_EFFECTIVE_DIST = "too_short_effectiveDist"
 
     @classmethod
-    def analyze(cls, segments: list[ParseSegment], minDist: float = 20.0) -> Generator[dict[str, Any]]:
+    def analyze(cls, segments: Iterator[ParseSegment], minDist: float = 20.0) -> Generator[dict[str, Any]]:
         """
         Generates a list of dictionaries containing the start and end line of all 
         the candidates for rapid moves and a flag if it is deemed a valid rapid movement.
@@ -497,17 +487,17 @@ class AnalysisSegment:
 
     def trimEndUntilValidOrNoMiddle(self, tokenizer: Callable[[str], list[str]], validator: Callable[[list[str]], bool], rejectionReason: str) -> None: 
         tokens = tokenizer(self.endText)
-        if validator(tokens):
-            while validator(tokens) and len(self.middleTexts) > 0:
-                self.endText = self.middleTexts[-1]
-                self.endLineNumber = self.middleLineNumbers[-1]
-                self.middleTexts.pop()
-                self.middleLineNumbers.pop()
-                tokens = tokenizer(self.endText)
+        #if validator(tokens):
+        while validator(tokens) and len(self.middleTexts) > 0:
+            self.endText = self.middleTexts[-1]
+            self.endLineNumber = self.middleLineNumbers[-1]
+            self.middleTexts.pop()
+            self.middleLineNumbers.pop()
+            tokens = tokenizer(self.endText)
 
-            if validator(tokens) and self.middleStepsCount == 0:
-                self.isValid = False
-                self.addRejectReason(rejectionReason)
+        if validator(tokens) and self.middleStepsCount == 0:
+            self.isValid = False
+            self.addRejectReason(rejectionReason)
 
     def getEffectiveLength(self) -> float:
         zDist = abs(self.deltaZUp) + abs(self.deltaZDown)
