@@ -14,6 +14,13 @@ class WORD(StrEnum):
     Z = "Z"
     F = "F"
 
+# Motions (modal values)
+class MOTIONS:
+        G0 = "G0"
+        G1 = "G1"
+        G2 = "G2"
+        G3 = "G3"
+        SUPPORTED = (G0, G1, G2, G3)
 
 @dataclass
 class ParseResult:
@@ -81,14 +88,6 @@ class ModalState:
     y: float | None = 0
     z: float | None = 0
     feed: float | None = None
-
-# Motions (modal values)
-class MOTIONS:
-        G0 = "G0"
-        G1 = "G1"
-        G2 = "G2"
-        G3 = "G3"
-        SUPPORTED = (G0, G1, G2, G3)
 
 @dataclass 
 class XYStepDetail:
