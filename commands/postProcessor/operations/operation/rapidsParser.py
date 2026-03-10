@@ -145,7 +145,10 @@ class ParseSegment:
         totaldXRaw = 0.0
         totaldYRaw = 0.0
         totalXYDistRaw = 0.0
-        for s in xySteps:
+        for s in xySteps: 
+            # Yes, there could be a Z component as well and to get the 
+            # true distance there should be more involved math here, 
+            # but this is suffucient.
             totaldXRaw += s.deltaX
             totaldYRaw += s.deltaY
             totalXYDistRaw += s.distance
