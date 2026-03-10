@@ -390,17 +390,16 @@ class RapidsParser:
     REASON_TOO_SHORT_EFFECTIVE_DIST = "too_short_effectiveDist"
 
     @classmethod
-    def analyze(cls, segments: Iterator[ParseSegment], minDist: float = 20.0) -> Generator[dict[str, Any]]:
+    def analyze(cls, segments: Iterator[ParseSegment], minDistance: float = 20.0) -> Generator[dict[str, Any]]:
         """
         Generates a list of dictionaries containing the start and end line of all 
         the candidates for rapid moves and a flag if it is deemed a valid rapid movement.
 
         Rules for rejections:
         - Reject if any middle-step line contains G2/G3 (arc) or F (feed).
-        - Reject if ending line contains feed, move back one line until it is valid or run out of middle lines.
-        - Reject if effectiveDist < minDist, where:
-                zDist = abs(dZUp) + abs(dZDown)
-                effectiveDist = max(totalXYDist, zDist)
+        - Reject if ending line contains feed, and running out of middle lines when moving back one line to make a valid segment.
+        - Reject if effectiveDistance < minDistance, where:
+                effectiveDistance = totalXYDistance + abs(deltaZUp) + abs(deltaZDown)
         """
 
         def _tokenize(line: str) -> list[str]:
@@ -452,7 +451,7 @@ class RapidsParser:
                     result.addRejectReason(cls.REASON_FEED_IN_MIDDLE)
 
             # Rule: calculate effective distance and disqualify if too short
-            if result.getEffectiveLength() < float(minDist):
+            if result.getEffectiveLength() < float(minDistance):
                 result.isValid = False
                 result.addRejectReason(cls.REASON_TOO_SHORT_EFFECTIVE_DIST)
 
@@ -486,7 +485,6 @@ class AnalysisSegment:
 
     def trimEndUntilValidOrNoMiddle(self, tokenizer: Callable[[str], list[str]], validator: Callable[[list[str]], bool], rejectionReason: str) -> None: 
         tokens = tokenizer(self.endText)
-        #if validator(tokens):
         while validator(tokens) and len(self.middleTexts) > 0:
             self.endText = self.middleTexts[-1]
             self.endLineNumber = self.middleLineNumbers[-1]
@@ -500,7 +498,7 @@ class AnalysisSegment:
 
     def getEffectiveLength(self) -> float:
         zDist = abs(self.deltaZUp) + abs(self.deltaZDown)
-        return zDist + zDist
+        return self.totalXYDistance + zDist
 
     def asDict(self) -> dict[str, Any]:
         d: dict[str, Any] = {}

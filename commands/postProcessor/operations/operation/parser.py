@@ -111,7 +111,7 @@ def parseFile(ctx: OperationContext):
         ctx.rapidsAnalysis = {segment["startLine"]: { 
             "endLine": segment["endLine"], 
             "startHasFeed": segment["startHasFeed"]}
-                for segment in RapidsParser().analyze(RapidsParser().parseFile(ctx.tempFilePath, maxStepsInbetween = maxStepsInbetween), minDist = minDist)
+                for segment in RapidsParser().analyze(RapidsParser().parseFile(ctx.tempFilePath, maxStepsInbetween = maxStepsInbetween), minDistance = minDist)
                 if segment.get("isValid") and "startLine" in segment and "endLine" in segment and "startHasFeed" in segment }
     
     with ctx.tempFilePath.open("r") as operationFile:
