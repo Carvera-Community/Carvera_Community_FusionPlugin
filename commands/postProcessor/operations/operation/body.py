@@ -52,15 +52,20 @@ class OperationBody(Line):
     def _matchLine(self, fileHandler: TextIO, line: str, row: int, rotationAngle: Optional[float], preserveRotation: Optional[bool] = False) -> bool:
         lineMatch = OperationBody._PARSE_LINE_RE.match(line)
         if lineMatch:
-            if lineMatch.group("G") is not None and lineMatch.group("A") is not None:
+            if lineMatch.group("G") is not None:
                 gCode = lineMatch.group("G")
-                aCode = lineMatch.group("A")
-                if gCode == "0" and float(aCode) == 0.0 and row == self._rotationLine:
-                    # Special handling of A-axis rotation moves.
-                    # The rotation will always be 0 as the operation
-                    # are always generated one by one
-                    if self._handleRotation(fileHandler, rotationAngle, preserveRotation):
-                        return True
+                if lineMatch.group("A") is not None:
+                    aCode = lineMatch.group("A")
+                    # Float as there can be subgroups of the command
+                    if float(gCode) == 0.0 and float(aCode) == 0.0:
+                        # Special handling of A-axis rotation moves.
+                        # The rotation will always be 0 as the operation
+                        # are always generated one by one
+                        # There is a rotation added at the end making
+                        # things messy, just ignore it as we don't need it.
+                        # If a rotation row is found but isn't the one 
+                        # expected just remove it, otherwise consider it.
+                        return True if row != self._rotationLine else self._handleRotation(fileHandler, rotationAngle, preserveRotation)
         return False
 
     def _handleRotation(self, fileHandler: TextIO, rotationAngle: Optional[float], preserveRotation: Optional[bool] = False) -> bool:
