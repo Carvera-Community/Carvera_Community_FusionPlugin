@@ -32,15 +32,15 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
     def _matchLine(line: str, row: int) -> bool:
         lineMatch = ctx.matchLine(line)
         if lineMatch:
-            if lineMatch.group("G") is not None and lineMatch.group("A") is not None:
+            if lineMatch.group("G") is not None:
                 gCode = lineMatch.group("G")
-                aCode = lineMatch.group("A")
-                if gCode == "0" and float(aCode) == 0.0 and row == ctx.rotationLine:
-                    # Special handling of A-axis rotation moves.
-                    # The rotation will always be 0 as the operation
-                    # are always generated one by one
-                    if _handleRotation():
-                        return True
+                if lineMatch.group("A") is not None:
+                    aCode = lineMatch.group("A")
+                    if float(gCode) == 0.0 and float(aCode) == 0.0:
+                        # Special handling of A-axis rotation moves.
+                        # The rotation should always be 0 as the 
+                        # operations are always generated one by one
+                        return row != ctx.rotationLine or _handleRotation()
         return False
 
     def _handleRotation() -> bool:
