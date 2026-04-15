@@ -122,7 +122,7 @@ class GCodeTab(Constants):
         toolChangeCodes.tooltip = Strings("TOOLTIP: Tool change code")
         toolChangeCodes.tooltipDescription = Strings("TOOLTIP TEXT: Tool change code")
 
-        EventRegistry.register(cls.TOOL_CHANGE_ID, lambda input: Settings.Set(Settings.TOOL_CHANGE, input.value))
+        EventRegistry.register(cls.TOOL_CHANGE_ID, lambda input: Settings.Set(Settings.TOOL_CHANGE, input.text))
 
         dummy = blocksGroup.children.addStringValueInput('', '') # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
         dummy.isEnabled = False
@@ -134,7 +134,7 @@ class GCodeTab(Constants):
         endCodes.tooltip = Strings("TOOLTIP: G-codes that mark ending sequence")
         endCodes.tooltipDescription = Strings("TOOLTIP TEXT: G-codes that mark ending sequence")
 
-        EventRegistry.register(cls.END_CODES_ID, lambda input: Settings.Set(Settings.END_CODES, input.value))
+        EventRegistry.register(cls.END_CODES_ID, lambda input: Settings.Set(Settings.END_CODES, input.text))
 
         dummy = blocksGroup.children.addStringValueInput('', '') # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
         dummy.isEnabled = False
@@ -146,7 +146,7 @@ class GCodeTab(Constants):
         headerEndCodes.tooltip = Strings("TOOLTIP: G-codes that mark header end")
         headerEndCodes.tooltipDescription = Strings("TOOLTIP TEXT: G-codes that mark header end")
 
-        EventRegistry.register(cls.HEADER_CODES_ID, lambda input: Settings.Set(Settings.HEADER_END_CODES, input.value))
+        EventRegistry.register(cls.HEADER_CODES_ID, lambda input: Settings.Set(Settings.HEADER_END_CODES, input.text))
 
         dummy = blocksGroup.children.addStringValueInput('', '') # As the TextBoxCommandInput above seems to be buggy we add a dummy input to create some space
         dummy.isEnabled = False
