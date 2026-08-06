@@ -85,15 +85,31 @@ class Program():
         """Returns the number of ATC slots of the machine of the NCProgram."""
         return cam.ToolingCapabilitiesMachineElement.cast(self._program.machine.elements.itemById('tooling','default')).maxToolCount if self.machineHasATC else 1
 
-    # @property
-    # def machineATCSlots(self) -> int:
-    #     return self._program
-
     @property
     def machineHasAAxis(self):
         """Returns whether the machine has A axis."""
-        return (cam.ControllerConfigurationMachineElement.cast(self._program.machine.elements.defaultItemByType('controller')).axisConfigurations.itemById('U') is not None 
-            if self._program.machine is not None else False)
+
+        machine = self._program.machine
+
+        if machine is None:
+            return False
+
+        axes = cam.ControllerConfigurationMachineElement.cast(
+            machine.elements.defaultItemByType('controller')).axisConfigurations
+
+        for index in range(axes.count):
+            try:
+                axis = axes.item(index)
+            except RuntimeError as error:
+                if index >= 3 and 'axisDefinition' in str(error):
+                    unreadable_extra_axis = True
+                    continue
+                raise
+
+            if cam.RotaryMachineAxisConfiguration.cast(axis) is not None:
+                return True
+
+        return unreadable_extra_axis
     
     @property
     def hasPostProcessor(self):
