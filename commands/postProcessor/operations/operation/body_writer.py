@@ -73,7 +73,6 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
                 if row == ctx.bodyStartLine: # Add an extra line marking where this operation starts
                     if ctx.allowBlankLines:
                         ctx.write(fileHandle, '\n') # keep blank line before operation start
-                    ctx.writeLine(fileHandle, f"({ctx.name})")
                 if ctx.rapidsAnalysis and row + 1 in ctx.rapidsAnalysis: # Add rapids comments if this line is the start of a rapid move
                     rapidsEnds = ctx.rapidsAnalysis[row + 1]["endLine"]
                     startHasFeed = ctx.rapidsAnalysis[row + 1]["startHasFeed"]
