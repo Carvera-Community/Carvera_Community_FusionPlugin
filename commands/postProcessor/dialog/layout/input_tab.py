@@ -196,8 +196,11 @@ class InputTab(Constants):
                     isReadOnly = True,
                     isEnabled = setup.isSelected
                 ),row,4)
+
+        def updateSetupswithoutNotice(input: DropDownCommandInput):
+            cls._updateSetups(input, ctx)
         
-        EventRegistry.register(cls.PROGRAM_DROPDOWN_ID, cls._updateSetups)
+        EventRegistry.register(cls.PROGRAM_DROPDOWN_ID, updateSetupswithoutNotice)
         #endregion
 
     @classmethod
