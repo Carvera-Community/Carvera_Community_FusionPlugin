@@ -99,7 +99,7 @@ class Operation():
     
     @property
     def hasRotation(self) -> bool:
-        return self.ctx.rotationLine != -1
+        return self.ctx.hasRotation
 
     def SetOutputPath(self, path: Path):
         self._outputFilePath = path

@@ -89,7 +89,10 @@ def parseFile(ctx: OperationContext):
                 if gCode == 0:
                     lineMatch = ctx.lineWriter._PARSE_LINE_RE.match(line)
                     # We're only interested in the first rotation move
-                    if not ctx.hasRotation and lineMatch and lineMatch.group("G") is not None and lineMatch.group("A") is not None:
+                    if ctx.rotationAngle is None \
+                        and lineMatch \
+                        and lineMatch.group("G") is not None \
+                        and lineMatch.group("A") is not None:
                         aCode = float(lineMatch.group("A"))
                         if aCode == 0.0:
                             # Found A-axis rotation move

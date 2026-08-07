@@ -10,8 +10,15 @@ def writeBody(ctx: OperationsContext):
     from .operations import setOperationFileName
 
     toolIdIndex = {}
+    firstOperation: bool = True
     operation: Operation
     for operation in [op for op in ctx.operations if op.hasBody]:
+        if firstOperation:
+            operation.ctx.rotationAngle = ctx.rotationAngle
+            operation.ctx.preserveRotation = ctx.preserveRotation
+        else:
+            operation.ctx.preserveRotation = False
+
         toolId = operation.toolId
         if toolId not in toolIdIndex:
             toolIdIndex[toolId] = 0
@@ -25,5 +32,5 @@ def writeBody(ctx: OperationsContext):
                                                             Settings.OperationsGroupings.SETUP]:
                 operation.WriteBody(fileHandle)
 
-            ctx.rotationAngle = None # Only apply rotation to the first operation if specified as the rotation is applied on a setup level
-            ctx.preserveRotation = False # Only preserve rotation for the first operation if specified as the rotation is applied on a setup level
+        if firstOperation:
+            firstOperation = False

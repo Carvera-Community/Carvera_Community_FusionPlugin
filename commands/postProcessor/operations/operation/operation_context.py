@@ -21,12 +21,15 @@ class OperationContext:
     bodyStartLine: int = -1
     tailStartLine: int = -1
     subOperationIndexWithTool: int = -1
-    hasRotation: bool = False
     rotationLine: int = -1
     rotationAngle: float | None = None
-    preserveRotation: bool | None = False
+    preserveRotation: bool = False
     rapidsAnalysis: dict[int, dict[str, Any]] | None = None
 
+
+    @property
+    def hasRotation(self) -> bool:
+        return self.rotationAngle is not None
 
     def writeLine(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.writeLine(fileHandle, line)
     def write(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.write(fileHandle, line)

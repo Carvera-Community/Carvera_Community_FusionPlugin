@@ -44,11 +44,12 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
         return False
 
     def _handleRotation() -> bool:
-        if ctx.preserveRotation: # This is the first setup, so we want it to rotate to 0, so we keep the rotation line as is
-            return False
-        elif ctx.rotationAngle is None: # No rotation provided, ignore the line as it will rotate to 0 which we don't want.
-            return True
+        if ctx.rotationAngle is None: # No rotation provided, do not preserve the line as it will rotate to 0 which we don't want.
+            return not ctx.preserveRotation
         else: # Write our own rotation code based on the provided rotation angle
+            if ctx.preserveRotation: # We will use the already generated gcode.
+                return False
+            # Adding our own rotation gcodes
             ctx.writeLine(fileHandle, "(Rotating A-axis between setups)")
             # Using G53 for absolute machine coordinates for safe retraction
             if Settings(Settings.SAFE_Y_RETRACTION):

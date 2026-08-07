@@ -5,12 +5,12 @@ from adsk.cam import Setup as adskSetup
 from ...operations.operations import Operations
 
 class SetupContext:
-    index: int
+    index: int = -1
     setup: adskSetup
-    isSelected: bool
+    isSelected: bool = False
     operations: Optional[Operations] = None
-    rotationAngle: float | None
-    preserveRotation: bool
+    rotationAngle: float | None = None
+    preserveRotation: bool = False
     origin: Optional[Point3D] = None
 
     @property
