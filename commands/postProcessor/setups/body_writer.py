@@ -19,7 +19,10 @@ def writeBody(ctx: SetupsContext):
         == Settings.OperationsGroupings.SINGLE_FILE
     )
 
-    fileName = ctx.fileName
+    fileName: str | None = None
+
+    if numericName:
+        fileName = ctx.fileName
 
     def _getRotation(
         setup: Setup,
@@ -54,7 +57,6 @@ def writeBody(ctx: SetupsContext):
         if numericName and fileName is not None:
             setup.ctx.SetFileName(fileName)
 
-        print(setup.name, setup.ctx.preserveRotation, setup.ctx.rotationAngle)
         setup.WriteBody()
 
         if not singleFile and numericName:
