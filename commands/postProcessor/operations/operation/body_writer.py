@@ -50,7 +50,7 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
             if ctx.preserveRotation: # We will use the already generated gcode.
                 return False
             # Adding our own rotation gcodes
-            ctx.writeLine(fileHandle, "(Rotating A-axis between setups)")
+            ctx.writeLine(fileHandle, "(Rotating a-axis between setups)")
             # Using G53 for absolute machine coordinates for safe retraction
             if Settings(Settings.SAFE_Y_RETRACTION):
                 ctx.writeLine(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = Settings(Settings.Y_RETRACTION_COORDINATE)))
