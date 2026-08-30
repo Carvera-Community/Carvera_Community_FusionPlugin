@@ -1,9 +1,6 @@
 from pathlib import Path
-from typing import Optional, TextIO
+from typing import Any, Optional, Protocol, TextIO
 
-from adsk import cam
-from .....lib.fusionParameters.cast_cam_param import castCAMParam
-from .....lib.fusionAddInUtils.general_utils import Utils
 from ...parameters import Parameters
 from ...strings import Strings
 from .parser import parseFile
@@ -18,23 +15,38 @@ from .body_writer import writeBody
 from .tail_writer import writeTail
 from .temporary_post_processing import createTemporaryOperationFile
 
+
+class OperationFusionAdapter(Protocol):
+    def getToolNumber(self, operation) -> int: ...
+    def maxFilenameLength(self) -> int: ...
+
+
 class Operation():    
-    def __init__(self, ctx: OperationContext):
+    def __init__(
+        self,
+        ctx: OperationContext,
+        fusionAdapter: OperationFusionAdapter | None = None,
+    ):
+        if fusionAdapter is None:
+            from ...fusion_adapters.operations import FusionOperationAdapter
+
+            fusionAdapter = FusionOperationAdapter()
+        self._fusionAdapter = fusionAdapter
         self._outputFilePath: Path | None = None
         self.ctx = ctx
         # As there can be multiple operations without tools they are 
         # grouped with the previous operation (or next if it is the 
         # first operation missing a tool)
-        self._operationsDict: dict[int, cam.Operation] = {}  
+        self._operationsDict: dict[int, Any] = {}
         
 
-    def Append(self, operation: cam.Operation, index, hasTool: bool):
+    def Append(self, operation: Any, index, hasTool: bool):
         self._operationsDict[index] = operation
         if hasTool:
             self.ctx.subOperationIndexWithTool = index
 
         names = "-".join(operation.name for operation in self._operationsDict.values())
-        if len(names) > Utils.maxFilenameLength() - 10:
+        if len(names) > self._fusionAdapter.maxFilenameLength() - 10:
             self.ctx.name = Strings("Combined Operations ({operationsCount})".format(operationsCount=len(self._operationsDict)))
         else:
             self.ctx.name = names
@@ -64,14 +76,16 @@ class Operation():
 
     @property
     def toolId(self) -> Optional[int]:
-        return Operation.GetToolNumber(self._operationsDict[self.ctx.subOperationIndexWithTool]) if self.hasTool else None
+        return self._fusionAdapter.getToolNumber(
+            self._operationsDict[self.ctx.subOperationIndexWithTool]
+        ) if self.hasTool else None
 
     @property
     def hasTool(self) -> bool:
         return self.ctx.subOperationIndexWithTool != -1 and self._operationsDict[self.ctx.subOperationIndexWithTool].hasToolpath
 
     @property
-    def tool(self) -> Optional[cam.Tool]:
+    def tool(self) -> Optional[Any]:
         if self.ctx.subOperationIndexWithTool == -1:
             return None
         return self._operationsDict[self.ctx.subOperationIndexWithTool].tool
@@ -109,7 +123,9 @@ class Operation():
 
     @staticmethod
     def GetToolNumber(operation) -> int:
-        return castCAMParam.ToInt(operation.tool.parameters.itemByName("tool_number"))
+        from ...fusion_adapters.operations import FusionOperationAdapter
+
+        return FusionOperationAdapter().getToolNumber(operation)
 
     def Parse(self, tmpPath: Path):
         from ...programs import Programs

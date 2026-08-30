@@ -1,10 +1,8 @@
 from pathlib import Path
+from typing import Any
 
-from adsk.cam import Operation as adskOperation
-from adsk.cam import Tool as adskTool
 from .operations_context import OperationsContext
 from .operation.operation_context import OperationContext
-from ....lib.fusionAddInUtils import Utils
 from ..settings.settings import Settings
 from .operation.operation import Operation
 from .operation_grouping import groupOperationSources
@@ -35,16 +33,25 @@ class Operations():
     def __getitem__(self, index):
         return self.ctx.operations[index]
 
-    def __init__(self, ctx: OperationsContext, adskOperations: list[adskOperation]):
+    def __init__(
+        self,
+        ctx: OperationsContext,
+        adskOperations: list[Any],
+        fusionAdapter=None,
+    ):
+        if fusionAdapter is None:
+            from ..fusion_adapters.operations import FusionOperationAdapter
+
+            fusionAdapter = FusionOperationAdapter()
         self.ctx = ctx
 
         groups = groupOperationSources(
             adskOperations,
             combineTool=bool(Settings.Get(Settings.COMBINE_TOOL)),
-            getToolNumber=Operation.GetToolNumber,
+            getToolNumber=fusionAdapter.getToolNumber,
         )
         for group in groups:
-            operation = Operation(OperationContext(group[0].index))
+            operation = Operation(OperationContext(group[0].index), fusionAdapter)
             for item in group:
                 operation.Append(item.source, item.index, item.source.hasToolpath)
             self.ctx.operations.append(operation)
@@ -71,8 +78,8 @@ class Operations():
         return self.ctx.operationWithTail is not None
 
     @property
-    def tools(self) -> list[adskTool]:
-        tools = list[adskTool]()
+    def tools(self) -> list[Any]:
+        tools = []
         for operation in self.ctx.operations:
             if operation.hasTool and operation.tool is not None and operation.tool not in tools:
                 tools.append(operation.tool)
@@ -110,5 +117,11 @@ def setOperationFileName(ctx: OperationsContext, operation: Operation, toolIdInd
         operation,
         toolIdIndex,
         settings,
-        lambda name: Utils.sanitizeFilename(name, preserveExtension=False),
+        lambda name: _sanitizeFilename(name),
     )
+
+
+def _sanitizeFilename(name: str) -> str:
+    from ....lib.fusionAddInUtils import Utils
+
+    return Utils.sanitizeFilename(name, preserveExtension=False)
