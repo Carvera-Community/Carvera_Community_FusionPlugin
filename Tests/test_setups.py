@@ -26,7 +26,7 @@ class FakeSetup:
     def __init__(self, name, origin, axis, angle=0):
         self.name = name
         self.origin = ComparablePoint(origin)
-        self.xNormal = ComparableAxis(axis)
+        self.x_normal = ComparableAxis(axis)
         self.angle = angle
 
     def rotation_relative_to_degrees(self, other):

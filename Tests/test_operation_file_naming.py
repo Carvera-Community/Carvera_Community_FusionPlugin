@@ -17,7 +17,7 @@ class FakeOperation:
     def __init__(self, index: int, name: str, tool_id: int | None):
         self.index = index
         self.name = name
-        self.toolId = tool_id
+        self.tool_id = tool_id
 
 
 def naming_settings(grouping, **overrides) -> OperationFileNamingSettings:

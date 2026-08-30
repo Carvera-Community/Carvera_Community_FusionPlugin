@@ -43,27 +43,27 @@ class Program():
         return self._program.name
     
     @property
-    def hasError(self):
+    def has_error(self):
         """Returns whether the NCProgram has an error."""
         return self._program.hasError
     
     @property
-    def isSelected(self):
+    def is_selected(self):
         """Returns whether the NCProgram is selected."""
         return self._program.isSelected
 
     @property
-    def isEmpty(self):
+    def is_empty(self):
         """Returns whether the NCProgram is empty (has no operations)."""
         return len(self._program.operations) == 0
     
     @property
-    def isSuppressed(self):
+    def is_suppressed(self):
         """Returns whether the NCProgram is suppressed."""
         return self._program.isSuppressed
     
     @property
-    def hasWarning(self):
+    def has_warning(self):
         """Returns whether the NCProgram has a warning."""
         return self._program.hasWarning
     
@@ -81,14 +81,14 @@ class Program():
         return self._attributes
     
     @property
-    def hasMachine(self):
+    def has_machine(self):
         """Returns whether the NCProgram has a machine."""
         return self._program.machine is not None
 
     @property
-    def machineName(self) -> str:
+    def machine_name(self) -> str:
         """Returns the machine of the NCProgram."""
-        return self._program.machine.model if self.hasMachine else Strings("<no machine selected>")
+        return self._program.machine.model if self.has_machine else Strings("<no machine selected>")
 
     @property
     def machine_has_atc(self):
@@ -117,16 +117,16 @@ class Program():
         return self._program.postConfiguration.description if self.has_post_processor else Strings("<no post processor selected>")
     
     @property
-    def fileName(self):
+    def file_name(self):
         """Returns the file name of the NCProgram."""
         return self.parameters.get(Parameters.FILE_NAME, str)
 
-    def set_file_name(self, fileName: str):
+    def set_file_name(self, file_name: str):
         """Sets the file name of the NCProgram."""
-        self.parameters.set(Parameters.FILE_NAME, fileName)
+        self.parameters.set(Parameters.FILE_NAME, file_name)
 
     @property
-    def fileExtension(self):
+    def file_extension(self):
         """Returns the file extension of the NCProgram."""
         return self._program.postConfiguration.extension if self._program.postConfiguration else None
 
@@ -137,7 +137,7 @@ class Program():
         ctx.capture_processing_settings()
 
         outputFolder = self.get_output_folder()
-        fileName = self.fileName
+        fileName = self.file_name
         name = self.parameters.get(Parameters.NAME, str)
 
         try:
@@ -155,7 +155,7 @@ class Program():
     def write_output(self, ctx: "SetupsContext"):
         """Write the final G-code files from the results of the post processing."""
         initialPath = self.get_output_folder()
-        initialFileName = self.fileName
+        initialFileName = self.file_name
         programName = self.parameters.get(Parameters.NAME, str)
 
         try:
@@ -163,7 +163,7 @@ class Program():
                 ctx,
                 initialPath,
                 initialFileName,
-                self.fileExtension,
+                self.file_extension,
             )
         finally:
             self.set_output_folder(initialPath)

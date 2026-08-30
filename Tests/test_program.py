@@ -90,17 +90,17 @@ def test_program_exposes_source_state_and_parameters():
     program, source, _ = make_program()
 
     assert program.name == "NC Program"
-    assert not program.hasError
-    assert program.isSelected
-    assert program.isEmpty
-    assert not program.isSuppressed
-    assert not program.hasWarning
-    assert program.fileName == "job"
+    assert not program.has_error
+    assert program.is_selected
+    assert program.is_empty
+    assert not program.is_suppressed
+    assert not program.has_warning
+    assert program.file_name == "job"
 
     program.set_file_name("updated")
     program.disable_open_in_editor()
 
-    assert program.fileName == "updated"
+    assert program.file_name == "updated"
     assert not program.parameters.get(Parameters.OPEN_IN_EDITOR, bool)
 
 
@@ -108,8 +108,8 @@ def test_machine_capabilities_are_delegated_to_fusion_adapter():
     adapter = FakeFusionAdapter(atc=True, slots=6, a_axis=True)
     program, _, _ = make_program(adapter, machine=SimpleNamespace(model="Makera"))
 
-    assert program.hasMachine
-    assert program.machineName == "Makera"
+    assert program.has_machine
+    assert program.machine_name == "Makera"
     assert program.machine_has_atc
     assert program.machine_tool_slots == 6
     assert program.machine_has_a_axis
@@ -118,11 +118,11 @@ def test_machine_capabilities_are_delegated_to_fusion_adapter():
 def test_missing_machine_and_post_configuration_have_fallbacks():
     program, _, _ = make_program()
 
-    assert not program.hasMachine
-    assert "no machine" in program.machineName
+    assert not program.has_machine
+    assert "no machine" in program.machine_name
     assert not program.has_post_processor
     assert "no post processor" in program.post_processor_description
-    assert program.fileExtension is None
+    assert program.file_extension is None
 
 
 def test_post_configuration_metadata_is_exposed():
@@ -131,7 +131,7 @@ def test_post_configuration_metadata_is_exposed():
 
     assert program.has_post_processor
     assert program.post_processor_description == "Makera post"
-    assert program.fileExtension == ".nc"
+    assert program.file_extension == ".nc"
 
 
 def test_post_process_rejects_empty_operation_list():
@@ -175,7 +175,7 @@ def test_process_restores_program_parameters_after_parser_failure():
         program.process(FailingContext(), Path("/tmp/work"))
 
     assert program.get_output_folder() == Path("/tmp/output")
-    assert program.fileName == "job"
+    assert program.file_name == "job"
     assert program.parameters.get(Parameters.NAME, str) == "Program"
 
 
@@ -195,5 +195,5 @@ def test_write_output_restores_parameters_after_renderer_failure(monkeypatch):
         program.write_output(object())
 
     assert program.get_output_folder() == Path("/tmp/output")
-    assert program.fileName == "job"
+    assert program.file_name == "job"
     assert program.parameters.get(Parameters.NAME, str) == "Program"

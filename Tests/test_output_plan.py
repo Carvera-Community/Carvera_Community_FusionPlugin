@@ -11,7 +11,7 @@ Constants = import_addin_module("commands.postProcessor.settings.constants").Con
 
 
 def operation(has_body=True):
-    return SimpleNamespace(hasBody=has_body, ctx=SimpleNamespace(isLastOp=False))
+    return SimpleNamespace(has_body=has_body, ctx=SimpleNamespace(isLastOp=False))
 
 
 def setup(*operations):
@@ -63,10 +63,10 @@ def test_setup_and_tool_membership_groups_only_consecutive_equal_tools():
 class FullOperation:
     def __init__(self, name, tool_id, *, header=True, tail=True):
         self.name = name
-        self.toolId = tool_id
-        self.hasBody = True
-        self.hasHeader = header
-        self.hasTail = tail
+        self.tool_id = tool_id
+        self.has_body = True
+        self.has_header = header
+        self.has_tail = tail
         self.ctx = SimpleNamespace(isLastOp=False)
 
 
@@ -75,8 +75,8 @@ class FullOperations:
         self._items = operations
         self.ctx = SimpleNamespace(
             path=path,
-            fileExtension=".nc",
-            operationWithTail=next((item for item in operations if item.hasTail), None),
+            file_extension=".nc",
+            operation_with_tail=next((item for item in operations if item.has_tail), None),
         )
 
     def __iter__(self):
@@ -116,7 +116,7 @@ def test_complete_single_file_plan_selects_sources_and_rotation(tmp_path):
         FullSetup(0, "Top", tmp_path, [first]),
         FullSetup(1, "Side", tmp_path, [second], angle=45),
     ]
-    context = SimpleNamespace(selected=setups, fileName="job")
+    context = SimpleNamespace(selected=setups, file_name="job")
 
     plans = module.plan_output_files(
         context,
@@ -137,7 +137,7 @@ def test_complete_numeric_per_operation_plan_advances_across_setups(tmp_path):
         FullSetup(0, "Top", tmp_path, [FullOperation("one", 1)]),
         FullSetup(1, "Side", tmp_path, [FullOperation("two", 2)]),
     ]
-    context = SimpleNamespace(selected=setups, fileName="009")
+    context = SimpleNamespace(selected=setups, file_name="009")
 
     plans = module.plan_output_files(
         context,
@@ -163,7 +163,7 @@ def test_complete_setup_and_tool_plan_groups_consecutive_tools(tmp_path):
         operation.index = index
     context = SimpleNamespace(
         selected=[FullSetup(0, "Top", tmp_path, operations)],
-        fileName="job",
+        file_name="job",
     )
 
     plans = module.plan_output_files(
@@ -198,7 +198,7 @@ def test_duplicate_operation_paths_are_rejected_before_rendering(tmp_path):
     )
     setup.ctx.operations._items[0].index = 0
     setup.ctx.operations._items[1].index = 1
-    context = SimpleNamespace(selected=[setup], fileName="job")
+    context = SimpleNamespace(selected=[setup], file_name="job")
 
     with pytest.raises(ValueError, match="same path"):
         module.plan_output_files(

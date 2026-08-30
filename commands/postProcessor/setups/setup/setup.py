@@ -51,18 +51,18 @@ class Setup():
             else setup
         )
         ctx.index = index
-        ctx.isSelected = isDefaultSelected
+        ctx.is_selected = isDefaultSelected
 
     @property
     def index(self) -> int:
         return self.ctx.index
     
     @property
-    def isSelected(self) -> bool:
-        return self.ctx.isSelected
+    def is_selected(self) -> bool:
+        return self.ctx.is_selected
 
     def select(self, value: bool):
-        self.ctx.isSelected = value
+        self.ctx.is_selected = value
 
     @property
     def name(self) -> str:
@@ -73,19 +73,19 @@ class Setup():
         return self._fusionAdapter.origin(self.ctx.setup)
 
     @property
-    def zNormal(self):
+    def z_normal(self):
         return self._fusionAdapter.normal(self.ctx.setup, (0, 0, 1))
     
     @property
-    def xNormal(self):
+    def x_normal(self):
         return self._fusionAdapter.normal(self.ctx.setup, (1, 0, 0))
 
     @property
-    def yNormal(self):
+    def y_normal(self):
         return self._fusionAdapter.normal(self.ctx.setup, (0, 1, 0))
 
     @property
-    def hasMachine(self) -> bool:
+    def has_machine(self) -> bool:
         return self.ctx.setup.machine is not None
 
     @property
@@ -154,11 +154,11 @@ class Setup():
         # - If projection degenerates (vectors near-parallel to X), fall
         #   back to project the Y normals instead.
 
-        xNormal = self.xNormal
+        xNormal = self.x_normal
         zNormal = None
         if isinstance(zNormalOrSetup, Setup) and yNormal is None: # unwrap if a Setup is given
-            yNormal = zNormalOrSetup.yNormal
-            zNormal = zNormalOrSetup.zNormal
+            yNormal = zNormalOrSetup.y_normal
+            zNormal = zNormalOrSetup.z_normal
         elif all(hasattr(zNormalOrSetup, coordinate) for coordinate in ("x", "y", "z")):
             zNormal = zNormalOrSetup
             if yNormal is None:
@@ -170,15 +170,15 @@ class Setup():
             return (vector.x, vector.y, vector.z)
 
         return get_signed_rotation_around_axis(
-            sourceDirection=coordinates(self.zNormal),
+            sourceDirection=coordinates(self.z_normal),
             targetDirection=coordinates(zNormal),
             rotationAxis=coordinates(xNormal),
-            sourceFallback=coordinates(self.yNormal),
+            sourceFallback=coordinates(self.y_normal),
             targetFallback=coordinates(yNormal),
         )
     
     def rotation_relative_to_degrees(self, otherSetup) -> float:
-        return math.degrees(self.rotation_relative_to(otherSetup.zNormal, otherSetup.yNormal))
+        return math.degrees(self.rotation_relative_to(otherSetup.z_normal, otherSetup.y_normal))
     
     def rename(self, find, replace, isRegex):
         if isRegex:

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class OperationsContext:
     operations: list[Operation] = field(default_factory=list)
     path: Path = field(default_factory=Path)
-    fileName: str = ''
-    fileExtension: str = ''
-    operationWithTail: Operation | None = None
+    file_name: str = ''
+    file_extension: str = ''
+    operation_with_tail: Operation | None = None
     processingSettings: "ProcessingSettings | None" = None

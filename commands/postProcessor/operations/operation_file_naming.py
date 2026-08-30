@@ -7,7 +7,7 @@ from ..settings.constants import Constants
 class NamedOperation(Protocol):
     index: int
     name: str
-    toolId: int | None
+    tool_id: int | None
 
 
 
@@ -43,7 +43,7 @@ def get_operation_file_name(
     file_number = str(operation.index + 1).rjust(settings.fileSequenceDigits, "0")
 
     if settings.operationsGrouping == Constants.OperationsGroupings.SETUP_AND_TOOL:
-        toolId = f"T{operation.toolId}"
+        toolId = f"T{operation.tool_id}"
         if tool_id_index > 1:
             toolId += f"_{tool_id_index}"
         if settings.fileSequence:

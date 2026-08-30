@@ -55,7 +55,7 @@ def test_operations_builds_domain_groups_from_sources():
         "Rough-Manual",
         "Finish",
     ]
-    assert [operation.toolId for operation in operations] == [1, 2]
+    assert [operation.tool_id for operation in operations] == [1, 2]
 
 
 def test_operations_combines_consecutive_same_tool_when_enabled():
@@ -106,4 +106,4 @@ def test_parse_records_first_tail_operation(tmp_path):
     operations.parse(tmp_path, program)
 
     assert calls == [(tmp_path, program), (tmp_path, program)]
-    assert operations.ctx.operationWithTail is operations[0]
+    assert operations.ctx.operation_with_tail is operations[0]

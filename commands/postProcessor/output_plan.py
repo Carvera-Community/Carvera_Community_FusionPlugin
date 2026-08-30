@@ -42,7 +42,7 @@ def plan_result_files(
         operations = tuple(
             operation
             for operation in (setup.ctx.operations or ())
-            if operation.hasBody
+            if operation.has_body
         )
         if operations:
             populated.append((setup, operations))
@@ -95,7 +95,7 @@ def plan_output_files(
     body_by_operation = {
         body.operation: body for body in _plan_rotations(setups, settings.rotateAAxis)
     }
-    base_name = context.fileName
+    base_name = context.file_name
     numeric_name = base_name
     plans: list[ResultFilePlan] = []
 
@@ -104,19 +104,19 @@ def plan_output_files(
             return ()
         members = membership[0]
         operations_context = members.setups[0].ctx.operations.ctx
-        path = operations_context.path / f"{base_name}{operations_context.fileExtension}"
+        path = operations_context.path / f"{base_name}{operations_context.file_extension}"
         return _ensure_unique_paths((_complete_plan(
             members,
             path,
-            next((op for op in members.operations if op.hasHeader), None),
+            next((op for op in members.operations if op.has_header), None),
             members.operations,
             body_by_operation,
-            next((op for op in members.operations if op.hasTail), None),
+            next((op for op in members.operations if op.has_tail), None),
         ),))
 
     for setup_index, setup in enumerate(setups):
         operations = setup.ctx.operations
-        body_operations = tuple(op for op in operations if op.hasBody)
+        body_operations = tuple(op for op in operations if op.has_body)
         if not body_operations:
             continue
 
@@ -137,11 +137,11 @@ def plan_output_files(
             )
             plans.append(_complete_plan(
                 membership_for_setup,
-                operations.ctx.path / f"{setup_base_name}{operations.ctx.fileExtension}",
-                next((op for op in operations if op.hasHeader), None),
+                operations.ctx.path / f"{setup_base_name}{operations.ctx.file_extension}",
+                next((op for op in operations if op.has_header), None),
                 tuple(operations),
                 body_by_operation,
-                operations.ctx.operationWithTail,
+                operations.ctx.operation_with_tail,
             ))
             continue
 
@@ -154,11 +154,11 @@ def plan_output_files(
         )
         for operation_index, operation_group in enumerate(output_groups):
             operation = operation_group[0]
-            tool_indexes[operation.toolId] = tool_indexes.get(operation.toolId, 0) + 1
+            tool_indexes[operation.tool_id] = tool_indexes.get(operation.tool_id, 0) + 1
             file_name, next_name = _operation_file_name(
                 setup_base_name,
                 operation,
-                tool_indexes[operation.toolId],
+                tool_indexes[operation.tool_id],
                 naming_settings,
                 sanitize_filename,
             )
@@ -170,11 +170,11 @@ def plan_output_files(
             )
             plans.append(_complete_plan(
                 membership_for_operation,
-                operations.ctx.path / f"{file_name}{operations.ctx.fileExtension}",
-                operation if operation.hasHeader else next((op for op in operations if op.hasHeader), None),
+                operations.ctx.path / f"{file_name}{operations.ctx.file_extension}",
+                operation if operation.has_header else next((op for op in operations if op.has_header), None),
                 (operation,),
                 body_by_operation,
-                operations.ctx.operationWithTail,
+                operations.ctx.operation_with_tail,
             ))
 
     return _ensure_unique_paths(tuple(plans))
@@ -183,7 +183,7 @@ def plan_output_files(
 def _consecutive_tool_runs(operations: tuple[Any, ...]) -> tuple[tuple[Any, ...], ...]:
     runs: list[list[Any]] = []
     for operation in operations:
-        if not runs or runs[-1][-1].toolId != operation.toolId:
+        if not runs or runs[-1][-1].tool_id != operation.tool_id:
             runs.append([operation])
         else:
             runs[-1].append(operation)
@@ -236,7 +236,7 @@ def _plan_rotations(setups, rotate_a_axis):
             if not preserve_rotation:
                 current_rotation = angle
                 rotation_angle = angle
-        operations = tuple(op for op in setup.ctx.operations if op.hasBody)
+        operations = tuple(op for op in setup.ctx.operations if op.has_body)
         for index, operation in enumerate(operations):
             result.append(PlannedBody(
                 operation,

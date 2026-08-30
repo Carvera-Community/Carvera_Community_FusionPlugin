@@ -11,7 +11,7 @@ def create_operations(
     operations_factory: Callable,
 ):
     """Create the operation collection for one currently viable setup."""
-    if not context.isSelected or context.isSuppressed or context.hasError:
+    if not context.is_selected or context.is_suppressed or context.has_error:
         return None
 
     sources = [

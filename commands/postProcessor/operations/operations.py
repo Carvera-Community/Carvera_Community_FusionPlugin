@@ -49,27 +49,27 @@ class Operations():
             self.ctx.operations.append(operation)
 
     @property
-    def fileName(self) -> str:
-        return self.ctx.fileName
+    def file_name(self) -> str:
+        return self.ctx.file_name
     
     def set_file_name(self, fileName: str) -> None:
-        self.ctx.fileName = fileName
+        self.ctx.file_name = fileName
 
     def set_output_path(self, path: Path) -> None:
         self.ctx.path = path
 
     def set_file_extension(self, extension: str) -> None:
-        self.ctx.fileExtension = extension
+        self.ctx.file_extension = extension
 
     @property
     def tools(self) -> list[Any]:
         tools = []
         for operation in self.ctx.operations:
-            if operation.hasTool and operation.tool is not None and operation.tool not in tools:
+            if operation.has_tool and operation.tool is not None and operation.tool not in tools:
                 tools.append(operation.tool)
         return tools
 
     def parse(self, tmpPath: Path, program) -> None:
         for operation in self.ctx.operations:
             operation.parse(tmpPath, program)
-        self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)
+        self.ctx.operation_with_tail = next((operation for operation in self.ctx.operations if operation.has_tail), None)

@@ -50,25 +50,25 @@ def test_rotated_setup_requires_aligned_axes_and_rotary_machine():
 
 
 def test_process_validation_rejects_missing_machine_selection_and_errors():
-    context = SimpleNamespace(hasSelected=True, selected=[])
+    context = SimpleNamespace(has_selected=True, selected=[])
     assert not state.can_process(None, context)
     assert not state.can_process(
-        SimpleNamespace(hasMachine=False, machine_has_a_axis=True),
+        SimpleNamespace(has_machine=False, machine_has_a_axis=True),
         context,
     )
 
-    context.selected = [SimpleNamespace(ctx=SimpleNamespace(hasError=True))]
+    context.selected = [SimpleNamespace(ctx=SimpleNamespace(has_error=True))]
     assert not state.can_process(
-        SimpleNamespace(hasMachine=True, machine_has_a_axis=True),
+        SimpleNamespace(has_machine=True, machine_has_a_axis=True),
         context,
     )
 
 
 def test_rotary_machine_can_process_valid_selected_setups():
     context = SimpleNamespace(
-        hasSelected=True,
-        selected=[SimpleNamespace(ctx=SimpleNamespace(hasError=False))],
+        has_selected=True,
+        selected=[SimpleNamespace(ctx=SimpleNamespace(has_error=False))],
     )
-    program = SimpleNamespace(hasMachine=True, machine_has_a_axis=True)
+    program = SimpleNamespace(has_machine=True, machine_has_a_axis=True)
 
     assert state.can_process(program, context)

@@ -36,10 +36,10 @@ class StreamingOperation:
     def __init__(self, root: Path, index: int, name: str, tool_id: int, settings):
         self.index = index
         self.name = name
-        self.toolId = tool_id
-        self.hasHeader = True
-        self.hasBody = True
-        self.hasTail = True
+        self.tool_id = tool_id
+        self.has_header = True
+        self.has_body = True
+        self.has_tail = True
         source = root / f"{name}.tmp"
         source.write_text(
             f"({source.stem})\n"
@@ -86,8 +86,8 @@ class OperationCollection:
         self._operations = operations
         self.ctx = SimpleNamespace(
             path=output_path,
-            fileExtension=".nc",
-            operationWithTail=operations[0],
+            file_extension=".nc",
+            operation_with_tail=operations[0],
         )
 
     def __iter__(self):
@@ -152,7 +152,7 @@ def build_context(tmp_path, grouping):
             )
             operation_index += 1
         setups.append(PlannedSetup(setup_index, setup_name, tmp_path, operations))
-    return SimpleNamespace(selected=setups, fileName="job"), current
+    return SimpleNamespace(selected=setups, file_name="job"), current
 
 
 @pytest.mark.parametrize(

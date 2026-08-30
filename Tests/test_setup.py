@@ -36,9 +36,9 @@ class FakeSetupAdapter:
 class FakeOperations:
     def __init__(self, ctx, sources):
         self.sources = sources
-        self.fileName = None
-        self.hasHeader = False
-        self.hasTail = False
+        self.file_name = None
+        self.has_header = False
+        self.has_tail = False
         self.tools = []
         self.parse_paths = []
 
@@ -99,11 +99,11 @@ def test_setup_exposes_selection_name_geometry_and_machine_state():
     setup = make_setup()
 
     assert setup.index == 2
-    assert setup.isSelected
+    assert setup.is_selected
     assert setup.name == "Setup"
     assert setup.origin is setup.ctx.setup.origin
-    assert (setup.xNormal.x, setup.yNormal.y, setup.zNormal.z) == (1, 1, 1)
-    assert not setup.hasMachine
+    assert (setup.x_normal.x, setup.y_normal.y, setup.z_normal.z) == (1, 1, 1)
+    assert not setup.has_machine
 
 
 def test_setup_rename_supports_plain_prepend_and_regex():

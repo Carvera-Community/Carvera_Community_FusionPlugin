@@ -20,10 +20,10 @@ class FakeSetup:
         self.ctx = ctx
         self.ctx.setup = source
         self.ctx.index = index
-        self.ctx.isSelected = selected
+        self.ctx.is_selected = selected
         self.index = index
         self.name = source.name
-        self.isSelected = selected
+        self.is_selected = selected
         self.tools = list(source.tools)
         self.parse_paths = []
         self.rename_calls = []
@@ -85,7 +85,7 @@ def test_load_selects_all_valid_setups_when_none_was_selected():
     )
 
     assert [setup.name for setup in context.selected] == ["First", "Second"]
-    assert context.hasSelected
+    assert context.has_selected
 
 
 def test_load_preserves_explicit_selection():
@@ -124,9 +124,9 @@ def test_rename_can_target_selected_or_all_setups():
 
 def test_output_path_file_name_and_extension_are_forwarded(tmp_path):
     context = context_with([source("First Setup")])
-    operations = SimpleNamespace(fileName=None)
+    operations = SimpleNamespace(file_name=None)
     context.selected[0].ctx.operations = operations
-    context.selected[0].ctx.set_file_name = lambda name: setattr(operations, "fileName", name)
+    context.selected[0].ctx.set_file_name = lambda name: setattr(operations, "file_name", name)
     configure_paths(Constants.OperationsGroupings.PER_OPERATION)
 
     context.set_path(tmp_path, lambda name: name.replace(" ", "_"))
@@ -134,5 +134,5 @@ def test_output_path_file_name_and_extension_are_forwarded(tmp_path):
     context.set_file_extension(".nc")
 
     assert context.selected[0].outputPath == tmp_path / "First_Setup"
-    assert operations.fileName == "job"
+    assert operations.file_name == "job"
     assert context.selected[0].extension == ".nc"

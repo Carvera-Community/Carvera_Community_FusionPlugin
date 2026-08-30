@@ -35,9 +35,9 @@ def is_setup_selectable(
 
 
 def can_process(program: Any | None, context: Any) -> bool:
-    if program is None or not program.hasMachine or not context.hasSelected:
+    if program is None or not program.has_machine or not context.has_selected:
         return False
-    if any(setup.ctx.hasError for setup in context.selected):
+    if any(setup.ctx.has_error for setup in context.selected):
         return False
     if program.machine_has_a_axis:
         return True

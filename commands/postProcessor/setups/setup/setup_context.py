@@ -9,24 +9,24 @@ if TYPE_CHECKING:
 class SetupContext:
     index: int = -1
     setup: Any = None
-    isSelected: bool = False
+    is_selected: bool = False
     operations: "Operations | None" = None
     processingSettings: "ProcessingSettings | None" = None
 
     @property
-    def isValid(self) -> bool:
-        return not (self.isSuppressed or self.hasError)
+    def is_valid(self) -> bool:
+        return not (self.is_suppressed or self.has_error)
 
     @property
-    def isSuppressed(self) -> bool:
+    def is_suppressed(self) -> bool:
         return self.setup is not None and self.setup.isSuppressed
     
     @property
-    def hasError(self) -> bool:
+    def has_error(self) -> bool:
         return self.setup is not None and self.setup.hasError
     
     @property
-    def hasWarning(self) -> bool:
+    def has_warning(self) -> bool:
         return self.setup is not None and self.setup.hasWarning
 
     @property

@@ -108,7 +108,7 @@ class OutputTab(Constants):
         EventRegistry.register(cls.FILE_NAME_ID, setFilename)
 
         def getFileNameFromProgram(dropdown: DropDownCommandInput):
-            fileName = Programs.Current.fileName if Programs.Current is not None and Programs.Current.fileName is not None else Strings("<Select program>")
+            fileName = Programs.Current.file_name if Programs.Current is not None and Programs.Current.file_name is not None else Strings("<Select program>")
             StringValueCommandInput.cast(dropdown.parentCommand.commandInputs.itemById(cls.FILE_NAME_ID)).value = fileName
 
         EventRegistry.register(cls.PROGRAM_DROPDOWN_ID, getFileNameFromProgram)
@@ -157,7 +157,7 @@ class OutputTab(Constants):
             input = IntegerSliderCommandInput.cast(checkbox.parentCommand.commandInputs.itemById(cls.FILE_SEQUENCE_DIGITS_ID))
             prependFileNumbers = BoolValueCommandInput.cast(checkbox.parentCommand.commandInputs.itemById(cls.FILE_SEQUENCE_ID))
             digits = numeric_name_digits(
-                Programs.Current.fileName if Programs.Current else None
+                Programs.Current.file_name if Programs.Current else None
             )
             if checkbox.value and digits is not None:
                 Settings.set(Settings.FILE_SEQUENCE_DIGITS, digits)
@@ -170,7 +170,7 @@ class OutputTab(Constants):
 
         def setNumberingDigitsOnFileName(textbox: StringValueCommandInput):
             digits = numeric_name_digits(
-                Programs.Current.fileName if Programs.Current else None
+                Programs.Current.file_name if Programs.Current else None
             )
             if (digits is not None
                     and BoolValueCommandInput.cast(textbox.parentCommand.commandInputs.itemById(cls.NUMERIC_NAME_ID)).value):

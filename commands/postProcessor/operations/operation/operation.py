@@ -68,13 +68,13 @@ class Operation():
         return self.ctx.index
 
     @property
-    def toolId(self) -> Optional[int]:
+    def tool_id(self) -> Optional[int]:
         return self._fusionAdapter.get_tool_number(
             self._operationsDict[self.ctx.subOperationIndexWithTool]
-        ) if self.hasTool else None
+        ) if self.has_tool else None
 
     @property
-    def hasTool(self) -> bool:
+    def has_tool(self) -> bool:
         return self.ctx.subOperationIndexWithTool != -1 and self._operationsDict[self.ctx.subOperationIndexWithTool].hasToolpath
 
     @property
@@ -84,27 +84,27 @@ class Operation():
         return self._operationsDict[self.ctx.subOperationIndexWithTool].tool
 
     @property
-    def firstIndex(self) -> int:
+    def first_index(self) -> int:
         return min(self._operationsDict.keys())
 
     @property
-    def tempFilePath(self) -> Path:
+    def temp_file_path(self) -> Path:
         return self.ctx.tempFilePath
     
     @property
-    def hasHeader(self) -> bool:
+    def has_header(self) -> bool:
         return self.ctx.analysis.header is not None if self.ctx.analysis else self.ctx.headerEndLine != -1
 
     @property
-    def hasBody(self) -> bool:
+    def has_body(self) -> bool:
         return self.ctx.analysis.body is not None if self.ctx.analysis else self.ctx.bodyStartLine != -1
     
     @property
-    def hasTail(self) -> bool:
+    def has_tail(self) -> bool:
         return self.ctx.analysis.tail is not None if self.ctx.analysis else self.ctx.tailStartLine != -1
     
     @property
-    def hasRotation(self) -> bool:
+    def has_rotation(self) -> bool:
         return self.ctx.hasRotation
 
     def parse(self, tmpPath: Path, program: PostProcessingProgram):
@@ -118,7 +118,7 @@ class Operation():
             self.ctx,
             tmpPath,
             [raw_operation(operation) for operation in self._operationsDict.values()],
-            program.fileExtension,
+            program.file_extension,
             postProcess,
             parse_file,
         )

@@ -18,7 +18,7 @@ def get_wcs_alignment_issues(ctx: SetupsContext) -> tuple[bool, list[str], list[
         else:
             if not first.origin.isEqualTo(setup.origin):
                 misalignedOrigin.append(setup.name)
-            if not first.xNormal.isParallelTo(setup.xNormal):
+            if not first.x_normal.isParallelTo(setup.x_normal):
                 misalignedXAxis.append(setup.name)
     return (len(misalignedOrigin) + len(misalignedXAxis) == 0, misalignedOrigin, misalignedXAxis)
 

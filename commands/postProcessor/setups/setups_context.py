@@ -11,7 +11,7 @@ from .output_path_planning import SetupOutputPathSettings, get_setup_output_path
 class SetupsContext:
     _items: list[Setup] = field(default_factory=list)
     tempPath: Path | None = None
-    fileName: str | None = None
+    file_name: str | None = None
     processingSettings: ProcessingSettings | None = None
 
     def capture_processing_settings(self) -> ProcessingSettings:
@@ -20,14 +20,14 @@ class SetupsContext:
 
     @property
     def valid(self) -> list[Setup]:
-        return [setup for setup in self._items if setup.ctx.isValid]
+        return [setup for setup in self._items if setup.ctx.is_valid]
 
     @property
     def selected(self) -> list[Setup]: 
-        return [setup for setup in self.valid if setup.isSelected]
+        return [setup for setup in self.valid if setup.is_selected]
 
     @property
-    def hasSelected(self) -> bool:
+    def has_selected(self) -> bool:
         return any(self.selected)
 
     @property
@@ -76,10 +76,10 @@ class SetupsContext:
             setup.set_output_path(outputPath)
 
     def set_file_name(self, fileName: str) -> None:
-        self.fileName = fileName
+        self.file_name = fileName
 
         for setup in self.selected:
-            setup.ctx.set_file_name(self.fileName)
+            setup.ctx.set_file_name(self.file_name)
 
     def set_file_extension(self, extension: str) -> None:
         for setup in self.selected:
