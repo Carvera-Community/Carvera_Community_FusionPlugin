@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -38,6 +39,25 @@ def test_setup_and_split_plans_express_result_file_membership():
 
     assert [plan.operations for plan in per_setup] == [(first, second), (third,)]
     assert [plan.operations for plan in split] == [(first,), (second,), (third,)]
+
+
+def test_setup_and_tool_membership_groups_only_consecutive_equal_tools():
+    first = FullOperation("first", 1)
+    second = FullOperation("second", 1)
+    third = FullOperation("third", 2)
+    fourth = FullOperation("fourth", 1)
+    setups = [FullSetup(0, "Top", Path("output"), [first, second, third, fourth])]
+
+    plans = module.plan_result_files(
+        setups,
+        Constants.OperationsGroupings.SETUP_AND_TOOL,
+    )
+
+    assert [plan.operations for plan in plans] == [
+        (first, second),
+        (third,),
+        (fourth,),
+    ]
 
 
 class FullOperation:
@@ -130,6 +150,43 @@ def test_complete_numeric_per_operation_plan_advances_across_setups(tmp_path):
 
     assert [plan.path.name for plan in plans] == ["009.nc", "010.nc"]
     assert all(plan.bodies[0].is_final for plan in plans)
+
+
+def test_complete_setup_and_tool_plan_groups_consecutive_tools(tmp_path):
+    operations = [
+        FullOperation("first", 1),
+        FullOperation("second", 1),
+        FullOperation("third", 2),
+        FullOperation("fourth", 1),
+    ]
+    for index, operation in enumerate(operations):
+        operation.index = index
+    context = SimpleNamespace(
+        selected=[FullSetup(0, "Top", tmp_path, operations)],
+        fileName="job",
+    )
+
+    plans = module.plan_output_files(
+        context,
+        full_settings(Constants.OperationsGroupings.SETUP_AND_TOOL),
+        lambda name: name,
+    )
+
+    assert [plan.path.name for plan in plans] == [
+        "Top_T1.nc",
+        "Top_T2.nc",
+        "Top_T1_2.nc",
+    ]
+    assert [tuple(body.operation for body in plan.bodies) for plan in plans] == [
+        (operations[0], operations[1]),
+        (operations[2],),
+        (operations[3],),
+    ]
+    assert [tuple(body.is_final for body in plan.bodies) for plan in plans] == [
+        (False, True),
+        (True,),
+        (True,),
+    ]
 
 
 def test_duplicate_operation_paths_are_rejected_before_rendering(tmp_path):

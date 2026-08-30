@@ -59,6 +59,13 @@ def plan_result_files(
             for setup_index, (setup, operations) in enumerate(populated)
         )
 
+    if grouping == Constants.OperationsGroupings.SETUP_AND_TOOL:
+        return tuple(
+            ResultFilePlan((setup_index, run_index), (setup,), run)
+            for setup_index, (setup, operations) in enumerate(populated)
+            for run_index, run in enumerate(_consecutive_tool_runs(operations))
+        )
+
     return tuple(
         ResultFilePlan((setup_index, operation_index), (setup,), (operation,))
         for setup_index, (setup, operations) in enumerate(populated)
@@ -140,7 +147,13 @@ def plan_output_files(
 
         tool_indexes: dict[int | None, int] = {}
         naming_settings = _operation_naming_settings(settings)
-        for operation_index, operation in enumerate(body_operations):
+        output_groups = (
+            _consecutive_tool_runs(body_operations)
+            if settings.operationsGrouping == Constants.OperationsGroupings.SETUP_AND_TOOL
+            else tuple((operation,) for operation in body_operations)
+        )
+        for operation_index, operation_group in enumerate(output_groups):
+            operation = operation_group[0]
             tool_indexes[operation.toolId] = tool_indexes.get(operation.toolId, 0) + 1
             file_name, next_name = _operation_file_name(
                 setup_base_name,
@@ -153,7 +166,7 @@ def plan_output_files(
                 numeric_name = next_name
                 setup_base_name = next_name
             membership_for_operation = ResultFilePlan(
-                (setup_index, operation_index), (setup,), (operation,)
+                (setup_index, operation_index), (setup,), operation_group
             )
             plans.append(_complete_plan(
                 membership_for_operation,
@@ -165,6 +178,16 @@ def plan_output_files(
             ))
 
     return _ensure_unique_paths(tuple(plans))
+
+
+def _consecutive_tool_runs(operations: tuple[Any, ...]) -> tuple[tuple[Any, ...], ...]:
+    runs: list[list[Any]] = []
+    for operation in operations:
+        if not runs or runs[-1][-1].toolId != operation.toolId:
+            runs.append([operation])
+        else:
+            runs[-1].append(operation)
+    return tuple(tuple(run) for run in runs)
 
 
 def _ensure_unique_paths(plans: tuple[ResultFilePlan, ...]) -> tuple[ResultFilePlan, ...]:

@@ -128,5 +128,5 @@ def write_body(
 
             line = operationFile.readline()
             row += 1
-            if not analysis.body.contains(row):
+            if row >= analysis.body.start and not analysis.body.contains(row):
                 break
