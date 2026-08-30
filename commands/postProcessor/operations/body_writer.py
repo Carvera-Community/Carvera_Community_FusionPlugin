@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from ..settings.settings import Settings
 from ..file_modes import FileModes
 
 from .operation.operation import Operation
@@ -28,9 +27,7 @@ def writeBody(ctx: OperationsContext):
 
         pathToOpen: Path = ctx.path / f"{operation.fileName}{ctx.fileExtension}"
         with pathToOpen.open(FileModes.APPEND) as fileHandle:
-            if Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SINGLE_FILE, 
-                                                            Settings.OperationsGroupings.SETUP]:
-                operation.WriteBody(fileHandle)
+            operation.WriteBody(fileHandle)
 
         if firstOperation:
             firstOperation = False

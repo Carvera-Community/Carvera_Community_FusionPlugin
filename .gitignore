@@ -4,3 +4,5 @@
 **/settings.settings
 Tests/**
 .vscode/**
+__pycache__
+TODO.md
