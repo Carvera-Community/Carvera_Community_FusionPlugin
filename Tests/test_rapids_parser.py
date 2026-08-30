@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from commands.postProcessor.operations.operation.rapidsParser import MOTIONS, RapidsParser
+from addin_import import import_addin_module
+
+
+rapids_parser = import_addin_module(
+    "commands.postProcessor.operations.operation.rapidsParser"
+)
+MOTIONS = rapids_parser.MOTIONS
+RapidsParser = rapids_parser.RapidsParser
 
 
 def write_operation(tmp_path: Path, contents: str) -> Path:

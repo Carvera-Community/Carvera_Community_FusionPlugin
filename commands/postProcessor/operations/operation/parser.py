@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 from .operation_context import OperationContext
@@ -6,7 +7,30 @@ from .rapidsParser import RapidsParser
 
 from ...settings.settings import Settings
 
-def parseFile(ctx: OperationContext):
+
+@dataclass(frozen=True)
+class ParserSettings:
+    headerEndCodes: str
+    endCodes: str
+    restoreRapidMoves: bool
+    rapidMovesMinimumDistance: float
+    rapidMovesMaxSteps: int
+
+    @classmethod
+    def fromCurrentSettings(cls) -> "ParserSettings":
+        minimumDistance = Settings.Get(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
+        maximumSteps = Settings.Get(Settings.RAPID_MOVES_MAX_STEPS)
+        return cls(
+            headerEndCodes=Settings.Get(Settings.HEADER_END_CODES) or "",
+            endCodes=Settings.Get(Settings.END_CODES) or "",
+            restoreRapidMoves=bool(Settings.Get(Settings.RESTORE_RAPID_MOVES)),
+            rapidMovesMinimumDistance=20 if minimumDistance is None else minimumDistance,
+            rapidMovesMaxSteps=3 if maximumSteps is None else maximumSteps,
+        )
+
+
+def parseFile(ctx: OperationContext, settings: ParserSettings | None = None):
+    settings = settings or ParserSettings.fromCurrentSettings()
     #region Header example
     # Find the start of the header and body in the generated file
 
@@ -44,7 +68,7 @@ def parseFile(ctx: OperationContext):
                 if headerMatch.group("G") is not None:
                     # Found a g-code, check if it is in the list of
                     # header end codes
-                    if f"G{headerMatch.group('G')}" in Settings.Get(Settings.HEADER_END_CODES):
+                    if f"G{headerMatch.group('G')}" in settings.headerEndCodes:
                         # Found the end of the header
                         ctx.headerEndLine = lineNumber
                         return (True, True)
@@ -55,7 +79,7 @@ def parseFile(ctx: OperationContext):
                 if headerMatch.group("M") is not None:
                     # Found an m-code, check if it is in the list of
                     # header end codes
-                    if f"M{headerMatch.group('M')}" in Settings.Get(Settings.HEADER_END_CODES):
+                    if f"M{headerMatch.group('M')}" in settings.headerEndCodes:
                         # Found the end of the header
                         ctx.headerEndLine = lineNumber
                         return (True, True)
@@ -110,25 +134,23 @@ def parseFile(ctx: OperationContext):
                 ctx.bodyStartLine = lineNumber
             elif bodyMatch.group("M") is not None:
                 mCode = int(bodyMatch.group("M"))
-                if f"M{mCode}" in Settings.Get(Settings.END_CODES):
+                if f"M{mCode}" in settings.endCodes:
                     # found tail start
                     ctx.tailStartLine = lineNumber
                     return True # File analysis complete
         return False
 
-    if Settings(Settings.RESTORE_RAPID_MOVES):
-        minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
-        if minDist is None:
-            minDist = 20
-
-        maxStepsInbetween = Settings(Settings.RAPID_MOVES_MAX_STEPS)
-        if maxStepsInbetween is None:
-            maxStepsInbetween = 3
-
+    if settings.restoreRapidMoves:
         ctx.rapidsAnalysis = {seg["startLine"]: { 
             "endLine": seg["endLine"], 
             "startHasFeed": seg["startHasFeed"]}
-                for seg in RapidsParser().analyze(RapidsParser().parseFile(ctx.tempFilePath, maxStepsInbetween = maxStepsInbetween), minDist = minDist)
+                for seg in RapidsParser().analyze(
+                    RapidsParser().parseFile(
+                        ctx.tempFilePath,
+                        maxStepsInbetween=settings.rapidMovesMaxSteps,
+                    ),
+                    minDist=settings.rapidMovesMinimumDistance,
+                )
                 if seg.get("isValid") and "startLine" in seg and "endLine" in seg}
     
     with ctx.tempFilePath.open("r") as operationFile:
