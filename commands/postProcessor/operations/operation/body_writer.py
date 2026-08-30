@@ -45,7 +45,7 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
                         elif float(gCode) == 92.4:
                             if lineMatch.group("R") is not None and not ctx.isLastOp:
                                 # Strip out all shrink A-axis commands unless it is the last operation in the file
-                                return row != ctx.shrinkLine
+                                return row == ctx.shrinkLine
         return False
 
     def _handleRotation() -> bool:
