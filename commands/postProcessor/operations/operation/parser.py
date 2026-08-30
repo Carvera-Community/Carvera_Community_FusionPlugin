@@ -85,18 +85,26 @@ def parseFile(ctx: OperationContext):
         bodyMatch = ctx.lineWriter._BODY_RE.match(line)
         if bodyMatch:
             if bodyMatch.group("G") is not None:
-                gCode = int(bodyMatch.group("G"))
-                if gCode == 0:
+                gCode = float(bodyMatch.group("G"))
+                if gCode in [0, 92.4]:
                     lineMatch = ctx.lineWriter._PARSE_LINE_RE.match(line)
-                    # We're only interested in the first rotation move
-                    if ctx.rotationAngle is None \
-                        and lineMatch \
+                    if lineMatch \
                         and lineMatch.group("G") is not None \
                         and lineMatch.group("A") is not None:
-                        aCode = float(lineMatch.group("A"))
-                        if aCode == 0.0:
-                            # Found A-axis rotation move
-                            ctx.rotationLine = lineNumber
+
+                        if gCode == 0:
+                            # We're only interested in the first rotation move
+                            if not ctx.hasRotation:
+                                aCode = float(lineMatch.group("A"))
+                                if aCode == 0.0:
+                                    # Found A-axis rotation move
+                                    ctx.rotationLine = lineNumber
+                        elif gCode == 92.4:
+                            # Find out if this is a shrink line (G92.4 A0 R0)
+                            if not ctx.hasShrink \
+                                and lineMatch.group("R") is not None:
+                                ctx.shrinkLine = lineNumber
+                        
             if bodyMatch.group("T") is not None and ctx.bodyStartLine == -1:
                 # found body start
                 ctx.bodyStartLine = lineNumber

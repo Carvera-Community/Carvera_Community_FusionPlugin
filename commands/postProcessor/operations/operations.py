@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional, TextIO
 
 from adsk.cam import Operation as adskOperation
 from adsk.cam import Tool as adskTool

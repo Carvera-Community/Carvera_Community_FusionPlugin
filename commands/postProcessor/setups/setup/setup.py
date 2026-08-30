@@ -206,7 +206,7 @@ class Setup():
         if self.ctx.setup.name != newName:
             self.ctx.setup.name = newName
     
-    def Parse(self, tmpPath: Path):
+    def Parse(self, tmpPath: Path, isLastSetup: bool):
         from ...programs import Programs
 
         # JIT parsing of operations to make sure that if settings are 
@@ -222,8 +222,10 @@ class Setup():
                                                                      if (operation := cam.Operation.cast(x)) is not None]))
 
 
-        if self.ctx.operations is None:
+        if not self.ctx.operations:
             return # Don't process this setup.
+
+        self.ctx.operations[-1].ctx.isLastOp = isLastSetup
 
         # Don't spam the user with temporary files that will be deleted anyway
         if Programs.Current is not None:

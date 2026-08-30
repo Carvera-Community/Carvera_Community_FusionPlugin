@@ -36,11 +36,16 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
                 gCode = lineMatch.group("G")
                 if lineMatch.group("A") is not None:
                     aCode = lineMatch.group("A")
-                    if float(gCode) == 0.0 and float(aCode) == 0.0:
-                        # Special handling of A-axis rotation moves.
-                        # The rotation should always be 0 as the 
-                        # operations are always generated one by one
-                        return row != ctx.rotationLine or _handleRotation()
+                    if float(aCode) == 0.0:
+                        if float(gCode) == 0.0:
+                            # Special handling of A-axis rotation moves.
+                            # The rotation should always be 0 as the 
+                            # operations are always generated one by one
+                            return row != ctx.rotationLine or _handleRotation()
+                        elif float(gCode) == 92.4:
+                            if lineMatch.group("R") is not None and not ctx.isLastOp:
+                                # Strip out all shrink A-axis commands unless it is the last operation in the file
+                                return row != ctx.shrinkLine
         return False
 
     def _handleRotation() -> bool:

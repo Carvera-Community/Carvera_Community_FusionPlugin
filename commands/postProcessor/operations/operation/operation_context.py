@@ -25,11 +25,22 @@ class OperationContext:
     rotationAngle: float | None = None
     preserveRotation: bool = False
     rapidsAnalysis: dict[int, dict[str, Any]] | None = None
+    shrinkLine: int = -1
+    isLastOp: bool = False
 
 
     @property
     def hasRotation(self) -> bool:
-        return self.rotationAngle is not None
+        # Parsing happens before the setup rotation angle is assigned.
+        # Track whether the source operation's rotation line has already been found
+        # so later A0 moves cannot replace it.
+        return self.rotationLine != -1
+
+    @property
+    def hasShrink(self) -> bool:
+        # check if the output contains a row that shrinks the A-axis as it can only be 
+        # in the last operation otherwise it will break things.
+        return self.shrinkLine != -1
 
     def writeLine(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.writeLine(fileHandle, line)
     def write(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.write(fileHandle, line)

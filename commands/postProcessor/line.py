@@ -10,17 +10,18 @@ class Line():
         r"(?P<N>N[0-9]+ *)?" # line number
         r"(?P<line>"         # line w/o number
         r"(M(?P<M>[0-9]+) *)?" # M-code
-        r"(G(?P<G>[0-9]+) *)?" # G-code
+        r"(G(?P<G>[0-9]+(?:\.[0-9]*)?) *)?" # G-code
         r"(T(?P<T>[0-9]+))?" # Tool
         r".+)",              # to end of line
         re.IGNORECASE | re.DOTALL)
 
     _PARSE_LINE_RE: Final = re.compile(r""
-            r"(G(?P<G>[0-9]+(\.[0-9]*)?)[^XYZFA]*)?"
-            r"(?P<XY>((X-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?((Y-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?)"
-            r"(A(?P<A>-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?"
-            r"(Z(?P<Z>-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?"
-            r"(F(?P<F>-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?",
+            r"(G(?P<G>[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(?P<XY>((X-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?((Y-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?)"
+            r"(A(?P<A>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(R(?P<R>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(Z(?P<Z>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(F(?P<F>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?",
             re.IGNORECASE)
     
     _GCODES_RE: Final = re.compile(r"G([0-9]+(?:\.[0-9]*)?)")

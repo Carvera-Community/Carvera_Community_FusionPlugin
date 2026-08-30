@@ -37,9 +37,12 @@ class SetupsContext:
         self._items = [Setup(SetupContext(), setup, index, selectAll or setup.isSelected) for index, setup in enumerate(setups)]
 
     def parse(self, tempPath: Path) -> None:
+        if not self.selected:
+            return
         self.tempPath = tempPath
+        lastSetup = self.selected[-1]
         for setup in self.selected:
-            setup.Parse(self.tempPath)
+            setup.Parse(self.tempPath, setup == lastSetup)
 #        return
 
     def renameSetups(self, find: str, replace: str, isRegex: bool, onlySelected: bool) -> None:
