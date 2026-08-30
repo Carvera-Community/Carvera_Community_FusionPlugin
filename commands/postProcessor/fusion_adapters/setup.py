@@ -2,16 +2,35 @@ from adsk import cam
 from adsk.core import Point3D, Vector3D
 
 from ..operations.operation_source import OperationSource
+from ..setups.setup_source import SetupSource, rawSetup
 from ....lib.fusionParameters.cast_cam_param import castCAMParam
 
 
 class FusionSetupAdapter:
+    def snapshotSetup(self, setup):
+        return SetupSource(
+            raw=setup,
+            name=setup.name,
+            isSelected=setup.isSelected,
+            isSuppressed=setup.isSuppressed,
+            hasError=setup.hasError,
+            hasWarning=setup.hasWarning,
+            machine=setup.machine,
+            allOperations=tuple(setup.allOperations),
+        )
+
+    def renameSetup(self, setup, name: str) -> None:
+        rawSetup(setup).name = name
+        setup.name = name
+
     def origin(self, setup):
+        setup = rawSetup(setup)
         origin = Point3D.create(0, 0, 0)
         origin.transformBy(setup.workCoordinateSystem)
         return origin
 
     def normal(self, setup, direction: tuple[float, float, float]):
+        setup = rawSetup(setup)
         vector = Vector3D.create(*direction)
         vector.transformBy(setup.workCoordinateSystem)
         vector.normalize()

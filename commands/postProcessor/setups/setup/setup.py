@@ -26,6 +26,7 @@ from .header_writer import (
 from .body_writer import writeBody
 from .tail_writer import writeTail
 from .vector_rotation import getSignedRotationAroundAxis
+from ..setup_source import rawSetup
 
 
 class SetupFusionAdapter(Protocol):
@@ -53,7 +54,11 @@ class Setup():
         self._operationsFactory = operationsFactory
         self._programRegistry = programRegistry
         self.ctx = ctx
-        ctx.setup = setup
+        ctx.setup = (
+            fusionAdapter.snapshotSetup(setup)
+            if hasattr(fusionAdapter, "snapshotSetup")
+            else setup
+        )
         ctx.index = index
         ctx.isSelected = isDefaultSelected
 
@@ -201,7 +206,10 @@ class Setup():
                 newName = self.ctx.setup.name.replace(find, replace)
 
         if self.ctx.setup.name != newName:
-            self.ctx.setup.name = newName
+            if hasattr(self._fusionAdapter, "renameSetup"):
+                self._fusionAdapter.renameSetup(self.ctx.setup, newName)
+            else:
+                self.ctx.setup.name = newName
     
     def Parse(self, tmpPath: Path):
         if self._programRegistry is None:
@@ -236,7 +244,7 @@ class Setup():
         program.DisableOpenInEditor()
 
         # Make sure that the setup has all its toolpaths generated
-        programs.CheckAndGenerateToolpath(self.ctx.setup)
+        programs.CheckAndGenerateToolpath(rawSetup(self.ctx.setup))
 
         self.ctx.operations.Parse(tmpPath, program)
 
