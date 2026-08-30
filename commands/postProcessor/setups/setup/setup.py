@@ -27,6 +27,7 @@ from .header_writer import (
 )
 from .body_writer import writeBody
 from .tail_writer import writeTail
+from .vector_rotation import getSignedRotationAroundAxis
 
 class Setup():
     def __init__(self, ctx: SetupContext, setup: cam.Setup, index: int, isDefaultSelected: bool = False):
@@ -165,30 +166,16 @@ class Setup():
         else:
             raise TypeError("Expected Setup or Vector3D")
 
-        def project(v: Vector3D, n: Vector3D) -> Vector3D:
-            d = n.dotProduct(v)
-            return Vector3D.create(v.x - n.x * d, v.y - n.y * d, v.z - n.z * d)
+        def coordinates(vector: Vector3D) -> tuple[float, float, float]:
+            return (vector.x, vector.y, vector.z)
 
-        p1 = project(self.zNormal, xNormal)
-        p2 = project(zNormal, xNormal)
-
-        # If projection is degenerate, fall back to using the y-axis instead.
-        if p1.length < 1e-6 or p2.length < 1e-6:
-                p1y = project(self.yNormal, xNormal)
-                p2y = project(yNormal, xNormal)
-                p1y.normalize()
-                p2y.normalize()
-                cross = p1y.crossProduct(p2y)
-                sign = xNormal.dotProduct(cross)
-                dot = p1y.dotProduct(p2y)
-                return math.atan2(sign, dot)
-
-        p1.normalize()
-        p2.normalize()
-        cross = p1.crossProduct(p2)
-        sign = xNormal.dotProduct(cross)
-        dot = p1.dotProduct(p2)
-        return math.atan2(sign, dot)
+        return getSignedRotationAroundAxis(
+            sourceDirection=coordinates(self.zNormal),
+            targetDirection=coordinates(zNormal),
+            rotationAxis=coordinates(xNormal),
+            sourceFallback=coordinates(self.yNormal),
+            targetFallback=coordinates(yNormal),
+        )
     
     def GetRotationAroundXAxisRelativeToDeg(self, otherSetup) -> float:
         return math.degrees(self.GetRotationAroundXAxisRelativeTo(otherSetup.zNormal, otherSetup.yNormal))
