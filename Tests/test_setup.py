@@ -1,6 +1,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from addin_import import import_addin_module
 
 
@@ -134,6 +136,32 @@ def test_invalid_or_unselected_setup_does_not_create_operations(tmp_path):
 
     assert setup.ctx.operations is None
     assert FakePrograms.checked == []
+
+
+def test_selected_setup_without_operations_stops_before_program_access(tmp_path):
+    setup = make_setup()
+    original_program = FakePrograms.Current
+    FakePrograms.Current = None
+    try:
+        setup.parse(tmp_path)
+    finally:
+        FakePrograms.Current = original_program
+
+    assert setup.ctx.operations.sources == []
+    assert FakePrograms.checked == []
+
+
+def test_setup_with_operations_requires_current_program(tmp_path):
+    source = source_setup()
+    source.allOperations = [SimpleNamespace(is_operation=True)]
+    setup = make_setup(source)
+    original_program = FakePrograms.Current
+    FakePrograms.Current = None
+    try:
+        with pytest.raises(ValueError, match="Programs.Current is None"):
+            setup.parse(tmp_path)
+    finally:
+        FakePrograms.Current = original_program
 
 
 def test_output_path_and_extension_are_forwarded(tmp_path):

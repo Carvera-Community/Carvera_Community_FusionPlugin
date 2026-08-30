@@ -11,9 +11,6 @@ class SetupContext:
     setup: Any = None
     isSelected: bool = False
     operations: "Operations | None" = None
-    rotationAngle: float | None = None
-    preserveRotation: bool = False
-    origin: Any = None
     processingSettings: "ProcessingSettings | None" = None
 
     @property

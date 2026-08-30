@@ -12,13 +12,12 @@ from typing import (
     Union,
 )
 
-from ...operations.operations_context import OperationsContext
 from .setup_context import SetupContext
 
 from ...operations.operations import Operations
 
 from .vector_rotation import getSignedRotationAroundAxis
-from ..setup_source import raw_setup
+from .setup_processing import process_setup
 
 
 class SetupFusionAdapter(Protocol):
@@ -206,34 +205,10 @@ class Setup():
             from ...programs import Programs
 
             self._programRegistry = Programs
-        programs = self._programRegistry
-
-        # JIT parsing of operations to make sure that if settings are 
-        # changed while the dialog is open, they are applied to all 
-        # setups and operations. 
-        # Also, avoids parsing operations for setups that are not 
-        # selected or are suppressed, which can speed up processing 
-        # and avoid creating temporary files for those setups.
-        self.ctx.operations = (None if 
-                               not (self.ctx.isSelected
-                                    and not (self.ctx.isSuppressed or self.ctx.hasError))
-                               else self._operationsFactory(
-                                   OperationsContext(processingSettings=self.ctx.processingSettings),
-                                   [operation for x in self.ctx.setup.allOperations
-                                    if (operation := self._fusionAdapter.castOperation(x)) is not None],
-                               ))
-
-
-        if not self.ctx.operations:
-            return # Don't process this setup.
-
-        # Don't spam the user with temporary files that will be deleted anyway
-        program = programs.Current
-        if program is None:
-            raise ValueError("Programs.Current is None")
-        program.disable_open_in_editor()
-
-        # Make sure that the setup has all its toolpaths generated
-        programs.check_and_generate_toolpath(raw_setup(self.ctx.setup))
-
-        self.ctx.operations.parse(tmpPath, program)
+        process_setup(
+            self.ctx,
+            tmpPath,
+            self._fusionAdapter,
+            self._operationsFactory,
+            self._programRegistry,
+        )
