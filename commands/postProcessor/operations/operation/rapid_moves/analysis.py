@@ -1,5 +1,14 @@
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Generator
+
+from .models import ParseSegment
+from .tokenizer import MOTIONS, WORD
+
+
+REASON_ARC_IN_MIDDLE = "arc_in_middle"
+REASON_FEED_IN_MIDDLE = "feed_in_middle"
+REASON_END_HAS_FEED_AND_NO_MIDDLE = "end_has_feed_and_no_middle"
+REASON_TOO_SHORT_EFFECTIVE_DIST = "too_short_effectiveDist"
 
 
 @dataclass
@@ -56,3 +65,59 @@ class AnalysisSegment:
             "startHasFeed": self.hasStartHasFeed,
             "isValid": self.isValid,
         }
+
+
+def tokenize_analysis_line(line: str) -> list[str]:
+    tokens = []
+    for token in (
+        token.strip().upper()
+        for token in line.replace("\t", " ").split()
+        if token.strip()
+    ):
+        if token.startswith(WORD.G) and len(token) > 1 and token[1:].isdigit():
+            tokens.append(f"G{int(token[1:])}")
+        else:
+            tokens.append(token)
+    return tokens
+
+
+def has_arc(tokens: list[str]) -> bool:
+    return MOTIONS.G2 in tokens or MOTIONS.G3 in tokens
+
+
+def has_feed(tokens: list[str]) -> bool:
+    return any(
+        len(token) >= 2
+        and token[0] == WORD.F
+        and any(character.isdigit() for character in token[1:])
+        for token in tokens
+    )
+
+
+def analyze_segments(
+    segments: list[ParseSegment],
+    min_distance: float = 20.0,
+) -> Generator[dict[str, Any]]:
+    for segment in segments:
+        result = AnalysisSegment(segment)
+        result.hasStartHasFeed = has_feed(tokenize_analysis_line(segment.startText))
+        result.trimEndUntilValidOrNoMiddle(
+            tokenize_analysis_line,
+            has_feed,
+            REASON_END_HAS_FEED_AND_NO_MIDDLE,
+        )
+
+        for line in segment.middleTexts:
+            tokens = tokenize_analysis_line(line)
+            if has_arc(tokens):
+                result.isValid = False
+                result.addRejectReason(REASON_ARC_IN_MIDDLE)
+            if has_feed(tokens):
+                result.isValid = False
+                result.addRejectReason(REASON_FEED_IN_MIDDLE)
+
+        if result.getEffectiveLength() < float(min_distance):
+            result.isValid = False
+            result.addRejectReason(REASON_TOO_SHORT_EFFECTIVE_DIST)
+
+        yield result.asDict()

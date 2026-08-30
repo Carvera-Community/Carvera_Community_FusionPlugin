@@ -1,122 +1,16 @@
-import math
 from collections import deque
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Generator
+from typing import Callable, Generator
 
 from .rapid_moves.tokenizer import MOTIONS, WORD, ParseResult, parse_line
-from .rapid_moves.analysis import AnalysisSegment
-
-@dataclass
-class LineResult:
-    def __init__(self, lineParser: Callable[[str], ParseResult], index: int, original: str, prevX: float | None, prevY: float | None, prevZ: float | None):
-        self._lineParser = lineParser
-        self.index = index
-        self.lineNumber = index + 1
-        self.original = original.rstrip("\n")
-        self.parseResult = self._lineParser(self.original)
-        self.prevX = prevX
-        self.prevY = prevY
-        self.prevZ = prevZ
-
-    x: float | None = None
-    y: float | None = None
-    z: float | None = None
-    effectiveMotion: str | None = None
-
-    def setEffectiveMotion(self, motion: str|None) -> None:
-        self.effectiveMotion = self.parseResult.localMotion or motion
-
-@dataclass()
-class ModalState:
-    motion: str | None = None
-    x: float | None = 0
-    y: float | None = 0
-    z: float | None = 0
-    feed: float | None = None
-
-@dataclass 
-class XYStepDetail:
-    def __init__(self, lineResult: LineResult, roundDecimals: int):
-        self.lineNumber = lineResult.lineNumber
-        self.text = lineResult.original
-        if lineResult.x is not None:
-            self.x = lineResult.x
-        if lineResult.y is not None:
-            self.y = lineResult.y
-        self.prevX = lineResult.prevX
-        self.prevY = lineResult.prevY
-        self.prevZ = lineResult.prevZ
-
-        dX = (lineResult.x - lineResult.prevX) if (lineResult.x is not None and lineResult.prevX is not None) else 0.0
-        dY = (lineResult.y - lineResult.prevY) if (lineResult.y is not None and lineResult.prevY is not None) else 0.0
-        self.deltaX = round(dX, roundDecimals)
-        self.deltaY = round(dY, roundDecimals)
-        self.distance = round(math.hypot(dX, dY), roundDecimals)
-        self.hasZ = lineResult.parseResult.sawZ
-
-    lineNumber: int
-    text: str
-    x: float
-    y: float
-    deltaX: float
-    deltaY: float
-    prevX: float | None
-    prevY: float | None
-    prevZ: float | None
-    distance: float
-    hasZ: bool
-
-@dataclass
-class ParseSegment:
-    def __init__(self, 
-                 start: LineResult, 
-                 end: LineResult, 
-                 middleLineNumbers: list[int],
-                 middleTexts: list[str],
-                 middleStepsCount: int,
-                 xySteps: list[XYStepDetail],
-                 roundDecimals: int
-                ):
-        self.startLineNumber: int = start.lineNumber
-        self.startText: str = start.original
-        self.endLineNumber: int = end.lineNumber
-        self.endText: str = end.original
-
-        self.middleLineNumbers: list[int] = middleLineNumbers
-        self.middleTexts: list[str] = middleTexts
-        self.middleStepsCount: int = middleStepsCount
-        self.xySteps: list[XYStepDetail] = xySteps
-
-        totaldXRaw = 0.0
-        totaldYRaw = 0.0
-        totalXYDistRaw = 0.0
-        for s in xySteps:
-            totaldXRaw += s.deltaX
-            totaldYRaw += s.deltaY
-            totalXYDistRaw += s.distance
-
-        self.totalDeltaX: float = round(totaldXRaw, roundDecimals)
-        self.totalDeltaY: float = round(totaldYRaw, roundDecimals)
-        self.totalXYDistance: float = round(totalXYDistRaw, roundDecimals)
-
-        netdX = None
-        netdY = None
-        netDist = None
-        if xySteps:
-            first = xySteps[0]
-            last = xySteps[-1]
-
-            netdX = last.x - (first.prevX if first.prevX is not None else 0.0)
-            netdY = last.y - (first.prevY if first.prevY is not None else 0.0)
-            netDist = math.hypot(netdX or 0.0, netdY or 0.0)
-
-        self.netDeltaX: float|None = None if netdX is None else round(netdX, roundDecimals)
-        self.netDeltaY: float|None = None if netdY is None else round(netdY, roundDecimals)
-        self.netXYDistance: float|None = None if netDist is None else round(netDist, roundDecimals)
-
-        self.deltaZUp = round(start.z - start.prevZ, roundDecimals) if start.z is not None and start.prevZ is not None else 0.0
-        self.deltaZDown = round(end.prevZ - end.z, roundDecimals) if end.z is not None and end.prevZ is not None else 0.0
+from .rapid_moves.models import LineResult, ModalState, ParseSegment, XYStepDetail
+from .rapid_moves.analysis import (
+    REASON_ARC_IN_MIDDLE,
+    REASON_END_HAS_FEED_AND_NO_MIDDLE,
+    REASON_FEED_IN_MIDDLE,
+    REASON_TOO_SHORT_EFFECTIVE_DIST,
+    analyze_segments,
+)
 
 class RapidsParser:
     _parseLine = staticmethod(parse_line)
@@ -340,13 +234,13 @@ class RapidsParser:
 
         return segments
 
-    REASON_ARC_IN_MIDDLE = "arc_in_middle"
-    REASON_FEED_IN_MIDDLE = "feed_in_middle"
-    REASON_END_HAS_FEED_AND_NO_MIDDLE = "end_has_feed_and_no_middle"
-    REASON_TOO_SHORT_EFFECTIVE_DIST = "too_short_effectiveDist"
+    REASON_ARC_IN_MIDDLE = REASON_ARC_IN_MIDDLE
+    REASON_FEED_IN_MIDDLE = REASON_FEED_IN_MIDDLE
+    REASON_END_HAS_FEED_AND_NO_MIDDLE = REASON_END_HAS_FEED_AND_NO_MIDDLE
+    REASON_TOO_SHORT_EFFECTIVE_DIST = REASON_TOO_SHORT_EFFECTIVE_DIST
 
     @classmethod
-    def analyze(cls, segments: list[ParseSegment], minDist: float = 20.0) -> Generator[dict[str, Any]]:
+    def analyze(cls, segments: list[ParseSegment], minDist: float = 20.0):
         """
         Generates a list of dictionaries containing the start and end line of all 
         the candidates for rapid moves and a flag if it is deemed a valid rapid movement.
@@ -359,57 +253,4 @@ class RapidsParser:
                 effectiveDist = max(totalXYDist, zDist)
         """
 
-        def _tokenize(line: str) -> list[str]:
-            tokens = []
-            for t in [t.strip().upper() for t in line.replace("\t", " ").split() if t.strip()]:
-                if t.startswith(WORD.G) and len(t) > 1 and t[1:].isdigit():
-                    # Normalize G-codes: G02 → G2, G03 → G3, G00 → G0, etc.
-                    number = int(t[1:])
-                    tokens.append(f"G{number}")
-                else:
-                    tokens.append(t)
-            return tokens
-        
-        def _hasArc(tokens: list[str]) -> bool:
-            for token in tokens:
-                if token == MOTIONS.G2 or token == MOTIONS.G3:
-                    return True
-            return False
-
-        def _hasFeed(tokens: list[str]) -> bool:
-            # Feed usually appears as "F333.3". We look for tokens starting with 'F' and having digits after it.
-            for token in tokens:
-                if len(token) >= 2 and token[0] == WORD.F:
-                    if any(ch.isdigit() for ch in token[1:]):
-                        return True
-            return False
-
-        for segment in segments:
-            result = AnalysisSegment(segment)
-
-            # Check if the first line has a feed
-            # Start is eligible even if it is G1 + F (Fusion transition)
-            # But if start has a feed token, mark it so writeBody can strip feed when injecting G0
-            tokens = _tokenize(segment.startText)
-            result.hasStartHasFeed = _hasFeed(tokens)
-
-            # Rule: If ending line contains feed, move back one line until it is valid or run out of middle lines.
-            result.trimEndUntilValidOrNoMiddle(_tokenize, _hasFeed, cls.REASON_END_HAS_FEED_AND_NO_MIDDLE)
-
-            # Rule: disqualify if middle steps contain arc/feed tokens
-            for line in segment.middleTexts:
-                tokens = _tokenize(line)
-                if _hasArc(tokens):
-                    result.isValid = False
-                    result.addRejectReason(cls.REASON_ARC_IN_MIDDLE)
-                
-                if _hasFeed(tokens):
-                    result.isValid = False
-                    result.addRejectReason(cls.REASON_FEED_IN_MIDDLE)
-
-            # Rule: calculate effective distance and disqualify if too short
-            if result.getEffectiveLength() < float(minDist):
-                result.isValid = False
-                result.addRejectReason(cls.REASON_TOO_SHORT_EFFECTIVE_DIST)
-
-            yield result.asDict()
+        return analyze_segments(segments, minDist)

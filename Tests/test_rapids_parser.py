@@ -71,3 +71,44 @@ def test_analysis_uses_greater_of_xy_and_z_distance(tmp_path):
 
     assert len(analysis) == 1
     assert analysis[0]["isValid"]
+
+
+def test_analysis_rejects_feed_in_middle_move(tmp_path):
+    path = write_operation(tmp_path, "G1 Z0\nG1 Z5\nX30 F100\nZ0\n")
+
+    analysis = list(RapidsParser.analyze(RapidsParser.parseFile(path), minDist=10))
+
+    assert len(analysis) == 1
+    assert not analysis[0]["isValid"]
+
+
+def test_analysis_rejects_arc_in_middle_move(tmp_path):
+    path = write_operation(tmp_path, "G1 Z0\nG1 Z5\nG2 X30\nG1 Z0\n")
+    segments = RapidsParser.parseFile(path, requireG1=False)
+
+    analysis = list(RapidsParser.analyze(segments, minDist=10))
+
+    assert len(analysis) == 1
+    assert not analysis[0]["isValid"]
+
+
+def test_analysis_moves_end_before_feed_line(tmp_path):
+    path = write_operation(tmp_path, "G1 Z0\nG1 Z5\nX30\nZ0 F100\n")
+
+    analysis = list(RapidsParser.analyze(RapidsParser.parseFile(path), minDist=10))
+
+    assert analysis == [{
+        "startLine": 2,
+        "endLine": 3,
+        "startHasFeed": False,
+        "isValid": True,
+    }]
+
+
+def test_analysis_rejects_short_effective_distance(tmp_path):
+    path = write_operation(tmp_path, "G1 Z0\nG1 Z1\nX2\nZ0\n")
+
+    analysis = list(RapidsParser.analyze(RapidsParser.parseFile(path), minDist=10))
+
+    assert len(analysis) == 1
+    assert not analysis[0]["isValid"]
