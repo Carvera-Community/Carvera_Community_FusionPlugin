@@ -79,3 +79,56 @@ def test_save_default_excludes_session_only_settings():
     saved = json.loads(Path(Settings._path).read_text(encoding="utf-8"))
     assert Constants.OVERWRITE_FILES not in saved
     assert Constants.CLEAR_FOLDER not in saved
+
+
+def test_load_reads_persisted_defaults_and_fills_missing_keys():
+    persisted = {
+        Constants.VERSION: Settings._default_settings[Constants.VERSION],
+        Constants.LANGUAGE: "sv",
+    }
+    Path(Settings._path).write_text(json.dumps(persisted), encoding="utf-8")
+
+    Settings.load()
+
+    assert Settings.get(Constants.LANGUAGE) == "sv"
+    assert Settings.get(Constants.OPERATIONS_GROUPING) == Constants.OperationsGroupings.SETUP
+    assert not Settings._must_save
+
+
+def test_load_marks_missing_default_file_for_creation():
+    Settings.load()
+
+    assert Settings.get(Constants.LANGUAGE) == "en"
+    assert Settings._must_save
+
+
+def test_load_migrates_defaults_from_an_older_settings_version():
+    persisted = {
+        Constants.VERSION: -1,
+        Constants.LANGUAGE: "sv",
+    }
+    Path(Settings._path).write_text(json.dumps(persisted), encoding="utf-8")
+
+    Settings.load()
+
+    assert Settings.get(Constants.VERSION) == Settings._default_settings[Constants.VERSION]
+    assert Settings.get(Constants.LANGUAGE) == "sv"
+    assert Settings.get(Constants.ROTATE_A_AXIS) is False
+
+
+def test_save_creates_default_file_when_required():
+    Settings.load()
+    attributes = FakeAttributes()
+
+    Settings.save(attributes)
+
+    assert Path(Settings._path).is_file()
+    assert not Settings._must_save
+
+
+def test_callable_interface_reads_and_writes_values():
+    Settings._items = dict(Settings._default_settings)
+
+    assert Settings(Constants.LANGUAGE) == "en"
+    assert Settings(Constants.LANGUAGE, "sv") == "sv"
+    assert list(Settings)

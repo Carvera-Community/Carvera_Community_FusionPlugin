@@ -106,8 +106,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
             if path.exists() and path.is_file():
                 with path.open() as file:
                     cls._default = json.load(file)
-                if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
-                    cls.update(Settings._default_settings, cls._default)
+                cls.update(Settings._default_settings, cls._default)
             else:
                 cls._default = dict(Settings._default_settings)
                 cls._must_save = True

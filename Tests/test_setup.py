@@ -20,6 +20,9 @@ class Vector:
 
 
 class FakeSetupAdapter:
+    def __init__(self):
+        self.rename_calls = []
+
     def origin(self, setup):
         return setup.origin
 
@@ -31,6 +34,10 @@ class FakeSetupAdapter:
 
     def cast_operation(self, value):
         return value if getattr(value, "is_operation", False) else None
+
+    def rename_setup(self, setup, name):
+        self.rename_calls.append((setup, name))
+        setup.name = name
 
 
 class FakeOperations:
@@ -105,6 +112,9 @@ def test_setup_exposes_selection_name_geometry_and_machine_state():
     assert (setup.x_normal.x, setup.y_normal.y, setup.z_normal.z) == (1, 1, 1)
     assert not setup.has_machine
 
+    setup.select(False)
+    assert not setup.is_selected
+
 
 def test_setup_rename_supports_plain_prepend_and_regex():
     setup = make_setup(source_setup("Rough Setup"))
@@ -113,6 +123,50 @@ def test_setup_rename_supports_plain_prepend_and_regex():
     assert setup.name == "01_Rough Setup"
     setup.rename(r"Rough\s+", "Finish ", True)
     assert setup.name == "01_Finish Setup"
+
+
+def test_setup_rename_is_delegated_to_the_fusion_adapter():
+    adapter = FakeSetupAdapter()
+    source = source_setup("Original")
+    setup = Setup(SetupContext(), source, 0, fusionAdapter=adapter)
+
+    setup.rename("Original", "Renamed", False)
+
+    assert adapter.rename_calls == [(source, "Renamed")]
+
+
+def test_rotation_wrappers_use_setup_and_global_axes():
+    setup = make_setup()
+    other_source = source_setup("Other")
+    other_source.normals[(0, 0, 1)] = Vector(0, -1, 0)
+    other_source.normals[(0, 1, 0)] = Vector(0, 0, 1)
+    other = make_setup(other_source)
+
+    assert setup.absolute_rotation() == pytest.approx(0)
+    assert setup.absolute_rotation_degrees() == pytest.approx(0)
+    assert setup.rotation_relative_to_setup(other) == pytest.approx(1.5707963267948966)
+    assert setup.rotation_relative_to_degrees(other) == pytest.approx(90)
+
+
+def test_rotation_rejects_missing_fallback_and_invalid_input():
+    setup = make_setup()
+
+    with pytest.raises(ValueError, match="yNormal"):
+        setup.rotation_relative_to(Vector(0, 0, 1))
+    with pytest.raises(TypeError, match="Expected Setup or Vector3D"):
+        setup.rotation_relative_to(object())
+
+
+def test_machine_and_tools_are_exposed_when_operations_exist():
+    source = source_setup()
+    source.machine = object()
+    setup = make_setup(source)
+    setup.ctx.operations = FakeOperations(None, [])
+    tool = object()
+    setup.ctx.operations.tools = [tool]
+
+    assert setup.has_machine
+    assert setup.tools == [tool]
 
 
 def test_setup_parse_casts_operations_generates_toolpath_and_parses(tmp_path):
