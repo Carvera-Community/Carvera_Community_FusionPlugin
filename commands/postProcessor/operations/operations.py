@@ -7,6 +7,7 @@ from .operation.operation_context import OperationContext
 from ....lib.fusionAddInUtils import Utils
 from ..settings.settings import Settings
 from .operation.operation import Operation
+from .operation_grouping import groupOperationSources
 from .operation_file_naming import (
     OperationFileNamingSettings,
     setOperationFileName as applyOperationFileName,
@@ -37,42 +38,15 @@ class Operations():
     def __init__(self, ctx: OperationsContext, adskOperations: list[adskOperation]):
         self.ctx = ctx
 
-        i = 0
-        operation = None
-        while i < len(adskOperations):
-            if(adskOperations[i].isSuppressed):
-                i += 1
-                continue
-            # Look ahead for operations without a toolpath. This can happen
-            # with a manual operation. Group it with current operation.
-            # Or if first, group it with subsequent ones.
-            # Also optionally group together operations with the same tool number
-
-            operationContext = OperationContext(i)
-            operation = Operation(operationContext)
-            operation.Append(adskOperations[i], i, adskOperations[i].hasToolpath) # add first operation
-            i += 1
-            while i < len(adskOperations):
-                if(adskOperations[i].isSuppressed):
-                    i += 1
-                    continue
-                # Append to current group if:
-                # - operation has no toolpath, or
-                # - current group has no tool yet (we haven't encountered a toolpath), or
-                # - we're grouping operations on setup and tool, or
-                # - we're combining tools and this op uses the same tool as the current group
-                # otherwise finish current group and start a new one
-                if ((not adskOperations[i].hasToolpath) 
-                    or (not operation.hasTool) 
-                    or (Settings.Get(Settings.COMBINE_TOOL) 
-                        and Operation.GetToolNumber(adskOperations[i]) == operation.toolId)):
-                    operation.Append(adskOperations[i], i, adskOperations[i].hasToolpath)
-                    i += 1
-                else:
-                    # different tool (or not combining) -> finish current group
-                    self.ctx.operations.append(operation)
-                    break
-        if operation is not None: # append final group
+        groups = groupOperationSources(
+            adskOperations,
+            combineTool=bool(Settings.Get(Settings.COMBINE_TOOL)),
+            getToolNumber=Operation.GetToolNumber,
+        )
+        for group in groups:
+            operation = Operation(OperationContext(group[0].index))
+            for item in group:
+                operation.Append(item.source, item.index, item.source.hasToolpath)
             self.ctx.operations.append(operation)
 
     @property
