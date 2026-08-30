@@ -50,7 +50,6 @@ class SetupsContext:
         for setup in self.selected:
             setup.ctx.processingSettings = self.processingSettings
             setup.parse(self.tempPath)
-#        return
 
     def renameSetups(self, find: str, replace: str, isRegex: bool, onlySelected: bool) -> None:
         setupsToRename = self.selected if onlySelected else self._items
@@ -77,14 +76,10 @@ class SetupsContext:
             setup.set_output_path(outputPath)
 
     def setFileName(self, fileName: str) -> None:
-        # This check should not be needed
-        # if (Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE 
-        #     or Settings(Settings.NUMERIC_NAME)):
         self.fileName = fileName
 
-        setup: Setup
         for setup in self.selected:
-                setup.ctx.set_file_name(self.fileName)
+            setup.ctx.set_file_name(self.fileName)
 
     def setFileExtension(self, extension: str) -> None:
         for setup in self.selected:

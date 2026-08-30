@@ -106,14 +106,14 @@ class Setup():
         if self.ctx.operations is not None:
             self.ctx.operations.set_file_extension(fileExtension)
 
-    #region Compute signed rotation around the setup's X axis.
+    # Compute signed rotation around the setup's X axis.
     #
     # Behavior:
-    # - `GetAbsoluteRotationAroundXAxis()` returns the signed rotation (radians)
+    # - `absolute_rotation()` returns the signed rotation (radians)
     #   that aligns the setup's local Z with the global Z, measured around the
     #   setup's local X axis. It is a thin wrapper that calls
-    #   `GetRotationAroundXAxisRelativeTo(zNormal, yNormal)` with global Z/Y.
-    # - `GetRotationAroundXAxisRelativeTo(zNormal, yNormal)` computes the
+    #   `rotation_relative_to(zNormal, yNormal)` with global Z/Y.
+    # - `rotation_relative_to(zNormal, yNormal)` computes the
     #   signed rotation around this setup's X axis that rotates this setup's
     #   Z into the supplied `zNormal`, using `yNormal` as a secondary
     #   reference when Z projection degenerates.
@@ -136,8 +136,6 @@ class Setup():
     # - The implementation works with supplied normal vectors and does not
     #   depend on a precomputed global rotation value; the absolute wrapper
     #   simply supplies global axes.
-    #endregion
-
     def absolute_rotation(self) -> float:
         gZNormal = self._fusionAdapter.globalVector((0, 0, 1))
         gYNormal = self._fusionAdapter.globalVector((0, 1, 0))

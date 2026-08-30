@@ -32,36 +32,12 @@ class Line():
 
     @classmethod
     def writeLine(cls, fileHandler: TextIO, line: str) -> None:
-        """
-        Writes the line to the fileHandler and terminates it with a newline (\\n), adding line numbers if needed and returns the new line number
-        
-        :param cls: Description
-        :param fileHandler: Description
-        :type fileHandler: TextIO
-        :param line: Description
-        :type line: str
-        :param lineNumber: Description
-        :type lineNumber: int
-        :return: Description
-        :rtype: int
-        """
+        """Write one line, removing an input line number when present."""
         return cls.write(fileHandler, line + "\n")
 
     @classmethod
     def write(cls, fileHandler: TextIO, line: str) -> None:
-        """
-        Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
-        
-        :param cls: Description
-        :param fileHandler: Description
-        :type fileHandler: TextIO
-        :param line: Description
-        :type line: str
-        :param lineNumber: Description
-        :type lineNumber: int
-        :return: Description
-        :rtype: int
-        """
+        """Write text after removing an input line number when present."""
         # Check if the line is numbered
         match = cls._BODY_RE.match(line)
         if match and match.group("N") is not None: # line is numbered

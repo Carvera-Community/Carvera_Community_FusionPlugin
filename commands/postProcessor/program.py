@@ -37,7 +37,6 @@ class Program():
             fusionAdapter = FusionProgramAdapter()
         self._fusionAdapter = fusionAdapter
         self._program = program
-        self._outputFolder: Path | None = None
         self._attributes: Attributes = Attributes(program.attributes)
         self._parameters: Parameters = Parameters(
             program.parameters,
@@ -142,9 +141,6 @@ class Program():
             and gather information for generation of final files."""
         oldOutputFolder = self.get_output_folder()
         ctx.captureProcessingSettings()
-
-        # TODO: Start showing progress here
-        #endregion
 
         outputFolder = self.get_output_folder()
         fileName = self.fileName
