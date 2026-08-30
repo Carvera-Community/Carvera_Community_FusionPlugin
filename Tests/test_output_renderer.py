@@ -32,7 +32,7 @@ class FakeOperation:
             f"final={self.ctx.isLastOp}\n"
         )
 
-    def WriteTail(self, output, file_name_target):
+    def WriteTail(self, output):
         output.write(f"TAIL {self.name}\n")
 
 

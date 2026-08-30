@@ -41,9 +41,6 @@ class Operation():
 
             fusionAdapter = FusionOperationAdapter()
         self._fusionAdapter = fusionAdapter
-        self._outputFilePath: Path | None = None
-        self._fileName: str | None = None
-        self._lineNumber: int = -1
         self.ctx = ctx
         # As there can be multiple operations without tools they are 
         # grouped with the previous operation (or next if it is the 
@@ -68,22 +65,8 @@ class Operation():
         return self.ctx.name
     
     @property
-    def fileName(self) -> str | None:
-        return self._fileName
-    
-    def SetFileName(self, fileName: str):
-        self._fileName = fileName
-
-    @property
     def index(self) -> int:
         return self.ctx.index
-
-    @property
-    def lineNumber(self) -> int:
-        return self._lineNumber
-
-    def SetLineNumber(self, lineNumber: int):
-        self._lineNumber = lineNumber
 
     @property
     def toolId(self) -> Optional[int]:
@@ -125,19 +108,6 @@ class Operation():
     def hasRotation(self) -> bool:
         return self.ctx.hasRotation
 
-    def SetOutputPath(self, path: Path):
-        self._outputFilePath = path
-
-    @staticmethod
-    def GetToolDescription(operation) -> str:
-        return operation.tool.description if operation.hasToolpath else Strings("<No tool>")
-
-    @staticmethod
-    def GetToolNumber(operation) -> int:
-        from ...fusion_adapters.operations import FusionOperationAdapter
-
-        return FusionOperationAdapter().getToolNumber(operation)
-
     def Parse(self, tmpPath: Path, program: PostProcessingProgram):
         def postProcess(operations, outputFolder, fileName):
             program.SetOutputFolder(outputFolder)
@@ -159,5 +129,5 @@ class Operation():
     def WriteToolComment(self, fileHandle: TextIO) -> None: writeToolComment(self.ctx, fileHandle)
     def WriteHeader(self, fileHandle: TextIO) -> None: writeHeader(self.ctx, fileHandle)
     def WriteBody(self, fileHandle: TextIO) -> None: writeBody(self.ctx, fileHandle)
-    def WriteTail(self, fileHandle: TextIO, fileNameTarget=None) -> None:
-        writeTail(self.ctx, fileHandle, fileNameTarget=fileNameTarget)
+    def WriteTail(self, fileHandle: TextIO) -> None:
+        writeTail(self.ctx, fileHandle)

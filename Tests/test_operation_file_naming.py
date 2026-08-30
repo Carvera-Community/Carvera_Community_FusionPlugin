@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 import pytest
 
 from addin_import import import_addin_module
@@ -12,13 +10,7 @@ Constants = import_addin_module(
     "commands.postProcessor.settings.constants"
 ).Constants
 OperationFileNamingSettings = naming.OperationFileNamingSettings
-setOperationFileName = naming.setOperationFileName
 get_operation_file_name = naming.get_operation_file_name
-
-
-@dataclass
-class FakeContext:
-    fileName: str
 
 
 class FakeOperation:
@@ -26,10 +18,6 @@ class FakeOperation:
         self.index = index
         self.name = name
         self.toolId = tool_id
-        self.fileName = None
-
-    def SetFileName(self, file_name: str) -> None:
-        self.fileName = file_name
 
 
 def naming_settings(grouping, **overrides) -> OperationFileNamingSettings:
@@ -55,38 +43,35 @@ def sanitize(name: str) -> str:
     ],
 )
 def test_shared_file_groupings_keep_context_file_name(grouping):
-    context = FakeContext("setup")
     operation = FakeOperation(2, "Pocket", 7)
 
-    setOperationFileName(
-        context, operation, 1, naming_settings(grouping), sanitize
+    file_name, next_name = get_operation_file_name(
+        "setup", operation, 1, naming_settings(grouping), sanitize
     )
 
-    assert operation.fileName == "setup"
-    assert context.fileName == "setup"
+    assert file_name == "setup"
+    assert next_name == "setup"
 
 
 def test_setup_and_tool_names_first_tool_group():
-    context = FakeContext("setup")
     operation = FakeOperation(0, "Pocket", 7)
 
-    setOperationFileName(
-        context,
+    file_name, _ = get_operation_file_name(
+        "setup",
         operation,
         1,
         naming_settings(Constants.OperationsGroupings.SETUP_AND_TOOL),
         sanitize,
     )
 
-    assert operation.fileName == "setup_T7"
+    assert file_name == "setup_T7"
 
 
 def test_setup_and_tool_indexes_repeated_tool_groups_and_sequences_files():
-    context = FakeContext("setup")
     operation = FakeOperation(4, "Pocket", 7)
 
-    setOperationFileName(
-        context,
+    file_name, _ = get_operation_file_name(
+        "setup",
         operation,
         2,
         naming_settings(
@@ -96,30 +81,28 @@ def test_setup_and_tool_indexes_repeated_tool_groups_and_sequences_files():
         sanitize,
     )
 
-    assert operation.fileName == "setup_005_T7_2"
+    assert file_name == "setup_005_T7_2"
 
 
 def test_per_operation_uses_sanitized_operation_name():
-    context = FakeContext("setup")
     operation = FakeOperation(1, "Pocket / Finish", 7)
 
-    setOperationFileName(
-        context,
+    file_name, _ = get_operation_file_name(
+        "setup",
         operation,
         1,
         naming_settings(Constants.OperationsGroupings.PER_OPERATION),
         sanitize,
     )
 
-    assert operation.fileName == "Pocket___Finish"
+    assert file_name == "Pocket___Finish"
 
 
 def test_per_operation_can_prefix_sequence_number():
-    context = FakeContext("setup")
     operation = FakeOperation(1, "Finish", 7)
 
-    setOperationFileName(
-        context,
+    file_name, _ = get_operation_file_name(
+        "setup",
         operation,
         1,
         naming_settings(
@@ -129,15 +112,14 @@ def test_per_operation_can_prefix_sequence_number():
         sanitize,
     )
 
-    assert operation.fileName == "002_Finish"
+    assert file_name == "002_Finish"
 
 
 def test_numeric_naming_assigns_current_name_and_advances_context():
-    context = FakeContext("009")
     operation = FakeOperation(0, "Pocket", 7)
 
-    setOperationFileName(
-        context,
+    file_name, next_name = get_operation_file_name(
+        "009",
         operation,
         1,
         naming_settings(
@@ -147,8 +129,8 @@ def test_numeric_naming_assigns_current_name_and_advances_context():
         sanitize,
     )
 
-    assert operation.fileName == "009"
-    assert context.fileName == "010"
+    assert file_name == "009"
+    assert next_name == "010"
 
 
 def test_pure_naming_returns_the_file_and_next_numeric_base():
@@ -167,4 +149,3 @@ def test_pure_naming_returns_the_file_and_next_numeric_base():
 
     assert file_name == "009"
     assert next_name == "010"
-    assert operation.fileName is None

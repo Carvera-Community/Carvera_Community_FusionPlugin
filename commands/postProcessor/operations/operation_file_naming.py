@@ -4,16 +4,11 @@ from typing import Callable, Protocol
 from ..settings.constants import Constants
 
 
-class NamingContext(Protocol):
-    fileName: str
-
-
 class NamedOperation(Protocol):
     index: int
     name: str
     toolId: int | None
 
-    def SetFileName(self, fileName: str) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -22,24 +17,6 @@ class OperationFileNamingSettings:
     fileSequenceDigits: int
     numericName: bool
     fileSequence: bool
-
-
-def setOperationFileName(
-    ctx: NamingContext,
-    operation: NamedOperation,
-    toolIdIndex: int,
-    settings: OperationFileNamingSettings,
-    sanitizeFilename: Callable[[str], str],
-) -> None:
-    file_name, next_base_name = get_operation_file_name(
-        ctx.fileName,
-        operation,
-        toolIdIndex,
-        settings,
-        sanitizeFilename,
-    )
-    operation.SetFileName(file_name)
-    ctx.fileName = next_base_name
 
 
 def get_operation_file_name(

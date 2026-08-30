@@ -31,6 +31,6 @@ def render_output_files(
                 body.operation.WriteBody(output)
 
             if plan.tail_source is not None:
-                plan.tail_source.WriteTail(output, None)
+                plan.tail_source.WriteTail(output)
         written.append(plan.path)
     return tuple(written)
