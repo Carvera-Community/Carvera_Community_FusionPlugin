@@ -13,6 +13,7 @@ from ...settings.settings import Settings
 from ...strings import Strings
 
 from ..event_registry import EventRegistry
+from ..state import is_output_name_valid, numeric_name_digits
 from ...programs import Programs
 
 from ..constants import Constants
@@ -124,9 +125,10 @@ class OutputTab(Constants):
 
         def ensureNumericFileName(input: CommandInput):
             textbox = StringValueCommandInput.cast(input.parentCommand.commandInputs.itemById(cls.FILE_NAME_ID))
-            textbox.isValueError = (len(textbox.value) == 0 
-                or (BoolValueCommandInput.cast(textbox.parentCommand.commandInputs.itemById(cls.NUMERIC_NAME_ID)).value 
-                    and not textbox.value.isnumeric()))
+            numeric = BoolValueCommandInput.cast(
+                textbox.parentCommand.commandInputs.itemById(cls.NUMERIC_NAME_ID)
+            ).value
+            textbox.isValueError = not is_output_name_valid(textbox.value, numeric)
 
         EventRegistry.register(cls.FILE_NAME_ID, ensureNumericFileName)
         EventRegistry.register(cls.NUMERIC_NAME_ID, ensureNumericFileName)
@@ -154,8 +156,11 @@ class OutputTab(Constants):
         def setNumberingDigitsOnNumericFileName(checkbox: BoolValueCommandInput):
             input = IntegerSliderCommandInput.cast(checkbox.parentCommand.commandInputs.itemById(cls.FILE_SEQUENCE_DIGITS_ID))
             prependFileNumbers = BoolValueCommandInput.cast(checkbox.parentCommand.commandInputs.itemById(cls.FILE_SEQUENCE_ID))
-            if checkbox.value and Programs.Current and Programs.Current.fileName is not None and Programs.Current.fileName.isnumeric():
-                Settings.Set(Settings.FILE_SEQUENCE_DIGITS, min(len(Programs.Current.fileName), 6))
+            digits = numeric_name_digits(
+                Programs.Current.fileName if Programs.Current else None
+            )
+            if checkbox.value and digits is not None:
+                Settings.Set(Settings.FILE_SEQUENCE_DIGITS, digits)
                 input.valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
                 input.isEnabled = False
                 prependFileNumbers.isEnabled = False
@@ -164,11 +169,12 @@ class OutputTab(Constants):
                 input.isEnabled = prependFileNumbers.value
 
         def setNumberingDigitsOnFileName(textbox: StringValueCommandInput):
-            if (Programs.Current is not None 
-                    and Programs.Current.fileName is not None 
-                    and Programs.Current.fileName.isnumeric() 
+            digits = numeric_name_digits(
+                Programs.Current.fileName if Programs.Current else None
+            )
+            if (digits is not None
                     and BoolValueCommandInput.cast(textbox.parentCommand.commandInputs.itemById(cls.NUMERIC_NAME_ID)).value):
-                Settings.Set(Settings.FILE_SEQUENCE_DIGITS, min(len(Programs.Current.fileName), 6))
+                Settings.Set(Settings.FILE_SEQUENCE_DIGITS, digits)
                 IntegerSliderCommandInput.cast(textbox.commandInputs.itemById(cls.FILE_SEQUENCE_DIGITS_ID)).valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
 
         EventRegistry.register(cls.FILE_SEQUENCE_DIGITS_ID, lambda spinner: Settings.Set(Settings.FILE_SEQUENCE_DIGITS, spinner.valueOne))

@@ -23,6 +23,7 @@ from ...strings import Strings
 
 from ..constants import Constants
 from ..event_registry import EventRegistry
+from ..state import is_setup_selectable
 
 class InputTab(Constants):
 
@@ -256,25 +257,6 @@ class InputTab(Constants):
                 firstSetup = setup
 
 
-    @classmethod
-    def _isSetupSelectable(cls, 
-                           firstSetup: Setup, 
-                           validProgram: bool, 
-                           sameOrigin: bool, 
-                           parallelXAxis: bool, 
-                           canRotate: bool, 
-                           requiredRotation: float
-                        ) -> bool:
-        if firstSetup is None:
-            return True
-        return (sameOrigin 
-            and parallelXAxis 
-            and validProgram 
-            and (requiredRotation == 0 
-                or (Programs.Current is not None 
-                    and Programs.Current.machineHasAAxis 
-                    and canRotate)))
-
     _INDEX = "index"
     _ENABLED = "enabled"
     _SELECTED = "selected"
@@ -298,13 +280,18 @@ class InputTab(Constants):
         the table based on the setup's properties and the current 
         program selection."""
         
-        isSelectable = cls._isSetupSelectable(
-                                setup,
-                                validProgram,
-                                sameOrigin,
-                                parallelXAxis,  
-                                canRotate, 
-                                rotation)
+        isSelectable = is_setup_selectable(
+            has_reference=hasReference,
+            valid_program=validProgram,
+            same_origin=sameOrigin,
+            parallel_x_axis=parallelXAxis,
+            can_rotate=canRotate,
+            required_rotation=rotation,
+            machine_has_a_axis=(
+                Programs.Current is not None
+                and Programs.Current.machineHasAAxis
+            ),
+        )
 
         isEnabled = isSelectable
         isSelected = setup.isSelected if isSelectable else False

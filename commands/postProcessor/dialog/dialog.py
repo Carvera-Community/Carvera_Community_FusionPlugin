@@ -35,6 +35,7 @@ from ..setups.setups_context import SetupsContext
 
 from .layout.layout import PostDialogLayout
 from .event_registry import EventRegistry
+from .state import can_process
 
 class PostDialog(PostDialogLayout):
 
@@ -257,7 +258,6 @@ class PostDialog(PostDialogLayout):
         except FileExistsError as e:
             Utils.log(f'PostDialog: {str(e)}', LogLevels.ErrorLogLevel)
             ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
-            ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
         except Exception as e:
             Utils.log(f'PostDialog: An error occurred during post processing: {str(e)}', LogLevels.ErrorLogLevel)
             ui.messageBox(f"An error occurred during post processing: {str(e)}", "Error!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
@@ -268,11 +268,7 @@ class PostDialog(PostDialogLayout):
     def commandValidateInput(cls, args: ValidateInputsEventArgs):
         # General logging for debug.
 
-        args.areInputsValid = (Programs.Current is not None 
-            and Programs.Current.hasMachine 
-            and cls._ctx.hasSelected 
-            and all(not setup.ctx.hasError for setup in cls._ctx.selected) 
-            and (Programs.Current.machineHasAAxis or not a_axis_rotation_required(cls._ctx)[0]))
+        args.areInputsValid = can_process(Programs.Current, cls._ctx)
 
         # TODO: Set up so that the Process button is only enabled when things are set up properly
 
