@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
 
@@ -7,17 +8,40 @@ from ...config import CMD_NAME
 from ...file_modes import FileModes
 from .operation_context import OperationContext
 
-def writeHeaderStart(ctx: OperationContext, fileHandle: TextIO):
+
+@dataclass(frozen=True)
+class HeaderWriterSettings:
+    restoreRapidMoves: bool
+    rapidMovesMaxSteps: int
+    rapidMovesMinimumDistance: float
+
+    @classmethod
+    def fromCurrentSettings(cls) -> "HeaderWriterSettings":
+        return cls(
+            restoreRapidMoves=bool(Settings.Get(Settings.RESTORE_RAPID_MOVES)),
+            rapidMovesMaxSteps=Settings.Get(Settings.RAPID_MOVES_MAX_STEPS),
+            rapidMovesMinimumDistance=Settings.Get(
+                Settings.RAPID_MOVES_MINIMUM_DISTANCE
+            ),
+        )
+
+
+def writeHeaderStart(
+    ctx: OperationContext,
+    fileHandle: TextIO,
+    settings: HeaderWriterSettings | None = None,
+):
+    settings = settings or HeaderWriterSettings.fromCurrentSettings()
     with ctx.tempFilePath.open("r") as tempFile:
         
         file = Path(fileHandle.name).stem
         ctx.writeLine(fileHandle, "({fileName})".format(fileName = file))
         ctx.writeLine(fileHandle, "(Generated with {pluginName} version {pluginVersion})".format(pluginName = CMD_NAME, pluginVersion = PLUGIN_VERSION))
-        if Settings(Settings.RESTORE_RAPID_MOVES):
+        if settings.restoreRapidMoves:
             ctx.writeLine(fileHandle, "(Restore rapid moves enabled: {restoreRapidMoves}, maximum steps inbetween start and stop: {maximumSteps}, minimum travel distance: {minimumDistance}mm)".format(
-                restoreRapidMoves = Settings(Settings.RESTORE_RAPID_MOVES),
-                maximumSteps = Settings(Settings.RAPID_MOVES_MAX_STEPS),
-                minimumDistance = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
+                restoreRapidMoves = settings.restoreRapidMoves,
+                maximumSteps = settings.rapidMovesMaxSteps,
+                minimumDistance = settings.rapidMovesMinimumDistance
             ))
         line = tempFile.readline()
         row = 0
@@ -56,8 +80,11 @@ def writeHeaderEnd(ctx: OperationContext, fileHandle: TextIO):
             line = operationFile.readline()
             row += 1
 
-def writeHeader(context: OperationContext, fileHandle: TextIO):
-    writeHeaderStart(context, fileHandle)
+def writeHeader(
+    context: OperationContext,
+    fileHandle: TextIO,
+    settings: HeaderWriterSettings | None = None,
+):
+    writeHeaderStart(context, fileHandle, settings)
     writeToolComment(context, fileHandle)
     writeHeaderEnd(context, fileHandle)
-
