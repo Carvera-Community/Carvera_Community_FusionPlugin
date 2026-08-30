@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-from ....lib.fusionAddInUtils.general_utils import Utils
 from .setups_context import SetupsContext
+
+
+def _log(message: str) -> None:
+    from ....lib.fusionAddInUtils.general_utils import Utils
+
+    Utils.log(message)
 
 def getWCSAlignmentIssues(ctx: SetupsContext) -> tuple[bool, list[str], list[str]]:
     misalignedOrigin = []
@@ -27,5 +32,5 @@ def aAxisRotationRequired(ctx: SetupsContext) -> tuple[bool, list[tuple[str, flo
             signed_angle = round(first.GetRotationAroundXAxisRelativeToDeg(setup), 3)
             if signed_angle != 0:
                 needsRotation.append((setup.name, signed_angle))
-                Utils.log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")
+                _log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")
     return (len(needsRotation) != 0, needsRotation)

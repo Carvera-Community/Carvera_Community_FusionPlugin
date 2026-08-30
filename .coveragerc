@@ -1,0 +1,8 @@
+[run]
+omit =
+    */commands/postProcessor/dialog/*
+    */commands/postProcessor/fusion_adapters/*
+
+[report]
+exclude_also =
+    if TYPE_CHECKING:

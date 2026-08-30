@@ -160,9 +160,11 @@ python3 -m pytest
 The test command prints a coverage summary for the currently testable host-side
 modules and writes a browsable report to `htmlcov/index.html`.
 
-These tests cover source logic that has already been isolated from the Fusion
-API. They do not replace validation inside Fusion for NC Program interaction,
-post processing, output routing, or generated machine behavior.
+The post-processing core is host-importable and covered without the Fusion
+runtime. Direct `adsk` access is restricted to `fusion_adapters/` and the
+dialog/UI layer; architecture tests enforce that boundary. Host tests do not
+replace validation inside Fusion for NC Program interaction, post processing,
+UI events, or generated machine behavior.
 
 - Create a development branch:
 

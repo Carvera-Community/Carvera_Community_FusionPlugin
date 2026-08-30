@@ -17,7 +17,10 @@ class classproperty:
 def _log(message: str) -> None:
     if not pluginConfig.DEBUG:
         return
-    from ...lib.fusionAddInUtils.general_utils import Utils
+    try:
+        from ...lib.fusionAddInUtils.general_utils import Utils
+    except ModuleNotFoundError:
+        return
 
     Utils.log(message)
 

@@ -1,6 +1,9 @@
 from io import StringIO
 
-from commands.postProcessor.line import Line
+from addin_import import import_addin_module
+
+
+Line = import_addin_module("commands.postProcessor.line").Line
 
 
 def test_parse_line_recognizes_decimal_gcode_and_r_parameter():
