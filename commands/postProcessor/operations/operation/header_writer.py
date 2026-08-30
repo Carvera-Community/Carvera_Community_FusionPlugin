@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import TextIO
 
 from .....config import PLUGIN_VERSION
-from ...settings.settings import Settings
 from ...config import CMD_NAME
 from ...file_modes import FileModes
 from .operation_context import OperationContext
@@ -24,28 +23,16 @@ class HeaderWriterSettings:
             settings.rapidMovesMinimumDistance,
         )
 
-    @classmethod
-    def fromCurrentSettings(cls) -> "HeaderWriterSettings":
-        return cls(
-            restoreRapidMoves=bool(Settings.Get(Settings.RESTORE_RAPID_MOVES)),
-            rapidMovesMaxSteps=Settings.Get(Settings.RAPID_MOVES_MAX_STEPS),
-            rapidMovesMinimumDistance=Settings.Get(
-                Settings.RAPID_MOVES_MINIMUM_DISTANCE
-            ),
-        )
-
-
 def writeHeaderStart(
     ctx: OperationContext,
     fileHandle: TextIO,
     settings: HeaderWriterSettings | None = None,
 ):
     analysis = parsed_operation(ctx)
-    settings = settings or (
-        HeaderWriterSettings.fromProcessingSettings(ctx.processingSettings)
-        if ctx.processingSettings is not None
-        else HeaderWriterSettings.fromCurrentSettings()
-    )
+    if settings is None:
+        if ctx.processingSettings is None:
+            raise ValueError("Header writer settings are required")
+        settings = HeaderWriterSettings.fromProcessingSettings(ctx.processingSettings)
     with analysis.source_file.open("r") as tempFile:
         
         file = Path(fileHandle.name).stem

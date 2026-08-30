@@ -36,8 +36,13 @@ def source(name, tool_number=None, suppressed=False):
 
 
 def make_operations(sources, combine=False):
-    Settings._items = {Settings.COMBINE_TOOL: combine}
-    return Operations(OperationsContext(), sources, FakeFusionAdapter())
+    Settings._items = dict(Settings._defaultSettings)
+    Settings._items[Settings.COMBINE_TOOL] = combine
+    return Operations(
+        OperationsContext(processingSettings=ProcessingSettings.capture()),
+        sources,
+        FakeFusionAdapter(),
+    )
 
 
 def test_operations_builds_domain_groups_from_sources():

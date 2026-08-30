@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import Any, Callable, ClassVar, TYPE_CHECKING
 
 from .program import Program
-from .settings.settings import Settings
 from .toolpath_generation import ensureToolpathGenerated
 
 if TYPE_CHECKING:
@@ -43,16 +42,17 @@ class Programs(metaclass=_ProgramsMeta):
         ctx: "SetupsContext",
         camSource: Any,
         programFactory: Callable[[Any], Program] = Program,
+        selectedProgramName: str | None = None,
     ):
         """Loads all NCPrograms from the current document."""
         cls._cam = camSource
         cls._items = [programFactory(program) for program in camSource.ncPrograms]
 
         cls._current = None
-        if Settings(Settings.NC_PROGRAM) is not None:
+        if selectedProgramName is not None:
             # Try to set the current program to the one specified in settings
             for program in cls._items:
-                if program.name == Settings(Settings.NC_PROGRAM):
+                if program.name == selectedProgramName:
                     cls.Current = program
                     break
 

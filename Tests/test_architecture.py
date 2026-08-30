@@ -52,3 +52,19 @@ def test_core_has_no_top_level_fusion_adapter_imports():
                 violations.append(str(relative))
 
     assert violations == []
+
+
+def test_only_processing_snapshot_reads_global_settings_in_core():
+    violations = []
+    allowed = {Path("processing_settings.py"), Path("settings/settings.py")}
+    for path, relative in core_module_paths():
+        if relative in allowed:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if (node.module or "").endswith("settings.settings"):
+                violations.append(str(relative))
+
+    assert violations == []

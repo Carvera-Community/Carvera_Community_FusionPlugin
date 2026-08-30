@@ -3,13 +3,8 @@ from typing import Any
 
 from .operations_context import OperationsContext
 from .operation.operation_context import OperationContext
-from ..settings.settings import Settings
 from .operation.operation import Operation
 from .operation_grouping import groupOperationSources
-from .operation_file_naming import (
-    OperationFileNamingSettings,
-    setOperationFileName as applyOperationFileName,
-)
 
 
 class Operations():
@@ -34,13 +29,11 @@ class Operations():
             fusionAdapter = FusionOperationAdapter()
         self.ctx = ctx
 
+        if self.ctx.processingSettings is None:
+            raise ValueError("Processing settings are required")
         groups = groupOperationSources(
             adskOperations,
-            combineTool=(
-                self.ctx.processingSettings.combineTool
-                if self.ctx.processingSettings is not None
-                else bool(Settings.Get(Settings.COMBINE_TOOL))
-            ),
+            combineTool=self.ctx.processingSettings.combineTool,
             getToolNumber=fusionAdapter.getToolNumber,
         )
         for group in groups:
@@ -90,25 +83,3 @@ class Operations():
             operation.Parse(tmpPath, program)
         self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)
         self.ctx.operationWithHeader = next((operation for operation in self.ctx.operations if operation.hasHeader), None)
-
-def setOperationFileName(ctx: OperationsContext, operation: Operation, toolIdIndex: int) -> None:
-    current = ctx.processingSettings
-    settings = OperationFileNamingSettings(
-        operationsGrouping=(current.operationsGrouping if current else Settings(Settings.OPERATIONS_GROUPING)),
-        fileSequenceDigits=(current.fileSequenceDigits if current else Settings(Settings.FILE_SEQUENCE_DIGITS)),
-        numericName=(current.numericName if current else Settings(Settings.NUMERIC_NAME)),
-        fileSequence=(current.fileSequence if current else Settings(Settings.FILE_SEQUENCE)),
-    )
-    applyOperationFileName(
-        ctx,
-        operation,
-        toolIdIndex,
-        settings,
-        lambda name: _sanitizeFilename(name),
-    )
-
-
-def _sanitizeFilename(name: str) -> str:
-    from ....lib.fusionAddInUtils import Utils
-
-    return Utils.sanitizeFilename(name, preserveExtension=False)

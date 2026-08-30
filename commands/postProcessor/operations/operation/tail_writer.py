@@ -23,16 +23,6 @@ class TailWriterSettings:
     def fromProcessingSettings(cls, settings) -> "TailWriterSettings":
         return cls(settings.numericName, settings.fileSequenceDigits)
 
-    @classmethod
-    def fromCurrentSettings(cls) -> "TailWriterSettings":
-        from ...settings.settings import Settings
-
-        return cls(
-            numericName=bool(Settings.Get(Settings.NUMERIC_NAME)),
-            fileSequenceDigits=Settings.Get(Settings.FILE_SEQUENCE_DIGITS),
-        )
-
-
 def writeTail(
     ctx: OperationContext,
     fileHandle: TextIO,
@@ -40,11 +30,10 @@ def writeTail(
     fileNameTarget: FileNameTarget | None = None,
 ):
     analysis = parsed_operation(ctx)
-    settings = settings or (
-        TailWriterSettings.fromProcessingSettings(ctx.processingSettings)
-        if ctx.processingSettings is not None
-        else TailWriterSettings.fromCurrentSettings()
-    )
+    if settings is None:
+        if ctx.processingSettings is None:
+            raise ValueError("Tail writer settings are required")
+        settings = TailWriterSettings.fromProcessingSettings(ctx.processingSettings)
 
     if analysis.tail is None:
         return

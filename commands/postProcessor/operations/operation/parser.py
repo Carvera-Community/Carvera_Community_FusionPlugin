@@ -6,9 +6,6 @@ from .analysis import ParsedOperation
 
 from .rapidsParser import RapidsParser
 
-from ...settings.settings import Settings
-
-
 @dataclass(frozen=True)
 class ParserSettings:
     headerEndCodes: str
@@ -27,25 +24,11 @@ class ParserSettings:
             rapidMovesMaxSteps=settings.rapidMovesMaxSteps,
         )
 
-    @classmethod
-    def fromCurrentSettings(cls) -> "ParserSettings":
-        minimumDistance = Settings.Get(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
-        maximumSteps = Settings.Get(Settings.RAPID_MOVES_MAX_STEPS)
-        return cls(
-            headerEndCodes=Settings.Get(Settings.HEADER_END_CODES) or "",
-            endCodes=Settings.Get(Settings.END_CODES) or "",
-            restoreRapidMoves=bool(Settings.Get(Settings.RESTORE_RAPID_MOVES)),
-            rapidMovesMinimumDistance=20 if minimumDistance is None else minimumDistance,
-            rapidMovesMaxSteps=3 if maximumSteps is None else maximumSteps,
-        )
-
-
 def parseFile(ctx: OperationContext, settings: ParserSettings | None = None):
-    settings = settings or (
-        ParserSettings.fromProcessingSettings(ctx.processingSettings)
-        if ctx.processingSettings is not None
-        else ParserSettings.fromCurrentSettings()
-    )
+    if settings is None:
+        if ctx.processingSettings is None:
+            raise ValueError("Parser settings are required")
+        settings = ParserSettings.fromProcessingSettings(ctx.processingSettings)
     #region Header example
     # Find the start of the header and body in the generated file
 

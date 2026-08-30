@@ -5,9 +5,6 @@ from .operation_context import OperationContext
 from .analysis import parsed_operation
 
 from ...file_modes import FileModes
-from ...settings.settings import Settings
-
-
 @dataclass(frozen=True)
 class BodyWriterSettings:
     safeYRetraction: bool
@@ -17,25 +14,16 @@ class BodyWriterSettings:
     def fromProcessingSettings(cls, settings) -> "BodyWriterSettings":
         return cls(settings.safeYRetraction, settings.yRetractionCoordinate)
 
-    @classmethod
-    def fromCurrentSettings(cls) -> "BodyWriterSettings":
-        return cls(
-            safeYRetraction=bool(Settings.Get(Settings.SAFE_Y_RETRACTION)),
-            yRetractionCoordinate=Settings.Get(Settings.Y_RETRACTION_COORDINATE),
-        )
-
-
 def writeBody(
     ctx: OperationContext,
     fileHandle: TextIO,
     settings: BodyWriterSettings | None = None,
 ):
     analysis = parsed_operation(ctx)
-    settings = settings or (
-        BodyWriterSettings.fromProcessingSettings(ctx.processingSettings)
-        if ctx.processingSettings is not None
-        else BodyWriterSettings.fromCurrentSettings()
-    )
+    if settings is None:
+        if ctx.processingSettings is None:
+            raise ValueError("Body writer settings are required")
+        settings = BodyWriterSettings.fromProcessingSettings(ctx.processingSettings)
 
     def _stripFeed(line: str) -> str:
         # Preserve newline exactly as it was

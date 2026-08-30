@@ -180,7 +180,11 @@ class PostDialog(PostDialogLayout):
 
         Settings.Load(doc.attributes) # Load settings from the document
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
-        Programs.Load(cls._ctx, cam) # Get the list of NCPrograms in the current document
+        Programs.Load(
+            cls._ctx,
+            cam,
+            selectedProgramName=Settings(Settings.NC_PROGRAM),
+        ) # Get the list of NCPrograms in the current document
 
         command = args.command
 
