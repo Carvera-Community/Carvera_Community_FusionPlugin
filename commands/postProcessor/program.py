@@ -145,6 +145,7 @@ class Program():
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
         oldOutputFolder = self.GetOutputFolder()
+        ctx.captureProcessingSettings()
 
         # TODO: Start showing progress here
         #endregion
@@ -172,11 +173,12 @@ class Program():
         programName = self.Parameters.Get(Parameters.NAME, str)
 
         try:
+            current = ctx.processingSettings or ctx.captureProcessingSettings()
             outputSettings = ProgramOutputSettings(
-                operationsGrouping=Settings(Settings.OPERATIONS_GROUPING),
-                flatFileStructure=bool(Settings(Settings.FLAT_FILE_STRUCTURE)),
-                numericName=bool(Settings(Settings.NUMERIC_NAME)),
-                clearFolder=bool(Settings(Settings.CLEAR_FOLDER)),
+                operationsGrouping=current.operationsGrouping,
+                flatFileStructure=current.flatFileStructure,
+                numericName=current.numericName,
+                clearFolder=current.clearFolder,
             )
             if not prepareOutputFolder(initialPath, outputSettings.clearFolder):
                 return  # Need to notify the user about this.

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from ..settings.settings import Settings
+from ..processing_settings import ProcessingSettings
 from .setup.setup_context import SetupContext
 from .setup.setup import Setup
 from .output_path_planning import SetupOutputPathSettings, getSetupOutputPath
@@ -12,6 +12,11 @@ class SetupsContext:
     _items: list[Setup] = field(default_factory=list)
     tempPath: Path | None = None
     fileName: str | None = None
+    processingSettings: ProcessingSettings | None = None
+
+    def captureProcessingSettings(self) -> ProcessingSettings:
+        self.processingSettings = ProcessingSettings.capture()
+        return self.processingSettings
 
     @property
     def valid(self) -> list[Setup]:
@@ -53,12 +58,13 @@ class SetupsContext:
     
     def setPath(self, path: Path, sanitizeFilename: Callable | None = None) -> None:
         sanitizeFilename = sanitizeFilename or _sanitizeFilename
+        current = self.processingSettings or self.captureProcessingSettings()
         settings = SetupOutputPathSettings(
-            flatFileStructure=bool(Settings(Settings.FLAT_FILE_STRUCTURE)),
-            numericName=bool(Settings(Settings.NUMERIC_NAME)),
-            operationsGrouping=Settings(Settings.OPERATIONS_GROUPING),
-            fileSequence=bool(Settings(Settings.FILE_SEQUENCE)),
-            fileSequenceDigits=Settings(Settings.FILE_SEQUENCE_DIGITS),
+            flatFileStructure=current.flatFileStructure,
+            numericName=current.numericName,
+            operationsGrouping=current.operationsGrouping,
+            fileSequence=current.fileSequence,
+            fileSequenceDigits=current.fileSequenceDigits,
         )
         for setup in self.selected:
             outputPath = getSetupOutputPath(
