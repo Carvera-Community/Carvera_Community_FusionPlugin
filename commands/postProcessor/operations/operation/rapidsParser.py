@@ -1,30 +1,11 @@
-from enum import StrEnum
 import math
-import re
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Generator
 
-# G/M words (letters)
-class WORD(StrEnum):
-    G = "G"
-    X = "X"
-    Y = "Y"
-    Z = "Z"
-    F = "F"
-
-
-@dataclass
-class ParseResult:
-    words: list[tuple[str, float]] = field(default_factory=list)
-    sawX: bool = False
-    sawY: bool = False
-    sawZ: bool = False
-    localMotion: WORD | None = None
-
-    def setLocalMotion(self, localMotion) -> None:
-        self.localMotion = localMotion
+from .rapid_moves.tokenizer import MOTIONS, WORD, ParseResult, parse_line
+from .rapid_moves.analysis import AnalysisSegment
 
 @dataclass
 class LineResult:
@@ -53,14 +34,6 @@ class ModalState:
     y: float | None = 0
     z: float | None = 0
     feed: float | None = None
-
-# Motions (modal values)
-class MOTIONS:
-        G0 = "G0"
-        G1 = "G1"
-        G2 = "G2"
-        G3 = "G3"
-        SUPPORTED = (G0, G1, G2, G3)
 
 @dataclass 
 class XYStepDetail:
@@ -146,35 +119,7 @@ class ParseSegment:
         self.deltaZDown = round(end.prevZ - end.z, roundDecimals) if end.z is not None and end.prevZ is not None else 0.0
 
 class RapidsParser:
-    # Regex
-    WORD_RE = re.compile(r'([A-Za-z])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))')
-    COMMENT_RE = re.compile(r'\([^)]*\)')
-    
-    @classmethod
-    def _parseLine(cls, line: str) -> ParseResult:
-        result = ParseResult()
-        clean = cls.COMMENT_RE.sub("", line)
-        raw = cls.WORD_RE.findall(clean)
-        if not raw:
-            return result
-
-        for letter, value in raw:
-            letter = letter.upper()
-            value = float(value)
-            result.words.append((letter, value))
-
-            if letter == WORD.G:
-                g = f"{WORD.G}{int(value)}"
-                if g in MOTIONS.SUPPORTED:
-                    result.setLocalMotion(g)
-            elif letter == WORD.X:
-                result.sawX = True
-            elif letter == WORD.Y:
-                result.sawY = True
-            elif letter == WORD.Z:
-                result.sawZ = True
-
-        return result
+    _parseLine = staticmethod(parse_line)
 
     @classmethod
     def _motionOk(cls, effectiveMotion: str | None, requireG1: bool) -> bool:
@@ -468,57 +413,3 @@ class RapidsParser:
                 result.addRejectReason(cls.REASON_TOO_SHORT_EFFECTIVE_DIST)
 
             yield result.asDict()
-    
-@dataclass
-class AnalysisSegment:
-    def __init__(self, lineResult: ParseSegment) -> None:
-        self.lineResult = lineResult
-        self.startLineNumber = lineResult.startLineNumber
-        self.startText = lineResult.startText
-        self.endLineNumber = lineResult.endLineNumber
-        self.endText = lineResult.endText
-        self.middleTexts = lineResult.middleTexts
-        self.middleLineNumbers = lineResult.middleLineNumbers
-        self.deltaZUp = lineResult.deltaZUp
-        self.deltaZDown = lineResult.deltaZDown
-        self.totalXYDistance = lineResult.totalXYDistance
-        self.isValid: bool = True
-        self.hasStartHasFeed: bool = False
-
-        self._rejectReason: list[str] = []
-
-
-    @property
-    def middleStepsCount(self) -> int:
-        return len(self.middleTexts)
-
-    def addRejectReason(self, rejectReason: str) -> None:
-        self._rejectReason.append(rejectReason)
-
-    def trimEndUntilValidOrNoMiddle(self, tokenizer: Callable[[str], list[str]], validator: Callable[[list[str]], bool], rejectionReason: str) -> None: 
-        tokens = tokenizer(self.endText)
-        if validator(tokens):
-            while validator(tokens) and len(self.middleTexts) > 0:
-                self.endText = self.middleTexts[-1]
-                self.endLineNumber = self.middleLineNumbers[-1]
-                self.middleTexts.pop()
-                self.middleLineNumbers.pop()
-                tokens = tokenizer(self.endText)
-
-            if validator(tokens) and self.middleStepsCount == 0:
-                self.isValid = False
-                self.addRejectReason(rejectionReason)
-
-    def getEffectiveLength(self) -> float:
-        zDist = abs(self.deltaZUp) + abs(self.deltaZDown)
-        return max(self.totalXYDistance, zDist)
-
-    def asDict(self) -> dict[str, Any]:
-        d: dict[str, Any] = {}
-
-        d['startLine'] = self.startLineNumber
-        d['endLine'] = self.endLineNumber
-        d['startHasFeed'] = self.hasStartHasFeed
-        d['isValid'] = self.isValid
-
-        return d
