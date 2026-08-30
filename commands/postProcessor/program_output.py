@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 import shutil
+from typing import Callable, Protocol
 
 from .settings.constants import Constants
 
@@ -17,6 +18,10 @@ class ProgramOutputSettings:
 class ProgramOutputLayout:
     path: Path
     fileName: str
+
+
+class ProgramOutputContext(Protocol):
+    def setFileName(self, fileName: str) -> None: ...
 
 
 def planProgramOutput(
@@ -57,3 +62,28 @@ def prepareOutputFolder(outputFolder: Path, clearFolder: bool) -> bool:
         return False
 
     return True
+
+
+def writeProgramOutputSections(
+    ctx: ProgramOutputContext,
+    initialFileName: str | None,
+    numericName: bool,
+    writeHeader: Callable[[ProgramOutputContext], None],
+    writeBody: Callable[[ProgramOutputContext], None],
+    writeTail: Callable[[ProgramOutputContext], None],
+) -> None:
+    resetNumericName = (
+        numericName
+        and initialFileName is not None
+        and initialFileName.isnumeric()
+    )
+
+    writeHeader(ctx)
+    if resetNumericName:
+        ctx.setFileName(initialFileName)
+
+    writeBody(ctx)
+    if resetNumericName:
+        ctx.setFileName(initialFileName)
+
+    writeTail(ctx)

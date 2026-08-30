@@ -16,6 +16,7 @@ from .program_output import (
     ProgramOutputSettings,
     planProgramOutput,
     prepareOutputFolder,
+    writeProgramOutputSections,
 )
 
 class Program():
@@ -189,15 +190,14 @@ class Program():
             ctx.setPath(outputLayout.path)
             ctx.setFileName(outputLayout.fileName)
 
-            writeSetupsHeader(ctx)
-
-            if Settings(Settings.NUMERIC_NAME) and initialFileName is not None and initialFileName.isnumeric():
-                ctx.setFileName(initialFileName) # Reset the numeric name
-            writeSetupsBody(ctx)
-
-            if Settings(Settings.NUMERIC_NAME) and initialFileName is not None and initialFileName.isnumeric():
-                ctx.setFileName(initialFileName) # Reset the numeric name
-            writeSetupsTail(ctx)
+            writeProgramOutputSections(
+                ctx,
+                initialFileName,
+                outputSettings.numericName,
+                writeSetupsHeader,
+                writeSetupsBody,
+                writeSetupsTail,
+            )
 
         except Exception as exc:
             raise exc

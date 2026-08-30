@@ -12,6 +12,17 @@ Constants = import_addin_module(
 ProgramOutputSettings = program_output.ProgramOutputSettings
 planProgramOutput = program_output.planProgramOutput
 prepareOutputFolder = program_output.prepareOutputFolder
+writeProgramOutputSections = program_output.writeProgramOutputSections
+
+
+class FakeOutputContext:
+    def __init__(self, file_name):
+        self.fileName = file_name
+        self.events = []
+
+    def setFileName(self, file_name):
+        self.fileName = file_name
+        self.events.append(("set", file_name))
 
 
 def settings(grouping, **overrides):
@@ -149,3 +160,74 @@ def test_clear_reports_file_removal_failure(tmp_path, monkeypatch):
 
     assert not prepareOutputFolder(output, clearFolder=True)
     assert protected.exists()
+
+
+def test_output_sections_are_written_in_header_body_tail_order():
+    context = FakeOutputContext("job")
+
+    writeProgramOutputSections(
+        context,
+        "job",
+        numericName=False,
+        writeHeader=lambda ctx: ctx.events.append(("header", ctx.fileName)),
+        writeBody=lambda ctx: ctx.events.append(("body", ctx.fileName)),
+        writeTail=lambda ctx: ctx.events.append(("tail", ctx.fileName)),
+    )
+
+    assert context.events == [
+        ("header", "job"),
+        ("body", "job"),
+        ("tail", "job"),
+    ]
+
+
+def test_numeric_name_is_reset_between_output_sections():
+    context = FakeOutputContext("009")
+
+    def write_header(ctx):
+        ctx.events.append(("header", ctx.fileName))
+        ctx.fileName = "012"
+
+    def write_body(ctx):
+        ctx.events.append(("body", ctx.fileName))
+        ctx.fileName = "015"
+
+    writeProgramOutputSections(
+        context,
+        "009",
+        numericName=True,
+        writeHeader=write_header,
+        writeBody=write_body,
+        writeTail=lambda ctx: ctx.events.append(("tail", ctx.fileName)),
+    )
+
+    assert context.events == [
+        ("header", "009"),
+        ("set", "009"),
+        ("body", "009"),
+        ("set", "009"),
+        ("tail", "009"),
+    ]
+
+
+def test_non_numeric_file_name_is_not_reset_in_numeric_mode():
+    context = FakeOutputContext("job")
+
+    def advance(ctx, section):
+        ctx.events.append((section, ctx.fileName))
+        ctx.fileName += "-next"
+
+    writeProgramOutputSections(
+        context,
+        "job",
+        numericName=True,
+        writeHeader=lambda ctx: advance(ctx, "header"),
+        writeBody=lambda ctx: advance(ctx, "body"),
+        writeTail=lambda ctx: advance(ctx, "tail"),
+    )
+
+    assert context.events == [
+        ("header", "job"),
+        ("body", "job-next"),
+        ("tail", "job-next-next"),
+    ]
