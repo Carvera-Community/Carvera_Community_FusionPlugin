@@ -3,6 +3,7 @@ from typing import Iterable, Protocol
 
 from ..settings.settings import Settings
 from ..settings.constants import Constants
+from ..output_plan import assignFinalOperations, planResultFiles
 
 
 class ResultOperationContext(Protocol):
@@ -82,36 +83,6 @@ def writeBody(
     if numericName:
         fileName = ctx.fileName
 
-    def _markLastOperationsInResultFiles() -> None:
-        operationsBySetup = []
-        allOperations = []
-
-        for setup in ctx.selected:
-            operations = setup.ctx.operations
-            if operations is None:
-                continue
-
-            for operation in operations:
-                operation.ctx.isLastOp = False
-
-            bodyOperations = [operation for operation in operations if operation.hasBody]
-            if bodyOperations:
-                operationsBySetup.append(bodyOperations)
-                allOperations.extend(bodyOperations)
-
-        if operationsGrouping == Constants.OperationsGroupings.SINGLE_FILE:
-            if allOperations:
-                allOperations[-1].ctx.isLastOp = True
-        elif operationsGrouping == Constants.OperationsGroupings.SETUP:
-            for operations in operationsBySetup:
-                operations[-1].ctx.isLastOp = True
-        else:
-            # SETUP_AND_TOOL and PER_OPERATION produce one result file for
-            # each internal operation group. Each group is therefore the
-            # final operation in its own result file.
-            for operation in allOperations:
-                operation.ctx.isLastOp = True
-
     def _getRotation(
         setup: RoutedSetup,
         firstSetup: RoutedSetup | None,
@@ -135,7 +106,8 @@ def writeBody(
 
         return currentRotation, newRotation, preserveRotation
 
-    _markLastOperationsInResultFiles()
+    resultFiles = planResultFiles(ctx.selected, operationsGrouping)
+    assignFinalOperations(ctx.selected, resultFiles)
 
     for setup in ctx.selected:
         currentRotationAngle, setup.ctx.rotationAngle, setup.ctx.preserveRotation = _getRotation(
