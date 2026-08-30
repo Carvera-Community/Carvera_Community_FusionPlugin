@@ -1,6 +1,4 @@
 from __future__ import annotations
-import os
-import shutil
 from adsk import cam
 from pathlib import Path
 
@@ -14,6 +12,11 @@ from .setups.tail_writer import writeTail as writeSetupsTail
 
 from .settings.settings import Settings
 from .parameters import Parameters
+from .program_output import (
+    ProgramOutputSettings,
+    planProgramOutput,
+    prepareOutputFolder,
+)
 
 class Program():
     def __init__(self, program: cam.NCProgram):
@@ -167,31 +170,24 @@ class Program():
         programName = self.Parameters.Get(Parameters.NAME, str)
 
         try:
-            if initialPath.exists() and not initialPath.is_dir():
-                return # Need to notify the user about this.
-
-            if Settings(Settings.CLEAR_FOLDER) and initialPath.exists() and initialPath.is_dir():
-                for child in initialPath.iterdir():
-                    try:
-                        if child.is_dir() and not child.is_symlink():
-                            shutil.rmtree(child)
-                        else:
-                            child.unlink()
-                    except Exception:
-                        return # File/folder could not be deleted, likely due to permissions. Need to notify the user about this.
+            outputSettings = ProgramOutputSettings(
+                operationsGrouping=Settings(Settings.OPERATIONS_GROUPING),
+                flatFileStructure=bool(Settings(Settings.FLAT_FILE_STRUCTURE)),
+                numericName=bool(Settings(Settings.NUMERIC_NAME)),
+                clearFolder=bool(Settings(Settings.CLEAR_FOLDER)),
+            )
+            if not prepareOutputFolder(initialPath, outputSettings.clearFolder):
+                return  # Need to notify the user about this.
             
             # Setting the base parameters for the output.
             ctx.setFileExtension(self._program.postConfiguration.extension)
-            if (Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE 
-                or Settings(Settings.FLAT_FILE_STRUCTURE) 
-                or (Settings(Settings.NUMERIC_NAME) 
-                    and initialFileName is not None 
-                    and initialFileName.isnumeric())): # numeric name is a special case where we want to keep a single file name and just increment it, so we treat it like single file grouping even if the user has selected otherwise
-                # Flat file structure / single file / numeric filename
-                ctx.setPath(initialPath)
-                ctx.setFileName(str(initialFileName))
-            else:
-                ctx.setPath(initialPath / str(initialFileName))
+            outputLayout = planProgramOutput(
+                initialPath,
+                initialFileName,
+                outputSettings,
+            )
+            ctx.setPath(outputLayout.path)
+            ctx.setFileName(outputLayout.fileName)
 
             writeSetupsHeader(ctx)
 
