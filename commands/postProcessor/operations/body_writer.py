@@ -1,16 +1,42 @@
 from pathlib import Path
+from typing import Callable, Protocol
 
 from ..file_modes import FileModes
 
-from .operation.operation import Operation
-from .operations_context import OperationsContext
 
-def writeBody(ctx: OperationsContext):
+class BodyOperationContext(Protocol):
+    rotationAngle: float | None
+    preserveRotation: bool
+
+
+class BodyOperation(Protocol):
+    hasBody: bool
+    toolId: int | None
+    fileName: str
+    ctx: BodyOperationContext
+
+    def WriteBody(self, fileHandle) -> None: ...
+
+
+class BodyContext(Protocol):
+    operations: list[BodyOperation]
+    path: Path
+    fileExtension: str
+    rotationAngle: float | None
+    preserveRotation: bool
+
+
+def _currentFileNameSetter():
     from .operations import setOperationFileName
+
+    return setOperationFileName
+
+
+def writeBody(ctx: BodyContext, setFileName: Callable | None = None):
+    setFileName = setFileName or _currentFileNameSetter()
 
     toolIdIndex = {}
     firstOperation: bool = True
-    operation: Operation
     for operation in [op for op in ctx.operations if op.hasBody]:
         if firstOperation:
             operation.ctx.rotationAngle = ctx.rotationAngle
@@ -23,7 +49,7 @@ def writeBody(ctx: OperationsContext):
             toolIdIndex[toolId] = 0
         toolIdIndex[toolId] += 1
 
-        setOperationFileName(ctx, operation, toolIdIndex[toolId])
+        setFileName(ctx, operation, toolIdIndex[toolId])
 
         pathToOpen: Path = ctx.path / f"{operation.fileName}{ctx.fileExtension}"
         with pathToOpen.open(FileModes.APPEND) as fileHandle:
