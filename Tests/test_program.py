@@ -1,6 +1,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from addin_import import import_addin_module
 
 
@@ -154,3 +156,44 @@ def test_output_folder_round_trips_through_parameters():
     program.set_output_folder(Path("/tmp/new-output"))
 
     assert program.get_output_folder() == Path("/tmp/new-output")
+
+
+def test_process_restores_program_parameters_after_parser_failure():
+    program, _, _ = make_program()
+
+    class FailingContext:
+        def captureProcessingSettings(self):
+            return None
+
+        def parse(self, _path):
+            program.set_output_folder(Path("/tmp/temporary"))
+            program.set_file_name("temporary")
+            program.parameters.Set(Parameters.NAME, "Temporary")
+            raise RuntimeError("parse failed")
+
+    with pytest.raises(RuntimeError, match="parse failed"):
+        program.process(FailingContext(), Path("/tmp/work"))
+
+    assert program.get_output_folder() == Path("/tmp/output")
+    assert program.fileName == "job"
+    assert program.parameters.Get(Parameters.NAME, str) == "Program"
+
+
+def test_write_output_restores_parameters_after_renderer_failure(monkeypatch):
+    configuration = SimpleNamespace(description="Makera post", extension=".nc")
+    program, _, _ = make_program(post_configuration=configuration)
+
+    def fail_render(*_args):
+        program.set_output_folder(Path("/tmp/temporary"))
+        program.set_file_name("temporary")
+        program.parameters.Set(Parameters.NAME, "Temporary")
+        raise RuntimeError("render failed")
+
+    monkeypatch.setattr(program_module, "render_program_output", fail_render)
+
+    with pytest.raises(RuntimeError, match="render failed"):
+        program.write_output(object())
+
+    assert program.get_output_folder() == Path("/tmp/output")
+    assert program.fileName == "job"
+    assert program.parameters.Get(Parameters.NAME, str) == "Program"

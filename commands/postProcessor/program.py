@@ -6,13 +6,7 @@ from .strings import Strings
 from .attributes import Attributes
 
 from .parameters import Parameters
-from .program_output import (
-    ProgramOutputSettings,
-    planProgramOutput,
-    prepareOutputFolder,
-)
-from .output_plan import plan_output_files
-from .output_renderer import render_output_files
+from .program_workflow import render_program_output
 
 if TYPE_CHECKING:
     from .setups.setups_context import SetupsContext
@@ -165,33 +159,12 @@ class Program():
         programName = self.parameters.Get(Parameters.NAME, str)
 
         try:
-            current = ctx.processingSettings or ctx.captureProcessingSettings()
-            outputSettings = ProgramOutputSettings(
-                operationsGrouping=current.operationsGrouping,
-                flatFileStructure=current.flatFileStructure,
-                numericName=current.numericName,
-                clearFolder=current.clearFolder,
-            )
-            if not prepareOutputFolder(initialPath, outputSettings.clearFolder):
-                return  # Need to notify the user about this.
-            
-            # Setting the base parameters for the output.
-            ctx.setFileExtension(self._program.postConfiguration.extension)
-            outputLayout = planProgramOutput(
+            return render_program_output(
+                ctx,
                 initialPath,
                 initialFileName,
-                outputSettings,
+                self.fileExtension,
             )
-            ctx.setPath(outputLayout.path)
-            ctx.setFileName(outputLayout.fileName)
-
-            plans = plan_output_files(
-                ctx,
-                current,
-                ctx.sanitizeFilename,
-            )
-            render_output_files(plans, current.overwriteFiles)
-
         finally:
             self.set_output_folder(initialPath)
             if initialFileName is not None:
