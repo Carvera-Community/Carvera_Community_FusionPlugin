@@ -7,6 +7,10 @@ from .operation.operation_context import OperationContext
 from ....lib.fusionAddInUtils import Utils
 from ..settings.settings import Settings
 from .operation.operation import Operation
+from .operation_file_naming import (
+    OperationFileNamingSettings,
+    setOperationFileName as applyOperationFileName,
+)
 
 from .header_writer import (
     writeFirstHeaderStart,
@@ -121,31 +125,16 @@ class Operations():
 
 
 def setOperationFileName(ctx: OperationsContext, operation: Operation, toolIdIndex: int) -> None:
-    
-    operation.SetFileName(ctx.fileName)
-
-    if Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SINGLE_FILE, 
-                                                    Settings.OperationsGroupings.SETUP]:
-        return
-    
-    fileNumber = str((operation.index + 1)).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
-
-    if Settings(Settings.NUMERIC_NAME) and ctx.fileName is not None:
-        # Bump up the file name for the next operation if numeric naming is set
-        ctx.fileName = str(int(ctx.fileName) + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), '0')
-    else:
-        if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SETUP_AND_TOOL:
-            # For setup and tool grouping, use the tool number as 
-            # the file name, and append an index if there are 
-            # multiple operations with the same tool
-            toolIdStr = f"T{operation.toolId}{'_' + str(toolIdIndex) if toolIdIndex > 1 else ''}"
-            if Settings(Settings.FILE_SEQUENCE):
-                toolIdStr = f"{fileNumber}_{toolIdStr}"
-            operation.SetFileName(Utils.sanitizeFilename(f"{ctx.fileName}_{toolIdStr}", preserveExtension = False))
-        elif Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.PER_OPERATION:
-            # For per operation grouping, use the operation name as
-            # the file name
-            if Settings(Settings.FILE_SEQUENCE):
-                operation.SetFileName(Utils.sanitizeFilename(f"{fileNumber}_{operation.name}", preserveExtension = False))
-            else:
-                operation.SetFileName(Utils.sanitizeFilename(operation.name, preserveExtension = False))
+    settings = OperationFileNamingSettings(
+        operationsGrouping=Settings(Settings.OPERATIONS_GROUPING),
+        fileSequenceDigits=Settings(Settings.FILE_SEQUENCE_DIGITS),
+        numericName=Settings(Settings.NUMERIC_NAME),
+        fileSequence=Settings(Settings.FILE_SEQUENCE),
+    )
+    applyOperationFileName(
+        ctx,
+        operation,
+        toolIdIndex,
+        settings,
+        lambda name: Utils.sanitizeFilename(name, preserveExtension=False),
+    )
