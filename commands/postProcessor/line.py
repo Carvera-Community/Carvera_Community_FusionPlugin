@@ -31,7 +31,7 @@ class Line():
     _RE_FEED = re.compile(r'(^|\s)F[+-]?\d+(?:\.\d*)?(?=\s|$)', re.IGNORECASE)
 
     @classmethod
-    def writeLine(cls, fileHandler: TextIO, line: str) -> None:
+    def write_line(cls, fileHandler: TextIO, line: str) -> None:
         """Write one line, removing an input line number when present."""
         return cls.write(fileHandler, line + "\n")
 
@@ -46,5 +46,5 @@ class Line():
         fileHandler.write(line)
 
     @classmethod
-    def removeFeedFromLine(cls, line: str) -> str:
+    def remove_feed_from_line(cls, line: str) -> str:
         return cls._RE_FEED.sub(r'\1', line).strip()

@@ -28,7 +28,7 @@ class LineResult:
         self.z: float | None = None
         self.effectiveMotion: str | None = None
 
-    def setEffectiveMotion(self, motion: str | None) -> None:
+    def set_effective_motion(self, motion: str | None) -> None:
         self.effectiveMotion = self.parseResult.localMotion or motion
 
 
@@ -86,7 +86,7 @@ class ParseSegment:
         self.endText = end.original
         self.middleLineNumbers = middle_line_numbers
         self.middleTexts = middle_texts
-        self.middleStepsCount = middle_steps_count
+        self.middle_steps_count = middle_steps_count
         self.xySteps = xy_steps
 
         self.totalDeltaX = round(sum(step.deltaX for step in xy_steps), round_decimals)

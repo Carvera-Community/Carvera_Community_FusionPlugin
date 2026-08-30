@@ -16,7 +16,7 @@ from ...const import Const
 from ...settings.settings import Settings
 
 from ...programs import Programs
-from ...setups.setups import aAxisRotationRequired
+from ...setups.setups import a_axis_rotation_required
 from ...setups.setups_context import SetupsContext
 from ...setups.setup.setup import Setup
 from ...strings import Strings
@@ -152,7 +152,7 @@ class InputTab(Constants):
         EventRegistry.register(cls.ROTATE_A_AXIS_ID, lambda input: EventRegistry.setValue(cls.SELECT_ALL_SETUPS_ID, areAllSetupsSelected(input.parentCommand.commandInputs)))
         
         def updateSetupsWithNotice(input: BoolValueCommandInput):
-            needsRotation, rotatedSetups = aAxisRotationRequired(ctx)
+            needsRotation, rotatedSetups = a_axis_rotation_required(ctx)
             if needsRotation and not input.value:
                 TabCommandInput.cast(input.parentCommand.commandInputs.itemById(cls.INPUT_SELECTION_TAB_ID)).activate()
                 app = Application.get()

@@ -85,7 +85,7 @@ class MiscTab(Constants):
         def replaceButtonHandler(input: BoolValueCommandInput):
             values = input.parentCommand.commandInputs
             if input.value:
-                ctx.renameSetups(
+                ctx.rename_setups(
                     StringValueCommandInput.cast(values.itemById(cls.FIND_STRING_ID)).value, 
                     StringValueCommandInput.cast(values.itemById(cls.REPLACE_STRING_ID)).value, 
                     BoolValueCommandInput.cast(values.itemById(cls.USE_REGEX_ID)).value, 

@@ -14,7 +14,7 @@ class SetupsContext:
     fileName: str | None = None
     processingSettings: ProcessingSettings | None = None
 
-    def captureProcessingSettings(self) -> ProcessingSettings:
+    def capture_processing_settings(self) -> ProcessingSettings:
         self.processingSettings = ProcessingSettings.capture()
         return self.processingSettings
 
@@ -51,14 +51,14 @@ class SetupsContext:
             setup.ctx.processingSettings = self.processingSettings
             setup.parse(self.tempPath)
 
-    def renameSetups(self, find: str, replace: str, isRegex: bool, onlySelected: bool) -> None:
+    def rename_setups(self, find: str, replace: str, isRegex: bool, onlySelected: bool) -> None:
         setupsToRename = self.selected if onlySelected else self._items
         for setup in setupsToRename:
             setup.rename(find, replace, isRegex)
     
-    def setPath(self, path: Path, sanitizeFilename: Callable | None = None) -> None:
-        sanitizeFilename = sanitizeFilename or _sanitizeFilename
-        current = self.processingSettings or self.captureProcessingSettings()
+    def set_path(self, path: Path, sanitize_filename: Callable | None = None) -> None:
+        sanitize_filename = sanitize_filename or _sanitize_filename
+        current = self.processingSettings or self.capture_processing_settings()
         settings = SetupOutputPathSettings(
             flatFileStructure=current.flatFileStructure,
             numericName=current.numericName,
@@ -71,26 +71,26 @@ class SetupsContext:
                 path,
                 setup,
                 settings,
-                sanitizeFilename,
+                sanitize_filename,
             )
             setup.set_output_path(outputPath)
 
-    def setFileName(self, fileName: str) -> None:
+    def set_file_name(self, fileName: str) -> None:
         self.fileName = fileName
 
         for setup in self.selected:
             setup.ctx.set_file_name(self.fileName)
 
-    def setFileExtension(self, extension: str) -> None:
+    def set_file_extension(self, extension: str) -> None:
         for setup in self.selected:
             setup.set_file_extension(extension)
 
     @staticmethod
-    def sanitizeFilename(name: str) -> str:
-        return _sanitizeFilename(name)
+    def sanitize_filename(name: str) -> str:
+        return _sanitize_filename(name)
 
 
-def _sanitizeFilename(name: str) -> str:
+def _sanitize_filename(name: str) -> str:
     from ....lib.fusionAddInUtils.general_utils import Utils
 
     return Utils.sanitizeFilename(name, preserveExtension=False)

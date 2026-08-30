@@ -8,7 +8,7 @@ def _log(message: str) -> None:
 
     Utils.log(message)
 
-def getWCSAlignmentIssues(ctx: SetupsContext) -> tuple[bool, list[str], list[str]]:
+def get_wcs_alignment_issues(ctx: SetupsContext) -> tuple[bool, list[str], list[str]]:
     misalignedOrigin = []
     misalignedXAxis = []
     first = None
@@ -22,7 +22,7 @@ def getWCSAlignmentIssues(ctx: SetupsContext) -> tuple[bool, list[str], list[str
                 misalignedXAxis.append(setup.name)
     return (len(misalignedOrigin) + len(misalignedXAxis) == 0, misalignedOrigin, misalignedXAxis)
 
-def aAxisRotationRequired(ctx: SetupsContext) -> tuple[bool, list[tuple[str, float]]]:
+def a_axis_rotation_required(ctx: SetupsContext) -> tuple[bool, list[tuple[str, float]]]:
     needsRotation = []
     first = None
     for setup in ctx.selected:

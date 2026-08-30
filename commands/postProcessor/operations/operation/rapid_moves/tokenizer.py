@@ -27,7 +27,7 @@ class ParseResult:
     sawZ: bool = False
     localMotion: WORD | None = None
 
-    def setLocalMotion(self, localMotion) -> None:
+    def set_local_motion(self, localMotion) -> None:
         self.localMotion = localMotion
 
 
@@ -46,7 +46,7 @@ def parse_line(line: str) -> ParseResult:
         if letter == WORD.G:
             motion = f"{WORD.G}{int(value)}"
             if motion in MOTIONS.SUPPORTED:
-                result.setLocalMotion(motion)
+                result.set_local_motion(motion)
         elif letter == WORD.X:
             result.sawX = True
         elif letter == WORD.Y:

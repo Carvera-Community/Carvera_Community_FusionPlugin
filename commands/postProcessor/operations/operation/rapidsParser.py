@@ -13,44 +13,44 @@ from .rapid_moves.analysis import (
 )
 
 class RapidsParser:
-    _parseLine = staticmethod(parse_line)
+    _parse_line = staticmethod(parse_line)
 
     @classmethod
-    def _motionOk(cls, effectiveMotion: str | None, requireG1: bool) -> bool:
+    def _motion_ok(cls, effectiveMotion: str | None, requireG1: bool) -> bool:
         if not requireG1:
             return True
         return effectiveMotion == MOTIONS.G1
 
     @classmethod
-    def _isZOnlyUp(cls, line: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(line.effectiveMotion, requireG1):
+    def _is_z_only_up(cls, line: LineResult, requireG1: bool) -> bool:
+        if not cls._motion_ok(line.effectiveMotion, requireG1):
             return False
         if not (line.parseResult.sawZ and not (line.parseResult.sawX or line.parseResult.sawY)):
             return False
         return False if line.prevZ is None or line.z is None else line.z > line.prevZ
 
     @classmethod
-    def _isZOnlyDown(cls, line: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(line.effectiveMotion, requireG1):
+    def _is_z_only_down(cls, line: LineResult, requireG1: bool) -> bool:
+        if not cls._motion_ok(line.effectiveMotion, requireG1):
             return False
         if not (line.parseResult.sawZ and not (line.parseResult.sawX or line.parseResult.sawY)):
             return False
         return False if line.prevZ is None or line.z is None else line.z < line.prevZ
 
     @classmethod
-    def _isXYOnly(cls, line: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(line.effectiveMotion, requireG1):
+    def _is_xy_only(cls, line: LineResult, requireG1: bool) -> bool:
+        if not cls._motion_ok(line.effectiveMotion, requireG1):
             return False
         return (line.parseResult.sawX or line.parseResult.sawY) and (not line.parseResult.sawZ)
 
     @classmethod
-    def _isXYZAny(cls, row: LineResult, requireG1: bool) -> bool:
-        if not cls._motionOk(row.effectiveMotion, requireG1):
+    def _is_xyz_any(cls, row: LineResult, requireG1: bool) -> bool:
+        if not cls._motion_ok(row.effectiveMotion, requireG1):
             return False
         return row.parseResult.sawZ and (row.parseResult.sawX or row.parseResult.sawY)
 
     @classmethod
-    def _iterPerLine(cls, path: Path, lineParser: Callable[[str], ParseResult]) -> Generator[LineResult]:
+    def _iter_per_line(cls, path: Path, lineParser: Callable[[str], ParseResult]) -> Generator[LineResult]:
         state = ModalState()
 
         with path.open("r", encoding="utf-8", errors="replace") as f:
@@ -75,7 +75,7 @@ class RapidsParser:
                 line.x = state.x
                 line.y = state.y
                 line.z = state.z
-                line.setEffectiveMotion(state.motion)
+                line.set_effective_motion(state.motion)
 
                 yield line
 
@@ -90,7 +90,7 @@ class RapidsParser:
             self.baseIndex: int = 0
             self.eof: bool = False
 
-        def _fillTo(self, globalIndex: int) -> None:
+        def _fill_to(self, globalIndex: int) -> None:
             if self.eof:
                 return
             while not self.eof and (self.baseIndex + len(self.buffer) - 1) < globalIndex:
@@ -103,13 +103,13 @@ class RapidsParser:
         def peek(self, globalIndex: int) -> LineResult | None:
             if globalIndex < self.baseIndex:
                 return None
-            self._fillTo(globalIndex)
+            self._fill_to(globalIndex)
             offset = globalIndex - self.baseIndex
             if 0 <= offset < len(self.buffer):
                 return self.buffer[offset]
             return None
 
-        def trimTo(self, globalIndex: int) -> None:
+        def trim_to(self, globalIndex: int) -> None:
             # Drop everything strictly before globalIndex
             while self.buffer and self.baseIndex < globalIndex:
                 self.buffer.popleft()
@@ -137,10 +137,10 @@ class RapidsParser:
 
         bufferSize = max(bufferSize, maxStepsInbetween + 8)
 
-        it = cls._iterPerLine(path, cls._parseLine)
+        it = cls._iter_per_line(path, cls._parse_line)
         window = cls._BufferWindow(it, bufferSize=bufferSize)
 
-        def _nextNonEmpty(currentLineIndex: int) -> int | None:
+        def _next_non_empty(currentLineIndex: int) -> int | None:
             nextNonBlankLine = currentLineIndex + 1
             while True:
                 row = window.peek(nextNonBlankLine)
@@ -157,19 +157,19 @@ class RapidsParser:
         segments: list[ParseSegment] = []
 
         while True:
-            window.trimTo(i)
+            window.trim_to(i)
             start = window.peek(i)
             if start is None:
                 break
 
-            if (not start.parseResult.words) or (not cls._isZOnlyUp(start, requireG1)):
+            if (not start.parseResult.words) or (not cls._is_z_only_up(start, requireG1)):
                 i += 1
                 continue
 
             xyStepDetails: list[XYStepDetail] = []
             middleLineIndexes: list[int] = []
 
-            nextLineIndex = _nextNonEmpty(start.index)
+            nextLineIndex = _next_non_empty(start.index)
             if nextLineIndex is None:
                 break
 
@@ -184,11 +184,11 @@ class RapidsParser:
                     aborted = True
                     break
 
-                if cls._isZOnlyDown(line, requireG1):
+                if cls._is_z_only_down(line, requireG1):
                     endLineIndex = nextLineIndex
                     break
 
-                if cls._isXYOnly(line, requireG1) or cls._isXYZAny(line, requireG1):
+                if cls._is_xy_only(line, requireG1) or cls._is_xyz_any(line, requireG1):
                     middleLineIndexes.append(nextLineIndex)
                     stepsTaken += 1
 
@@ -201,7 +201,7 @@ class RapidsParser:
                         aborted = True
                         break
 
-                    nextLineIndex = _nextNonEmpty(line.index)
+                    nextLineIndex = _next_non_empty(line.index)
                     continue
 
                 aborted = True

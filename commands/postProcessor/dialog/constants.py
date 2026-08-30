@@ -47,4 +47,3 @@ class Constants:
     ADD_LINE_NUMBERS_ID = 'addLineNumbers'
     LANGUAGE_ID = 'language'
     #endregion
-

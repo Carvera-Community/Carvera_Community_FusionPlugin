@@ -162,7 +162,7 @@ def test_process_restores_program_parameters_after_parser_failure():
     program, _, _ = make_program()
 
     class FailingContext:
-        def captureProcessingSettings(self):
+        def capture_processing_settings(self):
             return None
 
         def parse(self, _path):

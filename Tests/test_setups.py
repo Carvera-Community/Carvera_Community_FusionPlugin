@@ -42,7 +42,7 @@ def test_wcs_alignment_reports_origin_and_axis_issues():
         ]
     )
 
-    aligned, origins, axes = setups_module.getWCSAlignmentIssues(context)
+    aligned, origins, axes = setups_module.get_wcs_alignment_issues(context)
 
     assert not aligned
     assert origins == ["Moved"]
@@ -54,7 +54,7 @@ def test_wcs_alignment_accepts_matching_setups():
         selected=[FakeSetup("First", 0, "X"), FakeSetup("Second", 0, "X")]
     )
 
-    assert setups_module.getWCSAlignmentIssues(context) == (True, [], [])
+    assert setups_module.get_wcs_alignment_issues(context) == (True, [], [])
 
 
 def test_rotation_required_reports_nonzero_rounded_angles(monkeypatch):
@@ -68,7 +68,7 @@ def test_rotation_required_reports_nonzero_rounded_angles(monkeypatch):
         ]
     )
 
-    required, rotations = setups_module.aAxisRotationRequired(context)
+    required, rotations = setups_module.a_axis_rotation_required(context)
 
     assert required
     assert rotations == [("Tilted", 12.346)]
@@ -78,4 +78,4 @@ def test_rotation_required_reports_nonzero_rounded_angles(monkeypatch):
 def test_rotation_not_required_for_single_setup():
     context = SimpleNamespace(selected=[FakeSetup("Only", 0, "X")])
 
-    assert setups_module.aAxisRotationRequired(context) == (False, [])
+    assert setups_module.a_axis_rotation_required(context) == (False, [])

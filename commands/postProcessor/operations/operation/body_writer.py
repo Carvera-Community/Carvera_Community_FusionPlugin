@@ -25,7 +25,7 @@ def write_body(
             raise ValueError("Body writer settings are required")
         settings = BodyWriterSettings.from_processing_settings(ctx.processingSettings)
 
-    def _stripFeed(line: str) -> str:
+    def _strip_feed(line: str) -> str:
         # Preserve newline exactly as it was
         hasNewline = line.endswith("\n")
         s = line[:-1] if hasNewline else line
@@ -40,12 +40,12 @@ def write_body(
             suffix = ""
 
         # Remove feed(s) from the non-comment part
-        prefix = ctx.removeFeedFromLine(prefix)
+        prefix = ctx.remove_feed_from_line(prefix)
 
         out = (prefix + (" " if (prefix and suffix and not suffix.startswith(" ")) else "") + suffix).rstrip()
         return out + ("\n" if hasNewline else "")
 
-    def _matchLine(line: str, row: int) -> bool:
+    def _match_line(line: str, row: int) -> bool:
         lineMatch = ctx.matchLine(line)
         if lineMatch:
             if lineMatch.group("G") is not None:
@@ -57,27 +57,27 @@ def write_body(
                             # Special handling of A-axis rotation moves.
                             # The rotation should always be 0 as the 
                             # operations are always generated one by one
-                            return row != analysis.rotation_line or _handleRotation()
+                            return row != analysis.rotation_line or _handle_rotation()
                         elif float(gCode) == 92.4:
                             if lineMatch.group("R") is not None and not ctx.isLastOp:
                                 # Strip out all shrink A-axis commands unless it is the last operation in the file
                                 return row == analysis.shrink_line
         return False
 
-    def _handleRotation() -> bool:
+    def _handle_rotation() -> bool:
         if ctx.rotationAngle is None: # No rotation provided, do not preserve the line as it will rotate to 0 which we don't want.
             return not ctx.preserveRotation
         else: # Write our own rotation code based on the provided rotation angle
             if ctx.preserveRotation: # We will use the already generated gcode.
                 return False
             # Adding our own rotation gcodes
-            ctx.writeLine(fileHandle, "(Rotating a-axis between setups)")
+            ctx.write_line(fileHandle, "(Rotating a-axis between setups)")
             # Using G53 for absolute machine coordinates for safe retraction
             if settings.safeYRetraction:
-                ctx.writeLine(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = settings.yRetractionCoordinate))
+                ctx.write_line(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = settings.yRetractionCoordinate))
             else:
-                ctx.writeLine(fileHandle, "G90 G53 G0 Z-3")
-            ctx.writeLine(fileHandle, "G90 G54 G0 A{angle}".format(angle = f"{ctx.rotationAngle:.3f}".rstrip("0").rstrip(".")))
+                ctx.write_line(fileHandle, "G90 G53 G0 Z-3")
+            ctx.write_line(fileHandle, "G90 G54 G0 A{angle}".format(angle = f"{ctx.rotationAngle:.3f}".rstrip("0").rstrip(".")))
             return True
 
     if analysis.body is None:
@@ -107,20 +107,20 @@ def write_body(
                     lineMatch = ctx.matchLine(line)
                     if lineMatch:
                         if startHasFeed: 
-                            line = _stripFeed(line)
+                            line = _strip_feed(line)
                         if lineMatch.group("G") is not None:
                             if int(lineMatch.group("G")) == 1:
                                 gStart, gEnd = lineMatch.span("G")
                                 line = (line[:gStart] + "0" + line[gEnd:]).rstrip() + " (Rapid movement start)\n" # Change G1 to G0 for rapid move comment line
                         else:
-                            ctx.writeLine(fileHandle, f"G0 {line.rstrip()} (Rapid movement start)")
+                            ctx.write_line(fileHandle, f"G0 {line.rstrip()} (Rapid movement start)")
                             readNextLine = True
                             continue
                 if row + 1 == rapidsEnds:
                     rapidsEnds = 0
                     ctx.write(fileHandle, line)
                     line = "G1 (Rapid movement end)\n" # Add a line after the rapid move to switch back to G1 if it was changed for the rapid move comment
-                if _matchLine(line, row):
+                if _match_line(line, row):
                     readNextLine = True
                     continue
 

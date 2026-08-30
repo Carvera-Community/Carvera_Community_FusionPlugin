@@ -20,8 +20,8 @@ import os
 
 
 from ..setups.setups import (
-    aAxisRotationRequired,
-    getWCSAlignmentIssues
+    a_axis_rotation_required,
+    get_wcs_alignment_issues
 )
 from ..programs import Programs
 from ..settings.settings import Settings
@@ -210,7 +210,7 @@ class PostDialog(PostDialogLayout):
         ui = app.userInterface
         command = args.command
 
-        alignedWCS, badOrigins, badXAxes = getWCSAlignmentIssues(cls._ctx)
+        alignedWCS, badOrigins, badXAxes = get_wcs_alignment_issues(cls._ctx)
         if not alignedWCS:
             Utils.log(f'PostDialog: WCS are not aligned for setups: {badOrigins}', LogLevels.ErrorLogLevel)
             msg = '<i><u>Warning:</u></i><p>'
@@ -230,7 +230,7 @@ class PostDialog(PostDialogLayout):
 
 
         if Programs.Current is not None and not Programs.Current.machineHasAAxis:
-            needAAxisRotation, setups = aAxisRotationRequired(cls._ctx)
+            needAAxisRotation, setups = a_axis_rotation_required(cls._ctx)
             if needAAxisRotation:
                 Utils.log(f'PostDialog: Machine {Programs.Current.machineName} does not support A axis but setups {setups} require A axis rotation.', LogLevels.WarningLogLevel)
                 msg = '<i><u>Warning:</u></i><p>'
@@ -272,7 +272,7 @@ class PostDialog(PostDialogLayout):
             and Programs.Current.hasMachine 
             and cls._ctx.hasSelected 
             and all(not setup.ctx.hasError for setup in cls._ctx.selected) 
-            and (Programs.Current.machineHasAAxis or not aAxisRotationRequired(cls._ctx)[0]))
+            and (Programs.Current.machineHasAAxis or not a_axis_rotation_required(cls._ctx)[0]))
 
         # TODO: Set up so that the Process button is only enabled when things are set up properly
 

@@ -22,7 +22,7 @@ def write_tail(
             if row == analysis.tail.start: # Add an extra line marking where this operation tail starts
                 if analysis.allow_blank_lines:
                     ctx.write(fileHandle, "\n") # ensure blank line before operation tail
-                ctx.writeLine(fileHandle, f"({ctx.name})")
+                ctx.write_line(fileHandle, f"({ctx.name})")
             if analysis.tail.contains(row):
                 ctx.write(fileHandle, line)
             line = operationFile.readline()

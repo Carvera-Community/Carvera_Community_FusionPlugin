@@ -25,11 +25,11 @@ def make_context():
         selected=[],
         fileName=None,
         events=[],
-        sanitizeFilename=lambda name: name,
+        sanitize_filename=lambda name: name,
     )
-    context.setFileExtension = lambda value: context.events.append(("extension", value))
-    context.setPath = lambda value: context.events.append(("path", value))
-    context.setFileName = lambda value: context.events.append(("name", value))
+    context.set_file_extension = lambda value: context.events.append(("extension", value))
+    context.set_path = lambda value: context.events.append(("path", value))
+    context.set_file_name = lambda value: context.events.append(("name", value))
     return context
 
 

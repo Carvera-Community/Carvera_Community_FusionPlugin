@@ -55,7 +55,7 @@ def parse_file(ctx: OperationContext, settings: ParserSettings | None = None):
     # The tail is stripped until the last operation is done.
     #endregion
 
-    def _parseHeaderLine(line: str, lineNumber: int, inHeader: bool) -> tuple[bool, bool]:
+    def _parse_header_line(line: str, lineNumber: int, inHeader: bool) -> tuple[bool, bool]:
         toolComment = ctx.lineWriter._TOOL_COMMENT_REG.search(line)
         if toolComment: # We have found the tool comment line
             ctx.toolCommentLine = lineNumber
@@ -103,7 +103,7 @@ def parse_file(ctx: OperationContext, settings: ParserSettings | None = None):
                 
             return (not inHeader, inHeader)
 
-    def _parseBodyLine(line: str, lineNumber: int):
+    def _parse_body_line(line: str, lineNumber: int):
         bodyMatch = ctx.lineWriter._BODY_RE.match(line)
         if bodyMatch:
             if bodyMatch.group("G") is not None:
@@ -165,10 +165,10 @@ def parse_file(ctx: OperationContext, settings: ParserSettings | None = None):
                 ctx.allowBlankLines = True
 
             if processHeader:
-                processHeader, inHeader = _parseHeaderLine(line, lineNumber, inHeader)
+                processHeader, inHeader = _parse_header_line(line, lineNumber, inHeader)
                 processBody = not processHeader
             elif processBody:
-                if _parseBodyLine(line, lineNumber):
+                if _parse_body_line(line, lineNumber):
                     break
             line = operationFile.readline()
     ctx.analysis = ParsedOperation.from_context(ctx)

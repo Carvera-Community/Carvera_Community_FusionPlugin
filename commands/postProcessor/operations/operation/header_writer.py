@@ -36,10 +36,10 @@ def write_header_start(
     with analysis.source_file.open("r") as tempFile:
         
         file = Path(fileHandle.name).stem
-        ctx.writeLine(fileHandle, "({fileName})".format(fileName = file))
-        ctx.writeLine(fileHandle, "(Generated with {pluginName} version {pluginVersion})".format(pluginName = CMD_NAME, pluginVersion = PLUGIN_VERSION))
+        ctx.write_line(fileHandle, "({fileName})".format(fileName = file))
+        ctx.write_line(fileHandle, "(Generated with {pluginName} version {pluginVersion})".format(pluginName = CMD_NAME, pluginVersion = PLUGIN_VERSION))
         if settings.restoreRapidMoves:
-            ctx.writeLine(fileHandle, "(Restore rapid moves enabled: {restoreRapidMoves}, maximum steps inbetween start and stop: {maximumSteps}, minimum travel distance: {minimumDistance}mm)".format(
+            ctx.write_line(fileHandle, "(Restore rapid moves enabled: {restoreRapidMoves}, maximum steps inbetween start and stop: {maximumSteps}, minimum travel distance: {minimumDistance}mm)".format(
                 restoreRapidMoves = settings.restoreRapidMoves,
                 maximumSteps = settings.rapidMovesMaxSteps,
                 minimumDistance = settings.rapidMovesMinimumDistance

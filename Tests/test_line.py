@@ -43,4 +43,4 @@ def test_write_removes_leading_line_number():
 def test_remove_feed_does_not_remove_comment_text():
     line = "G1 X10 F250 (keep F999)"
 
-    assert Line.removeFeedFromLine(line) == "G1 X10  (keep F999)"
+    assert Line.remove_feed_from_line(line) == "G1 X10  (keep F999)"

@@ -29,13 +29,13 @@ class AnalysisSegment:
         self._rejectReason: list[str] = []
 
     @property
-    def middleStepsCount(self) -> int:
+    def middle_steps_count(self) -> int:
         return len(self.middleTexts)
 
-    def addRejectReason(self, rejectReason: str) -> None:
+    def add_reject_reason(self, rejectReason: str) -> None:
         self._rejectReason.append(rejectReason)
 
-    def trimEndUntilValidOrNoMiddle(
+    def trim_end_until_valid_or_no_middle(
         self,
         tokenizer: Callable[[str], list[str]],
         validator: Callable[[list[str]], bool],
@@ -50,15 +50,15 @@ class AnalysisSegment:
                 self.middleLineNumbers.pop()
                 tokens = tokenizer(self.endText)
 
-            if validator(tokens) and self.middleStepsCount == 0:
+            if validator(tokens) and self.middle_steps_count == 0:
                 self.isValid = False
-                self.addRejectReason(rejectionReason)
+                self.add_reject_reason(rejectionReason)
 
-    def getEffectiveLength(self) -> float:
+    def get_effective_length(self) -> float:
         z_distance = abs(self.deltaZUp) + abs(self.deltaZDown)
         return max(self.totalXYDistance, z_distance)
 
-    def asDict(self) -> dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "startLine": self.startLineNumber,
             "endLine": self.endLineNumber,
@@ -101,7 +101,7 @@ def analyze_segments(
     for segment in segments:
         result = AnalysisSegment(segment)
         result.hasStartHasFeed = has_feed(tokenize_analysis_line(segment.startText))
-        result.trimEndUntilValidOrNoMiddle(
+        result.trim_end_until_valid_or_no_middle(
             tokenize_analysis_line,
             has_feed,
             REASON_END_HAS_FEED_AND_NO_MIDDLE,
@@ -111,13 +111,13 @@ def analyze_segments(
             tokens = tokenize_analysis_line(line)
             if has_arc(tokens):
                 result.isValid = False
-                result.addRejectReason(REASON_ARC_IN_MIDDLE)
+                result.add_reject_reason(REASON_ARC_IN_MIDDLE)
             if has_feed(tokens):
                 result.isValid = False
-                result.addRejectReason(REASON_FEED_IN_MIDDLE)
+                result.add_reject_reason(REASON_FEED_IN_MIDDLE)
 
-        if result.getEffectiveLength() < float(min_distance):
+        if result.get_effective_length() < float(min_distance):
             result.isValid = False
-            result.addRejectReason(REASON_TOO_SHORT_EFFECTIVE_DIST)
+            result.add_reject_reason(REASON_TOO_SHORT_EFFECTIVE_DIST)
 
-        yield result.asDict()
+        yield result.as_dict()

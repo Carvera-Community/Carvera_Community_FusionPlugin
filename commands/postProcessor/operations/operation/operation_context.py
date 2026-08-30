@@ -45,11 +45,11 @@ class OperationContext:
         # in the last operation otherwise it will break things.
         return self.shrinkLine != -1
 
-    def writeLine(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.writeLine(fileHandle, line)
+    def write_line(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.write_line(fileHandle, line)
     def write(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.write(fileHandle, line)
 
     def matchLine(self, line: str) -> (Match[str] | None):
         return self.lineWriter._PARSE_LINE_RE.match(line)
     
-    def removeFeedFromLine(self, line: str) -> str:
-        return self.lineWriter.removeFeedFromLine(line)
+    def remove_feed_from_line(self, line: str) -> str:
+        return self.lineWriter.remove_feed_from_line(line)

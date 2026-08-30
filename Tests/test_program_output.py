@@ -19,7 +19,7 @@ class FakeOutputContext:
         self.fileName = file_name
         self.events = []
 
-    def setFileName(self, file_name):
+    def set_file_name(self, file_name):
         self.fileName = file_name
         self.events.append(("set", file_name))
 

@@ -17,7 +17,7 @@ def render_program_output(
     file_extension: str,
 ) -> None:
     """Plan and stream every result file for one processing context."""
-    settings = context.processingSettings or context.captureProcessingSettings()
+    settings = context.processingSettings or context.capture_processing_settings()
     output_settings = ProgramOutputSettings(
         operationsGrouping=settings.operationsGrouping,
         flatFileStructure=settings.flatFileStructure,
@@ -26,10 +26,10 @@ def render_program_output(
     )
     prepare_output_folder(output_path, output_settings.clearFolder)
 
-    context.setFileExtension(file_extension)
+    context.set_file_extension(file_extension)
     layout = plan_program_output(output_path, output_file_name, output_settings)
-    context.setPath(layout.path)
-    context.setFileName(layout.fileName)
+    context.set_path(layout.path)
+    context.set_file_name(layout.fileName)
 
-    plans = plan_output_files(context, settings, context.sanitizeFilename)
+    plans = plan_output_files(context, settings, context.sanitize_filename)
     render_output_files(plans, settings.overwriteFiles)

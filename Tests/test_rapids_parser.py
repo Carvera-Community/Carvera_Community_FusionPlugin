@@ -19,7 +19,7 @@ def write_operation(tmp_path: Path, contents: str) -> Path:
 
 
 def test_parse_line_recognizes_motion_and_ignores_comments():
-    result = RapidsParser._parseLine("g01 X1.5 Y-2 F100 (Z99 G3)")
+    result = RapidsParser._parse_line("g01 X1.5 Y-2 F100 (Z99 G3)")
 
     assert result.localMotion == MOTIONS.G1
     assert result.sawX

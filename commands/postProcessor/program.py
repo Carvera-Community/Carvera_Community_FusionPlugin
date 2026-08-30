@@ -134,7 +134,7 @@ class Program():
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
         oldOutputFolder = self.get_output_folder()
-        ctx.captureProcessingSettings()
+        ctx.capture_processing_settings()
 
         outputFolder = self.get_output_folder()
         fileName = self.fileName

@@ -114,11 +114,11 @@ def test_parse_visits_selected_setups(tmp_path):
 def test_rename_can_target_selected_or_all_setups():
     context = context_with([source("First"), source("Second", selected=True)])
 
-    context.renameSetups("x", "y", False, onlySelected=True)
+    context.rename_setups("x", "y", False, onlySelected=True)
     assert context._items[0].rename_calls == []
     assert context._items[1].rename_calls == [("x", "y", False)]
 
-    context.renameSetups("a", "b", True, onlySelected=False)
+    context.rename_setups("a", "b", True, onlySelected=False)
     assert context._items[0].rename_calls == [("a", "b", True)]
 
 
@@ -129,9 +129,9 @@ def test_output_path_file_name_and_extension_are_forwarded(tmp_path):
     context.selected[0].ctx.set_file_name = lambda name: setattr(operations, "fileName", name)
     configure_paths(Constants.OperationsGroupings.PER_OPERATION)
 
-    context.setPath(tmp_path, lambda name: name.replace(" ", "_"))
-    context.setFileName("job")
-    context.setFileExtension(".nc")
+    context.set_path(tmp_path, lambda name: name.replace(" ", "_"))
+    context.set_file_name("job")
+    context.set_file_extension(".nc")
 
     assert context.selected[0].outputPath == tmp_path / "First_Setup"
     assert operations.fileName == "job"
