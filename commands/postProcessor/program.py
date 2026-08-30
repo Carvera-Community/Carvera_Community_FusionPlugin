@@ -1,11 +1,10 @@
 from __future__ import annotations
-from adsk import cam
 from pathlib import Path
+from typing import Any, Protocol, TYPE_CHECKING
 
 from .strings import Strings
 from .attributes import Attributes
 
-from .setups.setups_context import SetupsContext 
 from .setups.header_writer import writeHeader as writeSetupsHeader
 from .setups.body_writer import writeBody as writeSetupsBody
 from .setups.tail_writer import writeTail as writeSetupsTail
@@ -19,12 +18,35 @@ from .program_output import (
     writeProgramOutputSections,
 )
 
+if TYPE_CHECKING:
+    from .setups.setups_context import SetupsContext
+
+
+class ProgramFusionAdapter(Protocol):
+    def machineHasATC(self, program) -> bool: ...
+    def machineToolSlots(self, program) -> int: ...
+    def machineHasAAxis(self, program) -> bool: ...
+    def postProcess(self, program) -> bool: ...
+
 class Program():
-    def __init__(self, program: cam.NCProgram):
-        self._program: cam.NCProgram = program
+    def __init__(
+        self,
+        program: Any,
+        fusionAdapter: ProgramFusionAdapter | None = None,
+        parameterValueAdapter=None,
+    ):
+        if fusionAdapter is None:
+            from .fusion_adapters.program import FusionProgramAdapter
+
+            fusionAdapter = FusionProgramAdapter()
+        self._fusionAdapter = fusionAdapter
+        self._program = program
         self._outputFolder: Path | None = None
         self._attributes: Attributes = Attributes(program.attributes)
-        self._parameters: Parameters = Parameters(program.parameters)
+        self._parameters: Parameters = Parameters(
+            program.parameters,
+            parameterValueAdapter,
+        )
 
     @property
     def name(self):
@@ -82,39 +104,18 @@ class Program():
     @property
     def machineHasATC(self):
         """Returns whether the machine of the NCProgram has an ATC."""
-        return cam.ToolingCapabilitiesMachineElement.cast(self._program.machine.elements.itemById('tooling','default')).isToolChangerAutomatic if self.hasMachine else False
+        return self._fusionAdapter.machineHasATC(self._program)
     
     @property
     def machineToolSlots(self):
         """Returns the number of ATC slots of the machine of the NCProgram."""
-        return cam.ToolingCapabilitiesMachineElement.cast(self._program.machine.elements.itemById('tooling','default')).maxToolCount if self.machineHasATC else 1
+        return self._fusionAdapter.machineToolSlots(self._program)
 
     @property
     def machineHasAAxis(self):
         """Returns whether the machine has A axis."""
 
-        machine = self._program.machine
-
-        if machine is None:
-            return False
-
-        axes = cam.ControllerConfigurationMachineElement.cast(
-            machine.elements.defaultItemByType('controller')).axisConfigurations
-
-        unreadable_extra_axis = False
-        for index in range(axes.count):
-            try:
-                axis = axes.item(index)
-            except RuntimeError as error:
-                if index >= 3 and 'axisDefinition' in str(error):
-                    unreadable_extra_axis = True
-                    continue
-                raise
-
-            if cam.RotaryMachineAxisConfiguration.cast(axis) is not None:
-                return True
-
-        return unreadable_extra_axis
+        return self._fusionAdapter.machineHasAAxis(self._program)
     
     @property
     def hasPostProcessor(self):
@@ -140,7 +141,7 @@ class Program():
         """Returns the file extension of the NCProgram."""
         return self._program.postConfiguration.extension if self._program.postConfiguration else None
 
-    def Process(self, ctx: SetupsContext, tmpPath: Path):
+    def Process(self, ctx: "SetupsContext", tmpPath: Path):
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
         oldOutputFolder = self.GetOutputFolder()
@@ -164,7 +165,7 @@ class Program():
         # Restore the output folder in the NC Program parameters
         self.SetOutputFolder(oldOutputFolder)
 
-    def WriteOutput(self, ctx: SetupsContext):
+    def WriteOutput(self, ctx: "SetupsContext"):
         """Write the final G-code files from the results of the post processing."""
         initialPath = self.GetOutputFolder()
         initialFileName = self.fileName
@@ -216,7 +217,7 @@ class Program():
         if len(operations) == 0:
             return False # Nothing to process
         self._program.operations = operations
-        return self._program.postProcess(cam.NCProgramPostProcessOptions.create())
+        return self._fusionAdapter.postProcess(self._program)
 
     def SetOutputFolder(self, folder: Path):
         """Convenience method to set and verify output folder"""

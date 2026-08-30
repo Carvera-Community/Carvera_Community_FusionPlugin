@@ -3,10 +3,23 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-from ...lib.fusionAddInUtils.general_utils import Utils
-from ...lib.fusionAddInUtils.general_utils import classproperty
+from ... import config as pluginConfig
 
 
+class classproperty:
+    def __init__(self, getter):
+        self.getter = getter
+
+    def __get__(self, instance, owner):
+        return self.getter(owner)
+
+
+def _log(message: str) -> None:
+    if not pluginConfig.DEBUG:
+        return
+    from ...lib.fusionAddInUtils.general_utils import Utils
+
+    Utils.log(message)
 
 class _StringsMeta(type):
     def __call__(cls, raw: str, /, **kwargs) -> str:
@@ -24,7 +37,7 @@ class Strings(metaclass=_StringsMeta):
 
     _current: Dict[str, str] = {}
     _meta: Dict[str, Any] = {}
-    _lang: str = "PROG" if Utils.DEBUG else "en"
+    _lang: str = "PROG" if pluginConfig.DEBUG else "en"
 
     @classmethod
     def _i18n_dir(cls) -> Path:
@@ -38,8 +51,7 @@ class Strings(metaclass=_StringsMeta):
         cls._meta = {}
         languageFile = cls._i18n_dir() / f"{lang}.json"
         if not languageFile.exists():
-            if Utils.DEBUG:
-                Utils.log(f"Strings: language file not found: {languageFile}")
+            _log(f"Strings: language file not found: {languageFile}")
             return
         try:
             buffer = json.loads(languageFile.read_text(encoding="utf-8"))
@@ -51,8 +63,8 @@ class Strings(metaclass=_StringsMeta):
     def get(cls, raw: str, /, **kwargs) -> str:
         translation = cls._current.get(raw)
         out = translation if translation is not None else raw
-        if translation is None and Utils.DEBUG and cls._lang != "PROG":
-            Utils.log(f"Strings: missing translation for '{{}}' in language '{{}}'".format(raw, cls._lang))
+        if translation is None and pluginConfig.DEBUG and cls._lang != "PROG":
+            _log(f"Strings: missing translation for '{{}}' in language '{{}}'".format(raw, cls._lang))
         return out.format(**kwargs) if kwargs else out
 
     @classmethod
@@ -93,8 +105,7 @@ class Strings(metaclass=_StringsMeta):
                 try:
                     data = json.load(fileHandle)
                 except Exception as e:
-                    if Utils.DEBUG:
-                        Utils.log(f"Unable to load translation: {jsonFile.absolute()}\nException: {e}")
+                    _log(f"Unable to load translation: {jsonFile.absolute()}\nException: {e}")
                     continue
 
                 meta = data.get('__meta__')
