@@ -1,7 +1,7 @@
 # Makera Community Post Processor Current-Behavior Specification
 
 Status: source-derived baseline for testability work  
-Scope: repository working tree as reviewed on 2026-08-30  
+Scope: repository working tree as reviewed on 2026-08-31
 Primary runtime: Autodesk Fusion Manufacture workspace
 
 ## 1. Purpose
@@ -76,6 +76,7 @@ Sources:
 - **MCB-030 — Confirmed intent:** Temporary G-code files may be large and shall not be loaded into memory as complete strings or complete line collections.
 - **MCB-031 — Source-observed:** Normal operation analysis shall read a temporary file sequentially, one line at a time.
 - **MCB-032 — Confirmed intent:** Future parser extraction may accept `Iterable[str]`, but production shall pass a streaming file iterator. `read()`, `readlines()`, and `list(file)` are prohibited for complete G-code files.
+- **MCB-032A — Source-observed working tree:** An architecture regression test rejects `read()` and `readlines()` calls throughout the operation G-code pipeline.
 - **MCB-033 — Source-observed:** Small analysis metadata, including boundary line numbers and rapid-move segment metadata, may be retained in memory.
 - **MCB-034 — Source-observed:** Header, body, and tail writers may reopen and sequentially scan the same temporary file in separate passes. Low bounded memory usage takes priority over minimizing sequential disk reads.
 
@@ -217,6 +218,7 @@ Sources:
 - **MCB-123 — Source-observed:** Feed parameters are removed from the non-comment portion of a rewritten rapid-start line.
 - **MCB-124 — Source-observed:** A `G1 (Rapid movement end)` line is inserted after the detected rapid segment.
 - **MCB-125 — Confirmed intent:** Rapid analysis and rewriting shall remain streaming with memory proportional to bounded analysis metadata, not total file size.
+- **MCB-126 — Source-observed working tree:** `RapidsParser` is a compatibility facade over the focused rapid-move scanner, tokenizer, analysis, and model modules.
 
 ## 11. Settings and persistence
 
@@ -226,7 +228,7 @@ Default settings are defined in [`commands/postProcessor/settings/settings.py`](
 
 - **MCB-130 — Source-observed:** Settings shall be loaded from the active document when the command is created.
 - **MCB-131 — Source-observed:** A document setting set with the current settings version shall be used directly.
-- **MCB-132 — Source-observed:** Missing settings shall be populated from local defaults and then built-in defaults.
+- **MCB-132 — Source-observed:** Missing settings shall be populated from local defaults and then built-in defaults. Persisted defaults are merged with the current built-in schema even when their version already matches, so missing keys are restored.
 - **MCB-133 — Source-observed:** Settings shall be saved to active-document attributes when the add-in stops.
 - **MCB-134 — Confirmed intent:** Overwrite and clear-folder options are safety-sensitive session choices and are not intended as persistent defaults.
 - **MCB-135 — Source-observed:** Default grouping is `SETUP`; tool combining, numeric naming, flat output, A-axis rotation, rapid restoration, overwrite, and clear-folder behavior default to disabled.
@@ -258,6 +260,14 @@ The following items describe current source behavior that should not silently be
 - **MCB-D11 — Handled in the current working tree; covered by a host regression test — Rapid effective distance:** `AnalysisSegment.getEffectiveLength()` previously returned doubled combined Z travel and ignored XY travel. It now returns the greater of total XY travel and combined Z travel, matching the documented analyzer rule.
 - **MCB-D12 — Handled in the current working tree; covered by complete-output host tests — Tool-run planning:** `SETUP_AND_TOOL` initially planned one file per internal operation. It now groups consecutive equal-tool operations and starts a new run when a tool returns after an intervening tool.
 - **MCB-D13 — Handled in the current working tree; covered by complete-output host tests — Multi-line header scan:** Body streaming previously stopped before reaching bodies whose start row followed more than one header row. The writer now scans to the body start before applying its end-of-range stop condition.
+- **MCB-D14 — Handled in the current working tree; covered by settings host tests — Sparse current-version defaults:** A local defaults file carrying the current version but missing newer keys was previously accepted without schema completion. Every defaults file is now merged with the current built-in schema before use.
+
+## 14. Maintainability boundaries
+
+- **MCB-150 — Source-observed working tree:** Core modules shall import on the host without the Autodesk runtime. Top-level `adsk` imports are restricted to Fusion adapters and dialog/UI modules.
+- **MCB-151 — Source-observed working tree:** Program, setup, operation, and context-facing domain properties use snake_case; raw Autodesk camelCase members remain isolated at adapter and snapshot boundaries.
+- **MCB-152 — Source-observed working tree:** Stable Fusion command input IDs are protected by an architecture regression test.
+- **MCB-153 — Source-observed working tree:** Setup table state is calculated separately from Fusion control mutation, and output grouping/safety controls are built by a focused layout section.
 
 ## 14. Refactoring constraints
 

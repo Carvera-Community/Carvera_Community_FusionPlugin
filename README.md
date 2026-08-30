@@ -176,6 +176,12 @@ The processing flow is split into explicit stages:
 4. One streaming renderer writes each complete result file without loading the
    source G-code files into memory.
 
+Rapid-move detection is implemented by a bounded streaming scanner behind the
+legacy `RapidsParser` facade. Dialog construction is divided into focused
+layout sections, while setup eligibility and other decision rules remain
+host-testable. Architecture tests protect the Fusion boundary, streaming
+contract, stable command IDs, and size limits for the refactored facades.
+
 - Create a development branch:
 
 ```bash

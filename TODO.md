@@ -263,7 +263,7 @@ self.ctx.subOperationIndexWithTool != -1
 
 ## 9. Add automated regression tests
 
-- **Status:** Handled — 177 host tests pass with 90% statement coverage; Fusion 360 acceptance testing remains
+- **Status:** Handled — 192 host tests pass with 93% statement coverage; Fusion 360 acceptance testing remains
 - **Priority:** High
 - **Scope:** Repository-wide
 
@@ -294,6 +294,8 @@ Keep host/source verification distinct from validation inside Fusion 360.
 - Session-only safety-setting serialization and legacy-value reset.
 
 Output planning, header/body/tail assembly, rotation injection, shrink retention per result file, filename routing, settings, and Fusion adapter boundaries are now covered on the host. A streaming end-to-end fixture renders all four grouping modes. Fusion API interaction, UI rendering, and machine-safe acceptance still require Fusion 360.
+
+Settings migration, setup rotation wrappers, setup table eligibility, streaming enforcement, stable dialog IDs, and refactored module-size boundaries are also covered. The rapid scanner and focused dialog sections remain behind their existing public entry points.
 
 ## 10. Correct the inverted shrink-line removal condition
 
@@ -360,7 +362,7 @@ The confirmed contract is to reuse the first detected tail. `SINGLE_FILE` choose
 
 - **Status:** Implemented in the current working tree; covered by a host regression test
 - **Priority:** High
-- **Location:** [`commands/postProcessor/operations/operation/rapidsParser.py`](commands/postProcessor/operations/operation/rapidsParser.py#L512)
+- **Location:** [`commands/postProcessor/operations/operation/rapid_moves/analysis.py`](commands/postProcessor/operations/operation/rapid_moves/analysis.py)
 - **Specification:** [`spec/current-behavior.md`](spec/current-behavior.md), `MCB-D11`
 
 ### Problem
@@ -408,7 +410,7 @@ The writer now scans until `body.start` and only applies the stop condition afte
 ## Current verification status
 
 - `python3 -m compileall -q commands Tests` passes.
-- `python3 -m pytest -q` passes 177 tests with 90% statement coverage.
+- `python3 -m pytest -q` passes 192 tests with 93% statement coverage.
 - Complete streaming output fixtures cover all four grouping modes, ordered body membership, shrink retention, and one tail per result file.
 - No Fusion 360 runtime validation has been performed.
 - `git diff --check` passes.
