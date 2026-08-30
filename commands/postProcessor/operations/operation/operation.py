@@ -21,6 +21,14 @@ class OperationFusionAdapter(Protocol):
     def maxFilenameLength(self) -> int: ...
 
 
+class PostProcessingProgram(Protocol):
+    fileExtension: str | None
+    Parameters: Parameters
+
+    def SetOutputFolder(self, folder: Path) -> None: ...
+    def PostProcess(self, operations) -> bool: ...
+
+
 class Operation():    
     def __init__(
         self,
@@ -129,14 +137,7 @@ class Operation():
 
         return FusionOperationAdapter().getToolNumber(operation)
 
-    def Parse(self, tmpPath: Path):
-        from ...programs import Programs
-
-        if Programs.Current is None:
-            raise ValueError("Programs.Current is None")
-        
-        program = Programs.Current
-
+    def Parse(self, tmpPath: Path, program: PostProcessingProgram):
         def postProcess(operations, outputFolder, fileName):
             program.SetOutputFolder(outputFolder)
             program.Parameters.Set(Parameters.FILE_NAME, fileName)

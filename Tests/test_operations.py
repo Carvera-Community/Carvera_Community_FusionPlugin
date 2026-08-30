@@ -74,12 +74,15 @@ def test_operations_exposes_unique_tools_in_source_order():
 
 def test_parse_records_first_tail_and_header_operation(tmp_path):
     operations = make_operations([source("One", 1), source("Two", 2)])
+    program = object()
+    calls = []
     for index, operation in enumerate(operations):
-        operation.Parse = lambda path: None
+        operation.Parse = lambda path, active_program: calls.append((path, active_program))
         operation.ctx.headerEndLine = 4 if index == 1 else -1
         operation.ctx.tailStartLine = 8 if index == 0 else -1
 
-    operations.Parse(tmp_path)
+    operations.Parse(tmp_path, program)
 
+    assert calls == [(tmp_path, program), (tmp_path, program)]
     assert operations.ctx.operationWithTail is operations[0]
     assert operations.ctx.operationWithHeader is operations[1]

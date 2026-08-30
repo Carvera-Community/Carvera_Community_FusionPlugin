@@ -230,13 +230,15 @@ class Setup():
             return # Don't process this setup.
 
         # Don't spam the user with temporary files that will be deleted anyway
-        if programs.Current is not None:
-            programs.Current.DisableOpenInEditor()
+        program = programs.Current
+        if program is None:
+            raise ValueError("Programs.Current is None")
+        program.DisableOpenInEditor()
 
         # Make sure that the setup has all its toolpaths generated
         programs.CheckAndGenerateToolpath(self.ctx.setup)
 
-        self.ctx.operations.Parse(tmpPath)
+        self.ctx.operations.Parse(tmpPath, program)
 
     def WriteHeader(self) -> None: writeHeader(self.ctx)
     def WriteHeaderStart(self) -> None: writeHeaderStart(self.ctx)

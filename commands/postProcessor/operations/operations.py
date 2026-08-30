@@ -85,9 +85,9 @@ class Operations():
                 tools.append(operation.tool)
         return tools
 
-    def Parse(self, tmpPath: Path) -> None:
+    def Parse(self, tmpPath: Path, program) -> None:
         for operation in self.ctx.operations:
-            operation.Parse(tmpPath)
+            operation.Parse(tmpPath, program)
         self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)
         self.ctx.operationWithHeader = next((operation for operation in self.ctx.operations if operation.hasHeader), None)
 

@@ -43,8 +43,8 @@ class FakeOperations:
     def __len__(self):
         return len(self.sources)
 
-    def Parse(self, path):
-        self.parse_paths.append(path)
+    def Parse(self, path, program):
+        self.parse_paths.append((path, program))
 
     def SetOutputPath(self, path):
         self.path = path
@@ -123,7 +123,7 @@ def test_setup_parse_casts_operations_generates_toolpath_and_parses(tmp_path):
     setup.Parse(tmp_path)
 
     assert setup.ctx.operations.sources == [first]
-    assert setup.ctx.operations.parse_paths == [tmp_path]
+    assert setup.ctx.operations.parse_paths == [(tmp_path, FakePrograms.Current)]
     assert FakePrograms.checked == [source]
 
 
