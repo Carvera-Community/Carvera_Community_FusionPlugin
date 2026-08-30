@@ -1,7 +1,5 @@
 from pathlib import Path
-import time
 from typing import Optional, TextIO
-import uuid
 
 from adsk import cam
 from .....lib.fusionParameters.cast_cam_param import castCAMParam
@@ -18,6 +16,7 @@ from .header_writer import (
 )
 from .body_writer import writeBody
 from .tail_writer import writeTail
+from .temporary_post_processing import createTemporaryOperationFile
 
 class Operation():    
     def __init__(self, ctx: OperationContext):
@@ -118,27 +117,22 @@ class Operation():
         if Programs.Current is None:
             raise ValueError("Programs.Current is None")
         
-        name = uuid.uuid4().hex + ('' if Programs.Current.fileExtension is None else Programs.Current.fileExtension)
-        self.ctx.tempFilePath = tmpPath / name
+        program = Programs.Current
 
-        Programs.Current.SetOutputFolder(self.ctx.tempFilePath.parent)
-        Programs.Current.Parameters.Set(Parameters.FILE_NAME, self.ctx.tempFilePath.stem)
-        Programs.Current.Parameters.Set(Parameters.NAME, self.ctx.tempFilePath.stem)
-        if not Programs.Current.PostProcess(list(self._operationsDict.values())):
-            raise Exception(f"Operation {self.ctx.name} post processing failed.")
-        
-        sleepTime = 0.1
-        loops = 0
-        # Wait maximally 5.5 seconds for the file to be created, as 
-        # sometimes it is not immediately available after post 
-        # processing
-        while not self.ctx.tempFilePath.exists() and loops < 10: 
-            loops += 1
-            time.sleep(sleepTime * loops)
-        if loops >= 10 or not self.ctx.tempFilePath.exists():
-            raise Exception(f"Operation {self.ctx.name} post processing failed: output file was not created.")
+        def postProcess(operations, outputFolder, fileName):
+            program.SetOutputFolder(outputFolder)
+            program.Parameters.Set(Parameters.FILE_NAME, fileName)
+            program.Parameters.Set(Parameters.NAME, fileName)
+            return program.PostProcess(operations)
 
-        parseFile(self.ctx)
+        createTemporaryOperationFile(
+            self.ctx,
+            tmpPath,
+            list(self._operationsDict.values()),
+            program.fileExtension,
+            postProcess,
+            parseFile,
+        )
 
     def WriteHeaderStart(self, fileHandle: TextIO) -> None: writeHeaderStart(self.ctx, fileHandle)
     def WriteHeaderEnd(self, fileHandle: TextIO) -> None : writeHeaderEnd(self.ctx, fileHandle)
