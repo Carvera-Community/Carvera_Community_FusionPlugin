@@ -7,6 +7,7 @@ from ...settings.settings import Settings
 from ...config import CMD_NAME
 from ...file_modes import FileModes
 from .operation_context import OperationContext
+from .analysis import parsed_operation
 
 
 @dataclass(frozen=True)
@@ -39,12 +40,13 @@ def writeHeaderStart(
     fileHandle: TextIO,
     settings: HeaderWriterSettings | None = None,
 ):
+    analysis = parsed_operation(ctx)
     settings = settings or (
         HeaderWriterSettings.fromProcessingSettings(ctx.processingSettings)
         if ctx.processingSettings is not None
         else HeaderWriterSettings.fromCurrentSettings()
     )
-    with ctx.tempFilePath.open("r") as tempFile:
+    with analysis.source_file.open("r") as tempFile:
         
         file = Path(fileHandle.name).stem
         ctx.writeLine(fileHandle, "({fileName})".format(fileName = file))
@@ -61,33 +63,40 @@ def writeHeaderStart(
         while len(line) != 0:
             # It's the temporary file name, so ignore it as the 
             # real name has already been written.
-            if line == f"({ctx.tempFilePath.stem})\n": 
+            if line == f"({analysis.source_file.stem})\n":
                 line = tempFile.readline()
                 row += 1
                 continue
-            elif row == ctx.toolCommentLine:
+            elif row == analysis.tool_comment_line:
                 break
             ctx.write(fileHandle, line)
             line = tempFile.readline()
             row += 1
 
 def writeToolComment(context: OperationContext, fileHandle: TextIO):
-    with context.tempFilePath.open(FileModes.READ) as operationFile:
+    analysis = parsed_operation(context)
+    if analysis.tool_comment_line is None:
+        return
+    with analysis.source_file.open(FileModes.READ) as operationFile:
         line = operationFile.readline()
         row = 0
         while len(line) != 0:
-            if row == context.toolCommentLine:
+            if row == analysis.tool_comment_line:
                 context.write(fileHandle, line)
                 break
             line = operationFile.readline()
             row += 1
 
 def writeHeaderEnd(ctx: OperationContext, fileHandle: TextIO):
-    with ctx.tempFilePath.open(FileModes.READ) as operationFile:
+    analysis = parsed_operation(ctx)
+    if analysis.header is None:
+        return
+    tool_comment_line = analysis.tool_comment_line
+    with analysis.source_file.open(FileModes.READ) as operationFile:
         line = operationFile.readline()
         row = 0
         while len(line) != 0:
-            if row > ctx.toolCommentLine and row <= ctx.headerEndLine:
+            if row > (-1 if tool_comment_line is None else tool_comment_line) and analysis.header.contains(row):
                 ctx.write(fileHandle, line)
             line = operationFile.readline()
             row += 1

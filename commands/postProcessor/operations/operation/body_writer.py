@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import TextIO
 
 from .operation_context import OperationContext
+from .analysis import parsed_operation
 
 from ...file_modes import FileModes
 from ...settings.settings import Settings
@@ -29,6 +30,7 @@ def writeBody(
     fileHandle: TextIO,
     settings: BodyWriterSettings | None = None,
 ):
+    analysis = parsed_operation(ctx)
     settings = settings or (
         BodyWriterSettings.fromProcessingSettings(ctx.processingSettings)
         if ctx.processingSettings is not None
@@ -67,11 +69,11 @@ def writeBody(
                             # Special handling of A-axis rotation moves.
                             # The rotation should always be 0 as the 
                             # operations are always generated one by one
-                            return row != ctx.rotationLine or _handleRotation()
+                            return row != analysis.rotation_line or _handleRotation()
                         elif float(gCode) == 92.4:
                             if lineMatch.group("R") is not None and not ctx.isLastOp:
                                 # Strip out all shrink A-axis commands unless it is the last operation in the file
-                                return row == ctx.shrinkLine
+                                return row == analysis.shrink_line
         return False
 
     def _handleRotation() -> bool:
@@ -90,7 +92,10 @@ def writeBody(
             ctx.writeLine(fileHandle, "G90 G54 G0 A{angle}".format(angle = f"{ctx.rotationAngle:.3f}".rstrip("0").rstrip(".")))
             return True
 
-    with ctx.tempFilePath.open(FileModes.READ) as operationFile:
+    if analysis.body is None:
+        return
+
+    with analysis.source_file.open(FileModes.READ) as operationFile:
         line = operationFile.readline()
         row = 0
         rapidsEnds = 0
@@ -100,16 +105,17 @@ def writeBody(
                 line = operationFile.readline() 
                 row += 1
                 readNextLine = False
-                if len(line) == 0 or row >= ctx.tailStartLine:
+                if len(line) == 0 or not analysis.body.contains(row):
                     break
 
-            if row >= ctx.bodyStartLine:
-                if row == ctx.bodyStartLine: # Add an extra line marking where this operation starts
-                    if ctx.allowBlankLines:
+            if analysis.body.contains(row):
+                if row == analysis.body.start: # Add an extra line marking where this operation starts
+                    if analysis.allow_blank_lines:
                         ctx.write(fileHandle, '\n') # keep blank line before operation start
-                if ctx.rapidsAnalysis and row + 1 in ctx.rapidsAnalysis: # Add rapids comments if this line is the start of a rapid move
-                    rapidsEnds = ctx.rapidsAnalysis[row + 1]["endLine"]
-                    startHasFeed = ctx.rapidsAnalysis[row + 1]["startHasFeed"]
+                rapid_rewrite = analysis.rapid_rewrite_at(row + 1)
+                if rapid_rewrite is not None: # Add rapids comments if this line is the start of a rapid move
+                    rapidsEnds = rapid_rewrite.end_line
+                    startHasFeed = rapid_rewrite.start_has_feed
                     lineMatch = ctx.matchLine(line)
                     if lineMatch:
                         if startHasFeed: 
@@ -134,5 +140,5 @@ def writeBody(
 
             line = operationFile.readline()
             row += 1
-            if row >= ctx.tailStartLine:                            
+            if not analysis.body.contains(row):
                 break

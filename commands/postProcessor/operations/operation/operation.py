@@ -111,15 +111,15 @@ class Operation():
     
     @property
     def hasHeader(self) -> bool:
-        return self.ctx.headerEndLine != -1
+        return self.ctx.analysis.header is not None if self.ctx.analysis else self.ctx.headerEndLine != -1
 
     @property
     def hasBody(self) -> bool:
-        return self.ctx.bodyStartLine != -1
+        return self.ctx.analysis.body is not None if self.ctx.analysis else self.ctx.bodyStartLine != -1
     
     @property
     def hasTail(self) -> bool:
-        return self.ctx.tailStartLine != -1
+        return self.ctx.analysis.tail is not None if self.ctx.analysis else self.ctx.tailStartLine != -1
     
     @property
     def hasRotation(self) -> bool:

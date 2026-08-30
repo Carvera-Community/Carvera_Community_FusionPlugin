@@ -92,6 +92,17 @@ def test_write_body_streams_only_body_rows(tmp_path):
     assert output == "T1 M6\nG1 X10\nG1 X20\n"
 
 
+def test_write_body_streams_to_eof_when_no_tail_was_detected(tmp_path):
+    output = write_operation_body(
+        tmp_path,
+        "(Header)\nG1 X10\nG1 X20\n",
+        body_start=1,
+        tail_start=-1,
+    )
+
+    assert output == "G1 X10\nG1 X20\n"
+
+
 def test_write_body_removes_shrink_from_nonfinal_operation(tmp_path):
     output = write_operation_body(
         tmp_path,

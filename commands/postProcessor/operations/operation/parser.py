@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .operation_context import OperationContext
+from .analysis import ParsedOperation
 
 from .rapidsParser import RapidsParser
 
@@ -185,6 +186,7 @@ def parseFile(ctx: OperationContext, settings: ParserSettings | None = None):
                 processBody = not processHeader
             elif processBody:
                 if _parseBodyLine(line, lineNumber):
-                    return
+                    break
             line = operationFile.readline()
-    return # No tail found, so possibly a handmade operation
+    ctx.analysis = ParsedOperation.from_context(ctx)
+    return ctx.analysis

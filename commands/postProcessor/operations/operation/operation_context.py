@@ -8,6 +8,7 @@ from ...line import Line
 
 if TYPE_CHECKING:
     from ...processing_settings import ProcessingSettings
+    from .analysis import ParsedOperation
 
 @dataclass
 class OperationContext:
@@ -28,6 +29,7 @@ class OperationContext:
     shrinkLine: int = -1
     isLastOp: bool = False
     processingSettings: "ProcessingSettings | None" = None
+    analysis: "ParsedOperation | None" = None
 
 
     @property
