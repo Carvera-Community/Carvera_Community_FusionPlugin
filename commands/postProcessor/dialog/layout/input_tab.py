@@ -84,8 +84,8 @@ class InputTab(Constants):
 
         def setPostProcessorValue(programDropdown):
             postProcessorText = programDropdown.parentCommand.commandInputs.itemById(cls.POST_PROCESSOR_ID)
-            postProcessorText.isEnabled = Programs.Current is not None and Programs.Current.hasPostProcessor
-            postProcessorText.value = Programs.Current.postProcessorDescription if Programs.Current is not None and postProcessorText.isEnabled else Strings('<Select a program with a post processor>')
+            postProcessorText.isEnabled = Programs.Current is not None and Programs.Current.has_post_processor
+            postProcessorText.value = Programs.Current.post_processor_description if Programs.Current is not None and postProcessorText.isEnabled else Strings('<Select a program with a post processor>')
 
         EventRegistry.register(cls.PROGRAM_DROPDOWN_ID, setPostProcessorValue)
 
@@ -233,7 +233,7 @@ class InputTab(Constants):
         settings."""
         inputs = input.parentCommand.commandInputs
         rotateAAxisCheckbox = BoolValueCommandInput.cast(inputs.itemById(cls.ROTATE_A_AXIS_ID))
-        rotateAAxisCheckbox.isEnabled = False if Programs.Current is None else Programs.Current.machineHasAAxis
+        rotateAAxisCheckbox.isEnabled = False if Programs.Current is None else Programs.Current.machine_has_a_axis
 
         validProgram = Programs.Current is not None and Programs.Current.hasMachine
 
@@ -289,7 +289,7 @@ class InputTab(Constants):
             required_rotation=rotation,
             machine_has_a_axis=(
                 Programs.Current is not None
-                and Programs.Current.machineHasAAxis
+                and Programs.Current.machine_has_a_axis
             ),
         )
 

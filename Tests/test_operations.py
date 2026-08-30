@@ -18,10 +18,10 @@ ProcessingSettings = import_addin_module(
 
 
 class FakeFusionAdapter:
-    def getToolNumber(self, operation):
+    def get_tool_number(self, operation):
         return operation.toolNumber
 
-    def maxFilenameLength(self):
+    def max_filename_length(self):
         return 255
 
 

@@ -23,8 +23,8 @@ from .setup_processing import process_setup
 class SetupFusionAdapter(Protocol):
     def origin(self, setup): ...
     def normal(self, setup, direction: tuple[float, float, float]): ...
-    def globalVector(self, direction: tuple[float, float, float]): ...
-    def castOperation(self, value): ...
+    def global_vector(self, direction: tuple[float, float, float]): ...
+    def cast_operation(self, value): ...
 
 class Setup():
     def __init__(
@@ -46,8 +46,8 @@ class Setup():
         self._programRegistry = programRegistry
         self.ctx = ctx
         ctx.setup = (
-            fusionAdapter.snapshotSetup(setup)
-            if hasattr(fusionAdapter, "snapshotSetup")
+            fusionAdapter.snapshot_setup(setup)
+            if hasattr(fusionAdapter, "snapshot_setup")
             else setup
         )
         ctx.index = index
@@ -136,8 +136,8 @@ class Setup():
     #   depend on a precomputed global rotation value; the absolute wrapper
     #   simply supplies global axes.
     def absolute_rotation(self) -> float:
-        gZNormal = self._fusionAdapter.globalVector((0, 0, 1))
-        gYNormal = self._fusionAdapter.globalVector((0, 1, 0))
+        gZNormal = self._fusionAdapter.global_vector((0, 0, 1))
+        gYNormal = self._fusionAdapter.global_vector((0, 1, 0))
         return self.rotation_relative_to(gZNormal, gYNormal)
     
     def absolute_rotation_degrees(self) -> float:
@@ -195,8 +195,8 @@ class Setup():
                 newName = self.ctx.setup.name.replace(find, replace)
 
         if self.ctx.setup.name != newName:
-            if hasattr(self._fusionAdapter, "renameSetup"):
-                self._fusionAdapter.renameSetup(self.ctx.setup, newName)
+            if hasattr(self._fusionAdapter, "rename_setup"):
+                self._fusionAdapter.rename_setup(self.ctx.setup, newName)
             else:
                 self.ctx.setup.name = newName
     

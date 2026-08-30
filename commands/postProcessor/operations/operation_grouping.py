@@ -19,7 +19,7 @@ class GroupedOperationSource:
 def group_operation_sources(
     operations: list[SourceOperation],
     combineTool: bool,
-    getToolNumber: Callable[[SourceOperation], int],
+    get_tool_number: Callable[[SourceOperation], int],
 ) -> list[list[GroupedOperationSource]]:
     groups: list[list[GroupedOperationSource]] = []
     currentGroup: list[GroupedOperationSource] = []
@@ -32,12 +32,12 @@ def group_operation_sources(
         if not currentGroup:
             currentGroup = [GroupedOperationSource(index, operation)]
             currentToolNumber = (
-                getToolNumber(operation) if operation.hasToolpath else None
+                get_tool_number(operation) if operation.hasToolpath else None
             )
             continue
 
         operationToolNumber = (
-            getToolNumber(operation) if operation.hasToolpath else None
+            get_tool_number(operation) if operation.hasToolpath else None
         )
         joinsCurrentGroup = (
             not operation.hasToolpath

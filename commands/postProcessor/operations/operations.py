@@ -34,7 +34,7 @@ class Operations():
         groups = group_operation_sources(
             adskOperations,
             combineTool=self.ctx.processingSettings.combineTool,
-            getToolNumber=fusionAdapter.getToolNumber,
+            get_tool_number=fusionAdapter.get_tool_number,
         )
         for group in groups:
             operation = Operation(

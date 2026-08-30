@@ -24,7 +24,7 @@ def group(operations, combine=False):
     return group_operation_sources(
         operations,
         combineTool=combine,
-        getToolNumber=lambda operation: operation.toolNumber,
+        get_tool_number=lambda operation: operation.toolNumber,
     )
 
 

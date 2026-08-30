@@ -2,7 +2,7 @@ from adsk import cam
 
 
 class FusionProgramAdapter:
-    def machineHasATC(self, program) -> bool:
+    def machine_has_atc(self, program) -> bool:
         if program.machine is None:
             return False
         tooling = cam.ToolingCapabilitiesMachineElement.cast(
@@ -10,15 +10,15 @@ class FusionProgramAdapter:
         )
         return tooling is not None and tooling.isToolChangerAutomatic
 
-    def machineToolSlots(self, program) -> int:
-        if not self.machineHasATC(program):
+    def machine_tool_slots(self, program) -> int:
+        if not self.machine_has_atc(program):
             return 1
         tooling = cam.ToolingCapabilitiesMachineElement.cast(
             program.machine.elements.itemById("tooling", "default")
         )
         return tooling.maxToolCount
 
-    def machineHasAAxis(self, program) -> bool:
+    def machine_has_a_axis(self, program) -> bool:
         if program.machine is None:
             return False
 
@@ -41,5 +41,5 @@ class FusionProgramAdapter:
 
         return unreadableExtraAxis
 
-    def postProcess(self, program) -> bool:
+    def post_process(self, program) -> bool:
         return program.postProcess(cam.NCProgramPostProcessOptions.create())

@@ -17,7 +17,7 @@ def create_operations(
     sources = [
         operation
         for candidate in context.setup.allOperations
-        if (operation := fusion_adapter.castOperation(candidate)) is not None
+        if (operation := fusion_adapter.cast_operation(candidate)) is not None
     ]
     return operations_factory(
         OperationsContext(processingSettings=context.processingSettings),

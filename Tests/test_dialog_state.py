@@ -53,13 +53,13 @@ def test_process_validation_rejects_missing_machine_selection_and_errors():
     context = SimpleNamespace(hasSelected=True, selected=[])
     assert not state.can_process(None, context)
     assert not state.can_process(
-        SimpleNamespace(hasMachine=False, machineHasAAxis=True),
+        SimpleNamespace(hasMachine=False, machine_has_a_axis=True),
         context,
     )
 
     context.selected = [SimpleNamespace(ctx=SimpleNamespace(hasError=True))]
     assert not state.can_process(
-        SimpleNamespace(hasMachine=True, machineHasAAxis=True),
+        SimpleNamespace(hasMachine=True, machine_has_a_axis=True),
         context,
     )
 
@@ -69,6 +69,6 @@ def test_rotary_machine_can_process_valid_selected_setups():
         hasSelected=True,
         selected=[SimpleNamespace(ctx=SimpleNamespace(hasError=False))],
     )
-    program = SimpleNamespace(hasMachine=True, machineHasAAxis=True)
+    program = SimpleNamespace(hasMachine=True, machine_has_a_axis=True)
 
     assert state.can_process(program, context)

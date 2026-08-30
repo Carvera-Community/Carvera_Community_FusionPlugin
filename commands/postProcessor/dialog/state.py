@@ -39,7 +39,7 @@ def can_process(program: Any | None, context: Any) -> bool:
         return False
     if any(setup.ctx.hasError for setup in context.selected):
         return False
-    if program.machineHasAAxis:
+    if program.machine_has_a_axis:
         return True
 
     from ..setups.setups import a_axis_rotation_required

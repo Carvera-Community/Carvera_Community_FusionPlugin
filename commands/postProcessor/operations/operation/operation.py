@@ -17,8 +17,8 @@ from ..operation_source import raw_operation
 
 
 class OperationFusionAdapter(Protocol):
-    def getToolNumber(self, operation) -> int: ...
-    def maxFilenameLength(self) -> int: ...
+    def get_tool_number(self, operation) -> int: ...
+    def max_filename_length(self) -> int: ...
 
 
 class PostProcessingProgram(Protocol):
@@ -53,7 +53,7 @@ class Operation():
             self.ctx.subOperationIndexWithTool = index
 
         names = "-".join(operation.name for operation in self._operationsDict.values())
-        if len(names) > self._fusionAdapter.maxFilenameLength() - 10:
+        if len(names) > self._fusionAdapter.max_filename_length() - 10:
             self.ctx.name = Strings("Combined Operations ({operationsCount})".format(operationsCount=len(self._operationsDict)))
         else:
             self.ctx.name = names
@@ -69,7 +69,7 @@ class Operation():
 
     @property
     def toolId(self) -> Optional[int]:
-        return self._fusionAdapter.getToolNumber(
+        return self._fusionAdapter.get_tool_number(
             self._operationsDict[self.ctx.subOperationIndexWithTool]
         ) if self.hasTool else None
 

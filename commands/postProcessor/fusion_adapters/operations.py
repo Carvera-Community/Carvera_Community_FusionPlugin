@@ -5,15 +5,15 @@ from ....lib.fusionParameters.cast_cam_param import castCAMParam
 
 
 class FusionOperationAdapter:
-    def castOperation(self, value):
+    def cast_operation(self, value):
         return cam.Operation.cast(value)
 
-    def getToolNumber(self, operation) -> int:
+    def get_tool_number(self, operation) -> int:
         if hasattr(operation, "toolNumber"):
             return operation.toolNumber
         return castCAMParam.ToInt(
             operation.tool.parameters.itemByName("tool_number")
         )
 
-    def maxFilenameLength(self) -> int:
+    def max_filename_length(self) -> int:
         return Utils.maxFilenameLength()

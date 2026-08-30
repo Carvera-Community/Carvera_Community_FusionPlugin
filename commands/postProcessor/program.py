@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 
 
 class ProgramFusionAdapter(Protocol):
-    def machineHasATC(self, program) -> bool: ...
-    def machineToolSlots(self, program) -> int: ...
-    def machineHasAAxis(self, program) -> bool: ...
-    def postProcess(self, program) -> bool: ...
+    def machine_has_atc(self, program) -> bool: ...
+    def machine_tool_slots(self, program) -> int: ...
+    def machine_has_a_axis(self, program) -> bool: ...
+    def post_process(self, program) -> bool: ...
 
 class Program():
     def __init__(
@@ -91,30 +91,30 @@ class Program():
         return self._program.machine.model if self.hasMachine else Strings("<no machine selected>")
 
     @property
-    def machineHasATC(self):
+    def machine_has_atc(self):
         """Returns whether the machine of the NCProgram has an ATC."""
-        return self._fusionAdapter.machineHasATC(self._program)
+        return self._fusionAdapter.machine_has_atc(self._program)
     
     @property
-    def machineToolSlots(self):
+    def machine_tool_slots(self):
         """Returns the number of ATC slots of the machine of the NCProgram."""
-        return self._fusionAdapter.machineToolSlots(self._program)
+        return self._fusionAdapter.machine_tool_slots(self._program)
 
     @property
-    def machineHasAAxis(self):
+    def machine_has_a_axis(self):
         """Returns whether the machine has A axis."""
 
-        return self._fusionAdapter.machineHasAAxis(self._program)
+        return self._fusionAdapter.machine_has_a_axis(self._program)
     
     @property
-    def hasPostProcessor(self):
+    def has_post_processor(self):
         """Returns whether the NCProgram has a post processor."""
         return self._program.postConfiguration is not None
 
     @property
-    def postProcessorDescription(self):
+    def post_processor_description(self):
         """Returns the post processor of the current NCProgram."""
-        return self._program.postConfiguration.description if self.hasPostProcessor else Strings("<no post processor selected>")
+        return self._program.postConfiguration.description if self.has_post_processor else Strings("<no post processor selected>")
     
     @property
     def fileName(self):
@@ -180,7 +180,7 @@ class Program():
         if len(operations) == 0:
             return False # Nothing to process
         self._program.operations = operations
-        return self._fusionAdapter.postProcess(self._program)
+        return self._fusionAdapter.post_process(self._program)
 
     def set_output_folder(self, folder: Path):
         """Convenience method to set and verify output folder"""

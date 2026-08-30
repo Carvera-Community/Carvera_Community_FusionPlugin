@@ -230,7 +230,7 @@ class PostDialog(PostDialogLayout):
                 return
 
 
-        if Programs.Current is not None and not Programs.Current.machineHasAAxis:
+        if Programs.Current is not None and not Programs.Current.machine_has_a_axis:
             needAAxisRotation, setups = a_axis_rotation_required(cls._ctx)
             if needAAxisRotation:
                 Utils.log(f'PostDialog: Machine {Programs.Current.machineName} does not support A axis but setups {setups} require A axis rotation.', LogLevels.WarningLogLevel)

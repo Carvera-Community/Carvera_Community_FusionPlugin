@@ -26,10 +26,10 @@ class FakeSetupAdapter:
     def normal(self, setup, direction):
         return setup.normals[direction]
 
-    def globalVector(self, direction):
+    def global_vector(self, direction):
         return Vector(*direction)
 
-    def castOperation(self, value):
+    def cast_operation(self, value):
         return value if getattr(value, "is_operation", False) else None
 
 

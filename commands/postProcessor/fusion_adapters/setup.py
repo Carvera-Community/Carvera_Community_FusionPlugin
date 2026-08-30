@@ -7,7 +7,7 @@ from ....lib.fusionParameters.cast_cam_param import castCAMParam
 
 
 class FusionSetupAdapter:
-    def snapshotSetup(self, setup):
+    def snapshot_setup(self, setup):
         return SetupSource(
             raw=setup,
             name=setup.name,
@@ -19,7 +19,7 @@ class FusionSetupAdapter:
             allOperations=tuple(setup.allOperations),
         )
 
-    def renameSetup(self, setup, name: str) -> None:
+    def rename_setup(self, setup, name: str) -> None:
         raw_setup(setup).name = name
         setup.name = name
 
@@ -36,10 +36,10 @@ class FusionSetupAdapter:
         vector.normalize()
         return vector
 
-    def globalVector(self, direction: tuple[float, float, float]):
+    def global_vector(self, direction: tuple[float, float, float]):
         return Vector3D.create(*direction)
 
-    def castOperation(self, value):
+    def cast_operation(self, value):
         operation = cam.Operation.cast(value)
         if operation is None:
             return None

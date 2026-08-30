@@ -46,16 +46,16 @@ class FakeFusionAdapter:
         self.post_result = post_result
         self.post_calls = []
 
-    def machineHasATC(self, program):
+    def machine_has_atc(self, program):
         return self.atc
 
-    def machineToolSlots(self, program):
+    def machine_tool_slots(self, program):
         return self.slots
 
-    def machineHasAAxis(self, program):
+    def machine_has_a_axis(self, program):
         return self.a_axis
 
-    def postProcess(self, program):
+    def post_process(self, program):
         self.post_calls.append(list(program.operations))
         return self.post_result
 
@@ -110,9 +110,9 @@ def test_machine_capabilities_are_delegated_to_fusion_adapter():
 
     assert program.hasMachine
     assert program.machineName == "Makera"
-    assert program.machineHasATC
-    assert program.machineToolSlots == 6
-    assert program.machineHasAAxis
+    assert program.machine_has_atc
+    assert program.machine_tool_slots == 6
+    assert program.machine_has_a_axis
 
 
 def test_missing_machine_and_post_configuration_have_fallbacks():
@@ -120,8 +120,8 @@ def test_missing_machine_and_post_configuration_have_fallbacks():
 
     assert not program.hasMachine
     assert "no machine" in program.machineName
-    assert not program.hasPostProcessor
-    assert "no post processor" in program.postProcessorDescription
+    assert not program.has_post_processor
+    assert "no post processor" in program.post_processor_description
     assert program.fileExtension is None
 
 
@@ -129,8 +129,8 @@ def test_post_configuration_metadata_is_exposed():
     configuration = SimpleNamespace(description="Makera post", extension=".nc")
     program, _, _ = make_program(post_configuration=configuration)
 
-    assert program.hasPostProcessor
-    assert program.postProcessorDescription == "Makera post"
+    assert program.has_post_processor
+    assert program.post_processor_description == "Makera post"
     assert program.fileExtension == ".nc"
 
 
