@@ -47,7 +47,7 @@ def test_write_header_start_replaces_temporary_name(tmp_path):
 
     output = read_written_output(
         tmp_path,
-        lambda file_handle: header_writer.writeHeaderStart(
+        lambda file_handle: header_writer.write_header_start(
             context, file_handle, header_settings()
         ),
     )
@@ -62,7 +62,7 @@ def test_write_header_start_describes_rapid_restoration(tmp_path):
 
     output = read_written_output(
         tmp_path,
-        lambda file_handle: header_writer.writeHeaderStart(
+        lambda file_handle: header_writer.write_header_start(
             context,
             file_handle,
             header_settings(
@@ -84,7 +84,7 @@ def test_write_tool_comment_copies_only_detected_comment(tmp_path):
 
     output = read_written_output(
         tmp_path,
-        lambda file_handle: header_writer.writeToolComment(context, file_handle),
+        lambda file_handle: header_writer.write_tool_comment(context, file_handle),
     )
 
     assert output == "(T7 Tool description)\n"
@@ -95,7 +95,7 @@ def test_write_header_end_copies_rows_after_tool_comment(tmp_path):
 
     output = read_written_output(
         tmp_path,
-        lambda file_handle: header_writer.writeHeaderEnd(context, file_handle),
+        lambda file_handle: header_writer.write_header_end(context, file_handle),
     )
 
     assert output == "G21\n"
@@ -106,7 +106,7 @@ def test_write_header_combines_all_header_sections(tmp_path):
 
     output = read_written_output(
         tmp_path,
-        lambda file_handle: header_writer.writeHeader(
+        lambda file_handle: header_writer.write_header(
             context, file_handle, header_settings()
         ),
     )

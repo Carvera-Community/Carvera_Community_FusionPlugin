@@ -34,7 +34,7 @@ def make_context():
 def test_render_program_output_prepares_plans_and_renders(tmp_path, monkeypatch):
     context = make_context()
     rendered = []
-    monkeypatch.setattr(workflow, "prepareOutputFolder", lambda path, clear: True)
+    monkeypatch.setattr(workflow, "prepare_output_folder", lambda path, clear: True)
     monkeypatch.setattr(workflow, "plan_output_files", lambda *args: ("plan",))
     monkeypatch.setattr(
         workflow,
@@ -58,7 +58,7 @@ def test_render_program_output_stops_when_folder_preparation_fails(
     monkeypatch,
 ):
     context = make_context()
-    monkeypatch.setattr(workflow, "prepareOutputFolder", lambda path, clear: False)
+    monkeypatch.setattr(workflow, "prepare_output_folder", lambda path, clear: False)
 
     assert not workflow.render_program_output(context, tmp_path, "job", ".nc")
     assert context.events == []

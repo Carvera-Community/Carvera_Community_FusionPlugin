@@ -15,7 +15,7 @@ class ParserSettings:
     rapidMovesMaxSteps: int
 
     @classmethod
-    def fromProcessingSettings(cls, settings) -> "ParserSettings":
+    def from_processing_settings(cls, settings) -> "ParserSettings":
         return cls(
             headerEndCodes=settings.headerEndCodes,
             endCodes=settings.endCodes,
@@ -24,11 +24,11 @@ class ParserSettings:
             rapidMovesMaxSteps=settings.rapidMovesMaxSteps,
         )
 
-def parseFile(ctx: OperationContext, settings: ParserSettings | None = None):
+def parse_file(ctx: OperationContext, settings: ParserSettings | None = None):
     if settings is None:
         if ctx.processingSettings is None:
             raise ValueError("Parser settings are required")
-        settings = ParserSettings.fromProcessingSettings(ctx.processingSettings)
+        settings = ParserSettings.from_processing_settings(ctx.processingSettings)
     #region Header example
     # Find the start of the header and body in the generated file
 
@@ -143,7 +143,7 @@ def parseFile(ctx: OperationContext, settings: ParserSettings | None = None):
             "endLine": seg["endLine"], 
             "startHasFeed": seg["startHasFeed"]}
                 for seg in RapidsParser().analyze(
-                    RapidsParser().parseFile(
+                    RapidsParser().parse_file(
                         ctx.tempFilePath,
                         maxStepsInbetween=settings.rapidMovesMaxSteps,
                     ),

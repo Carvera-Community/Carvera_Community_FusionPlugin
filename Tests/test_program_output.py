@@ -10,8 +10,8 @@ Constants = import_addin_module(
     "commands.postProcessor.settings.constants"
 ).Constants
 ProgramOutputSettings = program_output.ProgramOutputSettings
-planProgramOutput = program_output.planProgramOutput
-prepareOutputFolder = program_output.prepareOutputFolder
+plan_program_output = program_output.plan_program_output
+prepare_output_folder = program_output.prepare_output_folder
 
 
 class FakeOutputContext:
@@ -38,7 +38,7 @@ def settings(grouping, **overrides):
 def test_single_file_uses_output_folder_directly():
     output = Path("output")
 
-    layout = planProgramOutput(
+    layout = plan_program_output(
         output,
         "job",
         settings(Constants.OperationsGroupings.SINGLE_FILE),
@@ -57,13 +57,13 @@ def test_single_file_uses_output_folder_directly():
     ],
 )
 def test_split_output_uses_program_subfolder(grouping):
-    layout = planProgramOutput(Path("output"), "job", settings(grouping))
+    layout = plan_program_output(Path("output"), "job", settings(grouping))
 
     assert layout.path == Path("output/job")
 
 
 def test_flat_structure_keeps_split_output_in_base_folder():
-    layout = planProgramOutput(
+    layout = plan_program_output(
         Path("output"),
         "job",
         settings(
@@ -76,7 +76,7 @@ def test_flat_structure_keeps_split_output_in_base_folder():
 
 
 def test_numeric_file_name_keeps_split_output_in_base_folder():
-    layout = planProgramOutput(
+    layout = plan_program_output(
         Path("output"),
         "009",
         settings(
@@ -90,7 +90,7 @@ def test_numeric_file_name_keeps_split_output_in_base_folder():
 
 
 def test_non_numeric_name_does_not_trigger_numeric_layout():
-    layout = planProgramOutput(
+    layout = plan_program_output(
         Path("output"),
         "job",
         settings(
@@ -106,14 +106,14 @@ def test_existing_file_is_not_a_valid_output_folder(tmp_path):
     output = tmp_path / "output"
     output.write_text("not a directory", encoding="utf-8")
 
-    assert not prepareOutputFolder(output, clearFolder=False)
+    assert not prepare_output_folder(output, clearFolder=False)
     assert output.read_text(encoding="utf-8") == "not a directory"
 
 
 def test_missing_output_folder_needs_no_preparation(tmp_path):
     output = tmp_path / "missing"
 
-    assert prepareOutputFolder(output, clearFolder=True)
+    assert prepare_output_folder(output, clearFolder=True)
     assert not output.exists()
 
 
@@ -123,7 +123,7 @@ def test_existing_output_is_preserved_when_clear_is_disabled(tmp_path):
     file = output / "existing.nc"
     file.write_text("G1 X10", encoding="utf-8")
 
-    assert prepareOutputFolder(output, clearFolder=False)
+    assert prepare_output_folder(output, clearFolder=False)
     assert file.exists()
 
 
@@ -138,7 +138,7 @@ def test_clear_removes_files_directories_and_symlinks(tmp_path):
     target.write_text("keep", encoding="utf-8")
     (output / "linked.nc").symlink_to(target)
 
-    assert prepareOutputFolder(output, clearFolder=True)
+    assert prepare_output_folder(output, clearFolder=True)
     assert list(output.iterdir()) == []
     assert target.read_text(encoding="utf-8") == "keep"
 
@@ -157,5 +157,5 @@ def test_clear_reports_file_removal_failure(tmp_path, monkeypatch):
 
     monkeypatch.setattr(Path, "unlink", unlink)
 
-    assert not prepareOutputFolder(output, clearFolder=True)
+    assert not prepare_output_folder(output, clearFolder=True)
     assert protected.exists()

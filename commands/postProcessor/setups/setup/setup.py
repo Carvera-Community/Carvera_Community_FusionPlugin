@@ -16,7 +16,7 @@ from .setup_context import SetupContext
 
 from ...operations.operations import Operations
 
-from .vector_rotation import getSignedRotationAroundAxis
+from .vector_rotation import get_signed_rotation_around_axis
 from .setup_processing import process_setup
 
 
@@ -173,7 +173,7 @@ class Setup():
         def coordinates(vector) -> tuple[float, float, float]:
             return (vector.x, vector.y, vector.z)
 
-        return getSignedRotationAroundAxis(
+        return get_signed_rotation_around_axis(
             sourceDirection=coordinates(self.zNormal),
             targetDirection=coordinates(zNormal),
             rotationAxis=coordinates(xNormal),

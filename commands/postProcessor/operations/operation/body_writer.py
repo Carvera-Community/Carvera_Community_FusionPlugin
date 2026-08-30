@@ -11,10 +11,10 @@ class BodyWriterSettings:
     yRetractionCoordinate: float
 
     @classmethod
-    def fromProcessingSettings(cls, settings) -> "BodyWriterSettings":
+    def from_processing_settings(cls, settings) -> "BodyWriterSettings":
         return cls(settings.safeYRetraction, settings.yRetractionCoordinate)
 
-def writeBody(
+def write_body(
     ctx: OperationContext,
     fileHandle: TextIO,
     settings: BodyWriterSettings | None = None,
@@ -23,7 +23,7 @@ def writeBody(
     if settings is None:
         if ctx.processingSettings is None:
             raise ValueError("Body writer settings are required")
-        settings = BodyWriterSettings.fromProcessingSettings(ctx.processingSettings)
+        settings = BodyWriterSettings.from_processing_settings(ctx.processingSettings)
 
     def _stripFeed(line: str) -> str:
         # Preserve newline exactly as it was

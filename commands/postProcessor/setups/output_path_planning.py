@@ -19,7 +19,7 @@ class SetupOutputPathSettings:
     fileSequenceDigits: int
 
 
-def getSetupOutputPath(
+def get_setup_output_path(
     basePath: Path,
     setup: NamedSetup,
     settings: SetupOutputPathSettings,

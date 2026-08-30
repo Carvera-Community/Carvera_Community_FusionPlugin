@@ -16,7 +16,7 @@ class GroupedOperationSource:
     source: OperationSource
 
 
-def groupOperationSources(
+def group_operation_sources(
     operations: list[SourceOperation],
     combineTool: bool,
     getToolNumber: Callable[[SourceOperation], int],

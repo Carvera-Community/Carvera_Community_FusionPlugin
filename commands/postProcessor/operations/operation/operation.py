@@ -3,16 +3,16 @@ from typing import Any, Optional, Protocol, TextIO
 
 from ...parameters import Parameters
 from ...strings import Strings
-from .parser import parseFile
+from .parser import parse_file
 from .operation_context import OperationContext
 from .header_writer import (
-    writeHeaderStart,
-    writeHeaderEnd,
-    writeToolComment,
+    write_header_start,
+    write_header_end,
+    write_tool_comment,
 )
-from .body_writer import writeBody
-from .tail_writer import writeTail
-from .temporary_post_processing import createTemporaryOperationFile
+from .body_writer import write_body
+from .tail_writer import write_tail
+from .temporary_post_processing import create_temporary_operation_file
 from ..operation_source import raw_operation
 
 
@@ -114,18 +114,18 @@ class Operation():
             program.parameters.Set(Parameters.NAME, fileName)
             return program.post_process(operations)
 
-        createTemporaryOperationFile(
+        create_temporary_operation_file(
             self.ctx,
             tmpPath,
             [raw_operation(operation) for operation in self._operationsDict.values()],
             program.fileExtension,
             postProcess,
-            parseFile,
+            parse_file,
         )
 
-    def write_header_start(self, fileHandle: TextIO) -> None: writeHeaderStart(self.ctx, fileHandle)
-    def write_header_end(self, fileHandle: TextIO) -> None : writeHeaderEnd(self.ctx, fileHandle)
-    def write_tool_comment(self, fileHandle: TextIO) -> None: writeToolComment(self.ctx, fileHandle)
-    def write_body(self, fileHandle: TextIO) -> None: writeBody(self.ctx, fileHandle)
+    def write_header_start(self, fileHandle: TextIO) -> None: write_header_start(self.ctx, fileHandle)
+    def write_header_end(self, fileHandle: TextIO) -> None : write_header_end(self.ctx, fileHandle)
+    def write_tool_comment(self, fileHandle: TextIO) -> None: write_tool_comment(self.ctx, fileHandle)
+    def write_body(self, fileHandle: TextIO) -> None: write_body(self.ctx, fileHandle)
     def write_tail(self, fileHandle: TextIO) -> None:
-        writeTail(self.ctx, fileHandle)
+        write_tail(self.ctx, fileHandle)

@@ -25,7 +25,7 @@ def write_operation_tail(
     context.tailStartLine = tail_start
     context.allowBlankLines = allow_blank_lines
     output = StringIO()
-    tail_writer.writeTail(context, output)
+    tail_writer.write_tail(context, output)
     return output.getvalue()
 
 

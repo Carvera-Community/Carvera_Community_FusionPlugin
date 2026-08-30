@@ -5,8 +5,8 @@ from .output_plan import plan_output_files
 from .output_renderer import render_output_files
 from .program_output import (
     ProgramOutputSettings,
-    planProgramOutput,
-    prepareOutputFolder,
+    plan_program_output,
+    prepare_output_folder,
 )
 
 
@@ -24,11 +24,11 @@ def render_program_output(
         numericName=settings.numericName,
         clearFolder=settings.clearFolder,
     )
-    if not prepareOutputFolder(output_path, output_settings.clearFolder):
+    if not prepare_output_folder(output_path, output_settings.clearFolder):
         return False
 
     context.setFileExtension(file_extension)
-    layout = planProgramOutput(output_path, output_file_name, output_settings)
+    layout = plan_program_output(output_path, output_file_name, output_settings)
     context.setPath(layout.path)
     context.setFileName(layout.fileName)
 

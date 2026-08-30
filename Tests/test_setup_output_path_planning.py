@@ -13,7 +13,7 @@ Constants = import_addin_module(
     "commands.postProcessor.settings.constants"
 ).Constants
 SetupOutputPathSettings = planning.SetupOutputPathSettings
-getSetupOutputPath = planning.getSetupOutputPath
+get_setup_output_path = planning.get_setup_output_path
 
 
 def settings(grouping, **overrides):
@@ -43,7 +43,7 @@ def test_shared_groupings_use_base_path(grouping):
     base_path = Path("output")
     setup = SimpleNamespace(index=1, name="Second Setup")
 
-    assert getSetupOutputPath(
+    assert get_setup_output_path(
         base_path, setup, settings(grouping), sanitize
     ) == base_path
 
@@ -59,7 +59,7 @@ def test_flat_or_numeric_split_output_uses_base_path(override):
     base_path = Path("output")
     setup = SimpleNamespace(index=1, name="Second Setup")
 
-    assert getSetupOutputPath(
+    assert get_setup_output_path(
         base_path,
         setup,
         settings(Constants.OperationsGroupings.PER_OPERATION, **override),
@@ -78,7 +78,7 @@ def test_hierarchical_split_output_uses_sanitized_setup_folder(grouping):
     base_path = Path("output")
     setup = SimpleNamespace(index=1, name="Second / Setup")
 
-    assert getSetupOutputPath(
+    assert get_setup_output_path(
         base_path, setup, settings(grouping), sanitize
     ) == Path("output/Second___Setup")
 
@@ -87,7 +87,7 @@ def test_sequence_prefix_uses_original_setup_index():
     base_path = Path("output")
     setup = SimpleNamespace(index=4, name="Finish")
 
-    assert getSetupOutputPath(
+    assert get_setup_output_path(
         base_path,
         setup,
         settings(

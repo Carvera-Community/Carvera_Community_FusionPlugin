@@ -6,7 +6,7 @@ from addin_import import import_addin_module
 grouping = import_addin_module(
     "commands.postProcessor.operations.operation_grouping"
 )
-groupOperationSources = grouping.groupOperationSources
+group_operation_sources = grouping.group_operation_sources
 
 
 @dataclass
@@ -21,7 +21,7 @@ class FakeSourceOperation:
 
 
 def group(operations, combine=False):
-    return groupOperationSources(
+    return group_operation_sources(
         operations,
         combineTool=combine,
         getToolNumber=lambda operation: operation.toolNumber,

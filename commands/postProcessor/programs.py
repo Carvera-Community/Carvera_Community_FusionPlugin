@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any, Callable, ClassVar, TYPE_CHECKING
 
 from .program import Program
-from .toolpath_generation import ensureToolpathGenerated
+from .toolpath_generation import ensure_toolpath_generated
 
 if TYPE_CHECKING:
     from .setups.setups_context import SetupsContext
@@ -62,7 +62,7 @@ class Programs(metaclass=_ProgramsMeta):
     def check_and_generate_toolpath(cls, setup):
         """Ensure that the toolpath for the given setup is generated."""
         if cls._cam is not None:
-            ensureToolpathGenerated(
+            ensure_toolpath_generated(
                 setup,
                 cls._cam.checkToolpath,
                 cls._cam.generateToolpath,

@@ -10,7 +10,7 @@ temporary = import_addin_module(
     "commands.postProcessor.operations.operation.temporary_post_processing"
 )
 TemporaryPostProcessPolicy = temporary.TemporaryPostProcessPolicy
-createTemporaryOperationFile = temporary.createTemporaryOperationFile
+create_temporary_operation_file = temporary.create_temporary_operation_file
 
 
 def test_post_processes_to_unique_temporary_path_and_parses_result(tmp_path):
@@ -24,7 +24,7 @@ def test_post_processes_to_unique_temporary_path_and_parses_result(tmp_path):
         return True
 
     parsed = []
-    createTemporaryOperationFile(
+    create_temporary_operation_file(
         context,
         tmp_path,
         source_operations,
@@ -46,7 +46,7 @@ def test_none_extension_is_not_appended(tmp_path):
         (output_folder / file_name).touch()
         return True
 
-    createTemporaryOperationFile(
+    create_temporary_operation_file(
         context,
         tmp_path,
         [],
@@ -65,7 +65,7 @@ def test_failed_post_process_stops_before_waiting_or_parsing(tmp_path):
     parsed = []
 
     with pytest.raises(RuntimeError, match="Pocket post processing failed"):
-        createTemporaryOperationFile(
+        create_temporary_operation_file(
             context,
             tmp_path,
             [],
@@ -89,7 +89,7 @@ def test_waits_with_increasing_delay_until_output_exists(tmp_path):
         if len(sleeps) == 2:
             context.tempFilePath.touch()
 
-    createTemporaryOperationFile(
+    create_temporary_operation_file(
         context,
         tmp_path,
         [],
@@ -109,7 +109,7 @@ def test_missing_output_fails_after_configured_attempts(tmp_path):
     parsed = []
 
     with pytest.raises(RuntimeError, match="output file was not created"):
-        createTemporaryOperationFile(
+        create_temporary_operation_file(
             context,
             tmp_path,
             [],

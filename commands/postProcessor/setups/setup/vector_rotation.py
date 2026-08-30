@@ -30,7 +30,7 @@ def _projectOntoRotationPlane(vector: Vector3, axis: Vector3) -> Vector3:
     return tuple(value - axis_value * distance for value, axis_value in zip(vector, axis))
 
 
-def getSignedRotationAroundAxis(
+def get_signed_rotation_around_axis(
     sourceDirection: Vector3,
     targetDirection: Vector3,
     rotationAxis: Vector3,

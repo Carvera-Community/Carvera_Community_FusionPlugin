@@ -19,7 +19,7 @@ class ProgramOutputLayout:
     fileName: str
 
 
-def planProgramOutput(
+def plan_program_output(
     outputFolder: Path,
     fileName: str | None,
     settings: ProgramOutputSettings,
@@ -40,7 +40,7 @@ def planProgramOutput(
     )
 
 
-def prepareOutputFolder(outputFolder: Path, clearFolder: bool) -> bool:
+def prepare_output_folder(outputFolder: Path, clearFolder: bool) -> bool:
     if outputFolder.exists() and not outputFolder.is_dir():
         return False
 

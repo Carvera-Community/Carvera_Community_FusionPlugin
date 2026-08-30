@@ -8,7 +8,7 @@ OperationContext = import_addin_module(
 ).OperationContext
 parser = import_addin_module("commands.postProcessor.operations.operation.parser")
 ParserSettings = parser.ParserSettings
-parseFile = parser.parseFile
+parse_file = parser.parse_file
 
 
 def parser_settings(**overrides) -> ParserSettings:
@@ -29,7 +29,7 @@ def parse_operation(tmp_path: Path, contents: str, **setting_overrides):
     context = OperationContext(0)
     context.name = "Operation"
     context.tempFilePath = path
-    parseFile(context, parser_settings(**setting_overrides))
+    parse_file(context, parser_settings(**setting_overrides))
     return context
 
 

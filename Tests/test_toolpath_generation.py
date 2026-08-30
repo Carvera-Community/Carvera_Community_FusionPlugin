@@ -3,15 +3,15 @@ from types import SimpleNamespace
 from addin_import import import_addin_module
 
 
-ensureToolpathGenerated = import_addin_module(
+ensure_toolpath_generated = import_addin_module(
     "commands.postProcessor.toolpath_generation"
-).ensureToolpathGenerated
+).ensure_toolpath_generated
 
 
 def test_existing_toolpath_is_not_generated():
     generated = []
 
-    ensureToolpathGenerated(
+    ensure_toolpath_generated(
         "setup",
         checkToolpath=lambda setup: True,
         generateToolpath=lambda setup: generated.append(setup),
@@ -29,7 +29,7 @@ def test_generation_is_polled_until_complete():
         if len(sleeps) == 3:
             generation.isGenerationCompleted = True
 
-    ensureToolpathGenerated(
+    ensure_toolpath_generated(
         "setup",
         checkToolpath=lambda setup: False,
         generateToolpath=lambda setup: generation,

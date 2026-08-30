@@ -8,7 +8,7 @@ from addin_import import import_addin_module
 rotation = import_addin_module(
     "commands.postProcessor.setups.setup.vector_rotation"
 )
-getSignedRotationAroundAxis = rotation.getSignedRotationAroundAxis
+get_signed_rotation_around_axis = rotation.get_signed_rotation_around_axis
 
 
 X_AXIS = (1.0, 0.0, 0.0)
@@ -17,7 +17,7 @@ Z_AXIS = (0.0, 0.0, 1.0)
 
 
 def angle(source, target, source_fallback=Y_AXIS, target_fallback=Y_AXIS):
-    return getSignedRotationAroundAxis(
+    return get_signed_rotation_around_axis(
         sourceDirection=source,
         targetDirection=target,
         rotationAxis=X_AXIS,
@@ -43,7 +43,7 @@ def test_opposite_directions_produce_half_turn():
 
 
 def test_non_unit_rotation_axis_is_normalized():
-    result = getSignedRotationAroundAxis(
+    result = get_signed_rotation_around_axis(
         sourceDirection=Z_AXIS,
         targetDirection=(0.0, -1.0, 0.0),
         rotationAxis=(2.0, 0.0, 0.0),

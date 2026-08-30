@@ -19,7 +19,7 @@ class TemporaryPostProcessPolicy:
     maxAttempts: int = 10
 
 
-def createTemporaryOperationFile(
+def create_temporary_operation_file(
     ctx: TemporaryOperationContext,
     tempPath: Path,
     operations: list[SourceOperation],

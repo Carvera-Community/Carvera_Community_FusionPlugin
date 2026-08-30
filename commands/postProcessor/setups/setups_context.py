@@ -5,7 +5,7 @@ from typing import Any, Callable
 from ..processing_settings import ProcessingSettings
 from .setup.setup_context import SetupContext
 from .setup.setup import Setup
-from .output_path_planning import SetupOutputPathSettings, getSetupOutputPath
+from .output_path_planning import SetupOutputPathSettings, get_setup_output_path
 
 @dataclass
 class SetupsContext:
@@ -67,7 +67,7 @@ class SetupsContext:
             fileSequenceDigits=current.fileSequenceDigits,
         )
         for setup in self.selected:
-            outputPath = getSetupOutputPath(
+            outputPath = get_setup_output_path(
                 path,
                 setup,
                 settings,

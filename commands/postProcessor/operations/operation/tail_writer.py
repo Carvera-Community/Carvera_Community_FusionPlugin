@@ -6,7 +6,7 @@ from .analysis import parsed_operation
 from ...file_modes import FileModes
 
 
-def writeTail(
+def write_tail(
     ctx: OperationContext,
     fileHandle: TextIO,
 ):

@@ -16,14 +16,14 @@ class HeaderWriterSettings:
     rapidMovesMinimumDistance: float
 
     @classmethod
-    def fromProcessingSettings(cls, settings) -> "HeaderWriterSettings":
+    def from_processing_settings(cls, settings) -> "HeaderWriterSettings":
         return cls(
             settings.restoreRapidMoves,
             settings.rapidMovesMaxSteps,
             settings.rapidMovesMinimumDistance,
         )
 
-def writeHeaderStart(
+def write_header_start(
     ctx: OperationContext,
     fileHandle: TextIO,
     settings: HeaderWriterSettings | None = None,
@@ -32,7 +32,7 @@ def writeHeaderStart(
     if settings is None:
         if ctx.processingSettings is None:
             raise ValueError("Header writer settings are required")
-        settings = HeaderWriterSettings.fromProcessingSettings(ctx.processingSettings)
+        settings = HeaderWriterSettings.from_processing_settings(ctx.processingSettings)
     with analysis.source_file.open("r") as tempFile:
         
         file = Path(fileHandle.name).stem
@@ -60,7 +60,7 @@ def writeHeaderStart(
             line = tempFile.readline()
             row += 1
 
-def writeToolComment(context: OperationContext, fileHandle: TextIO):
+def write_tool_comment(context: OperationContext, fileHandle: TextIO):
     analysis = parsed_operation(context)
     if analysis.tool_comment_line is None:
         return
@@ -74,7 +74,7 @@ def writeToolComment(context: OperationContext, fileHandle: TextIO):
             line = operationFile.readline()
             row += 1
 
-def writeHeaderEnd(ctx: OperationContext, fileHandle: TextIO):
+def write_header_end(ctx: OperationContext, fileHandle: TextIO):
     analysis = parsed_operation(ctx)
     if analysis.header is None:
         return
@@ -88,11 +88,11 @@ def writeHeaderEnd(ctx: OperationContext, fileHandle: TextIO):
             line = operationFile.readline()
             row += 1
 
-def writeHeader(
+def write_header(
     context: OperationContext,
     fileHandle: TextIO,
     settings: HeaderWriterSettings | None = None,
 ):
-    writeHeaderStart(context, fileHandle, settings)
-    writeToolComment(context, fileHandle)
-    writeHeaderEnd(context, fileHandle)
+    write_header_start(context, fileHandle, settings)
+    write_tool_comment(context, fileHandle)
+    write_header_end(context, fileHandle)

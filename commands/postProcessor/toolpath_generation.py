@@ -2,7 +2,7 @@ from typing import Callable
 import time
 
 
-def ensureToolpathGenerated(
+def ensure_toolpath_generated(
     setup,
     checkToolpath: Callable[[object], bool],
     generateToolpath: Callable[[object], object],

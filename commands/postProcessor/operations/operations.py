@@ -4,7 +4,7 @@ from typing import Any
 from .operations_context import OperationsContext
 from .operation.operation_context import OperationContext
 from .operation.operation import Operation
-from .operation_grouping import groupOperationSources
+from .operation_grouping import group_operation_sources
 
 
 class Operations():
@@ -31,7 +31,7 @@ class Operations():
 
         if self.ctx.processingSettings is None:
             raise ValueError("Processing settings are required")
-        groups = groupOperationSources(
+        groups = group_operation_sources(
             adskOperations,
             combineTool=self.ctx.processingSettings.combineTool,
             getToolNumber=fusionAdapter.getToolNumber,

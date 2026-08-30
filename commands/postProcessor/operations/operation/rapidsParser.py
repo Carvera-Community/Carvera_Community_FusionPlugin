@@ -121,7 +121,7 @@ class RapidsParser:
                 self.baseIndex += 1
 
     @classmethod
-    def parseFile(
+    def parse_file(
         cls,
         path: Path,
         *,

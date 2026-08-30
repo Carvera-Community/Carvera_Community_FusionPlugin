@@ -11,7 +11,7 @@ body_writer = import_addin_module(
     "commands.postProcessor.operations.operation.body_writer"
 )
 BodyWriterSettings = body_writer.BodyWriterSettings
-writeBody = body_writer.writeBody
+write_body = body_writer.write_body
 ProcessingSettings = import_addin_module(
     "commands.postProcessor.processing_settings"
 ).ProcessingSettings
@@ -52,7 +52,7 @@ def test_body_writer_uses_captured_retraction_settings(tmp_path):
     context.rotationAngle = 10
 
     output = StringIO()
-    writeBody(context, output)
+    write_body(context, output)
 
     assert "G90 G53 G0 Z-3\n" in output.getvalue()
     assert " Y" not in output.getvalue()
@@ -77,7 +77,7 @@ def write_operation_body(
         setattr(context, name, value)
 
     output = StringIO()
-    writeBody(context, output, settings or writer_settings())
+    write_body(context, output, settings or writer_settings())
     return output.getvalue()
 
 
