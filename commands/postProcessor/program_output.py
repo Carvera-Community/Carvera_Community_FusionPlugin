@@ -40,20 +40,15 @@ def plan_program_output(
     )
 
 
-def prepare_output_folder(outputFolder: Path, clearFolder: bool) -> bool:
+def prepare_output_folder(outputFolder: Path, clearFolder: bool) -> None:
     if outputFolder.exists() and not outputFolder.is_dir():
-        return False
+        raise NotADirectoryError(f"Output path is not a directory: {outputFolder}")
 
     if not clearFolder or not outputFolder.exists():
-        return True
+        return
 
-    try:
-        for child in outputFolder.iterdir():
-            if child.is_dir() and not child.is_symlink():
-                shutil.rmtree(child)
-            else:
-                child.unlink()
-    except OSError:
-        return False
-
-    return True
+    for child in outputFolder.iterdir():
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink()

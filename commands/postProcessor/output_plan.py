@@ -98,14 +98,14 @@ def plan_output_files(
         members = membership[0]
         operations_context = members.setups[0].ctx.operations.ctx
         path = operations_context.path / f"{base_name}{operations_context.fileExtension}"
-        return (_complete_plan(
+        return _ensure_unique_paths((_complete_plan(
             members,
             path,
             next((op for op in members.operations if op.hasHeader), None),
             members.operations,
             body_by_operation,
             next((op for op in members.operations if op.hasTail), None),
-        ),)
+        ),))
 
     for setup_index, setup in enumerate(setups):
         operations = setup.ctx.operations
@@ -164,7 +164,17 @@ def plan_output_files(
                 operations.ctx.operationWithTail,
             ))
 
-    return tuple(plans)
+    return _ensure_unique_paths(tuple(plans))
+
+
+def _ensure_unique_paths(plans: tuple[ResultFilePlan, ...]) -> tuple[ResultFilePlan, ...]:
+    paths: set[Path] = set()
+    for plan in plans:
+        if plan.path in paths:
+            raise ValueError(f"Multiple result files resolve to the same path: {plan.path}")
+        if plan.path is not None:
+            paths.add(plan.path)
+    return plans
 
 
 def _complete_plan(membership, path, header_source, comments, bodies, tail_source):

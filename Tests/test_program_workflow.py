@@ -1,6 +1,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from addin_import import import_addin_module
 
 
@@ -42,9 +44,8 @@ def test_render_program_output_prepares_plans_and_renders(tmp_path, monkeypatch)
         lambda plans, overwrite: rendered.append((plans, overwrite)),
     )
 
-    result = workflow.render_program_output(context, tmp_path, "job", ".nc")
+    workflow.render_program_output(context, tmp_path, "job", ".nc")
 
-    assert result
     assert context.events == [
         ("extension", ".nc"),
         ("path", tmp_path),
@@ -58,7 +59,11 @@ def test_render_program_output_stops_when_folder_preparation_fails(
     monkeypatch,
 ):
     context = make_context()
-    monkeypatch.setattr(workflow, "prepare_output_folder", lambda path, clear: False)
+    def fail_preparation(_path, _clear):
+        raise PermissionError("protected")
 
-    assert not workflow.render_program_output(context, tmp_path, "job", ".nc")
+    monkeypatch.setattr(workflow, "prepare_output_folder", fail_preparation)
+
+    with pytest.raises(PermissionError, match="protected"):
+        workflow.render_program_output(context, tmp_path, "job", ".nc")
     assert context.events == []

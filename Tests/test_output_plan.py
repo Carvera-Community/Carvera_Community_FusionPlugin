@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from addin_import import import_addin_module
 
 
@@ -128,3 +130,22 @@ def test_complete_numeric_per_operation_plan_advances_across_setups(tmp_path):
 
     assert [plan.path.name for plan in plans] == ["009.nc", "010.nc"]
     assert all(plan.bodies[0].is_final for plan in plans)
+
+
+def test_duplicate_operation_paths_are_rejected_before_rendering(tmp_path):
+    setup = FullSetup(
+        0,
+        "Top",
+        tmp_path,
+        [FullOperation("duplicate", 1), FullOperation("duplicate", 2)],
+    )
+    setup.ctx.operations._items[0].index = 0
+    setup.ctx.operations._items[1].index = 1
+    context = SimpleNamespace(selected=[setup], fileName="job")
+
+    with pytest.raises(ValueError, match="same path"):
+        module.plan_output_files(
+            context,
+            full_settings(Constants.OperationsGroupings.PER_OPERATION),
+            lambda name: name,
+        )

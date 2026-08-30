@@ -106,14 +106,15 @@ def test_existing_file_is_not_a_valid_output_folder(tmp_path):
     output = tmp_path / "output"
     output.write_text("not a directory", encoding="utf-8")
 
-    assert not prepare_output_folder(output, clearFolder=False)
+    with pytest.raises(NotADirectoryError, match="not a directory"):
+        prepare_output_folder(output, clearFolder=False)
     assert output.read_text(encoding="utf-8") == "not a directory"
 
 
 def test_missing_output_folder_needs_no_preparation(tmp_path):
     output = tmp_path / "missing"
 
-    assert prepare_output_folder(output, clearFolder=True)
+    prepare_output_folder(output, clearFolder=True)
     assert not output.exists()
 
 
@@ -123,7 +124,7 @@ def test_existing_output_is_preserved_when_clear_is_disabled(tmp_path):
     file = output / "existing.nc"
     file.write_text("G1 X10", encoding="utf-8")
 
-    assert prepare_output_folder(output, clearFolder=False)
+    prepare_output_folder(output, clearFolder=False)
     assert file.exists()
 
 
@@ -138,7 +139,7 @@ def test_clear_removes_files_directories_and_symlinks(tmp_path):
     target.write_text("keep", encoding="utf-8")
     (output / "linked.nc").symlink_to(target)
 
-    assert prepare_output_folder(output, clearFolder=True)
+    prepare_output_folder(output, clearFolder=True)
     assert list(output.iterdir()) == []
     assert target.read_text(encoding="utf-8") == "keep"
 
@@ -157,5 +158,6 @@ def test_clear_reports_file_removal_failure(tmp_path, monkeypatch):
 
     monkeypatch.setattr(Path, "unlink", unlink)
 
-    assert not prepare_output_folder(output, clearFolder=True)
+    with pytest.raises(PermissionError, match="protected"):
+        prepare_output_folder(output, clearFolder=True)
     assert protected.exists()
