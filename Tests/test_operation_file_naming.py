@@ -13,6 +13,7 @@ Constants = import_addin_module(
 ).Constants
 OperationFileNamingSettings = naming.OperationFileNamingSettings
 setOperationFileName = naming.setOperationFileName
+get_operation_file_name = naming.get_operation_file_name
 
 
 @dataclass
@@ -148,3 +149,22 @@ def test_numeric_naming_assigns_current_name_and_advances_context():
 
     assert operation.fileName == "009"
     assert context.fileName == "010"
+
+
+def test_pure_naming_returns_the_file_and_next_numeric_base():
+    operation = FakeOperation(4, "Pocket", 7)
+
+    file_name, next_name = get_operation_file_name(
+        "009",
+        operation,
+        1,
+        naming_settings(
+            Constants.OperationsGroupings.PER_OPERATION,
+            numericName=True,
+        ),
+        sanitize,
+    )
+
+    assert file_name == "009"
+    assert next_name == "010"
+    assert operation.fileName is None

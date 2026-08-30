@@ -5,18 +5,14 @@ from typing import Any, Protocol, TYPE_CHECKING
 from .strings import Strings
 from .attributes import Attributes
 
-from .setups.header_writer import writeHeader as writeSetupsHeader
-from .setups.body_writer import writeBody as writeSetupsBody
-from .setups.tail_writer import writeTail as writeSetupsTail
-
-from .settings.settings import Settings
 from .parameters import Parameters
 from .program_output import (
     ProgramOutputSettings,
     planProgramOutput,
     prepareOutputFolder,
-    writeProgramOutputSections,
 )
+from .output_plan import plan_output_files
+from .output_renderer import render_output_files
 
 if TYPE_CHECKING:
     from .setups.setups_context import SetupsContext
@@ -193,17 +189,13 @@ class Program():
             ctx.setPath(outputLayout.path)
             ctx.setFileName(outputLayout.fileName)
 
-            writeProgramOutputSections(
+            plans = plan_output_files(
                 ctx,
-                initialFileName,
-                outputSettings.numericName,
-                writeSetupsHeader,
-                writeSetupsBody,
-                writeSetupsTail,
+                current,
+                ctx.sanitizeFilename,
             )
+            render_output_files(plans, current.overwriteFiles)
 
-        except Exception as exc:
-            raise exc
         finally:
             self.SetOutputFolder(initialPath)
             if initialFileName is not None:

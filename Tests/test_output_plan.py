@@ -36,3 +36,95 @@ def test_setup_and_split_plans_express_result_file_membership():
 
     assert [plan.operations for plan in per_setup] == [(first, second), (third,)]
     assert [plan.operations for plan in split] == [(first,), (second,), (third,)]
+
+
+class FullOperation:
+    def __init__(self, name, tool_id, *, header=True, tail=True):
+        self.name = name
+        self.toolId = tool_id
+        self.hasBody = True
+        self.hasHeader = header
+        self.hasTail = tail
+        self.ctx = SimpleNamespace(isLastOp=False)
+
+
+class FullOperations:
+    def __init__(self, path, operations):
+        self._items = operations
+        self.ctx = SimpleNamespace(
+            path=path,
+            fileExtension=".nc",
+            operationWithTail=next((item for item in operations if item.hasTail), None),
+        )
+
+    def __iter__(self):
+        return iter(self._items)
+
+    def __len__(self):
+        return len(self._items)
+
+
+class FullSetup:
+    def __init__(self, index, name, path, operations, angle=0):
+        self.index = index
+        self.name = name
+        self.ctx = SimpleNamespace(operations=FullOperations(path, operations))
+        self.angle = angle
+
+    def GetRotationAroundXAxisRelativeToDeg(self, other):
+        return self.angle
+
+
+def full_settings(grouping, **overrides):
+    values = {
+        "operationsGrouping": grouping,
+        "numericName": False,
+        "fileSequence": False,
+        "fileSequenceDigits": 3,
+        "rotateAAxis": False,
+    }
+    values.update(overrides)
+    return SimpleNamespace(**values)
+
+
+def test_complete_single_file_plan_selects_sources_and_rotation(tmp_path):
+    first = FullOperation("rough", 1)
+    second = FullOperation("finish", 2)
+    setups = [
+        FullSetup(0, "Top", tmp_path, [first]),
+        FullSetup(1, "Side", tmp_path, [second], angle=45),
+    ]
+    context = SimpleNamespace(selected=setups, fileName="job")
+
+    plans = module.plan_output_files(
+        context,
+        full_settings(Constants.OperationsGroupings.SINGLE_FILE, rotateAAxis=True),
+        lambda name: name,
+    )
+
+    assert len(plans) == 1
+    assert plans[0].path == tmp_path / "job.nc"
+    assert plans[0].header_source is first
+    assert plans[0].tail_source is first
+    assert [body.rotation_angle for body in plans[0].bodies] == [None, 45]
+    assert [body.is_final for body in plans[0].bodies] == [False, True]
+
+
+def test_complete_numeric_per_operation_plan_advances_across_setups(tmp_path):
+    setups = [
+        FullSetup(0, "Top", tmp_path, [FullOperation("one", 1)]),
+        FullSetup(1, "Side", tmp_path, [FullOperation("two", 2)]),
+    ]
+    context = SimpleNamespace(selected=setups, fileName="009")
+
+    plans = module.plan_output_files(
+        context,
+        full_settings(
+            Constants.OperationsGroupings.PER_OPERATION,
+            numericName=True,
+        ),
+        lambda name: name,
+    )
+
+    assert [plan.path.name for plan in plans] == ["009.nc", "010.nc"]
+    assert all(plan.bodies[0].is_final for plan in plans)

@@ -31,29 +31,49 @@ def setOperationFileName(
     settings: OperationFileNamingSettings,
     sanitizeFilename: Callable[[str], str],
 ) -> None:
-    operation.SetFileName(ctx.fileName)
+    file_name, next_base_name = get_operation_file_name(
+        ctx.fileName,
+        operation,
+        toolIdIndex,
+        settings,
+        sanitizeFilename,
+    )
+    operation.SetFileName(file_name)
+    ctx.fileName = next_base_name
+
+
+def get_operation_file_name(
+    base_file_name: str,
+    operation: NamedOperation,
+    tool_id_index: int,
+    settings: OperationFileNamingSettings,
+    sanitize_filename: Callable[[str], str],
+) -> tuple[str, str]:
+    file_name = base_file_name
 
     if settings.operationsGrouping in (
         Constants.OperationsGroupings.SINGLE_FILE,
         Constants.OperationsGroupings.SETUP,
     ):
-        return
+        return file_name, base_file_name
 
-    fileNumber = str(operation.index + 1).rjust(settings.fileSequenceDigits, "0")
-
-    if settings.numericName and ctx.fileName is not None:
-        ctx.fileName = str(int(ctx.fileName) + 1).rjust(
+    if settings.numericName:
+        next_base_name = str(int(base_file_name) + 1).rjust(
             settings.fileSequenceDigits, "0"
         )
-        return
+        return file_name, next_base_name
+
+    file_number = str(operation.index + 1).rjust(settings.fileSequenceDigits, "0")
 
     if settings.operationsGrouping == Constants.OperationsGroupings.SETUP_AND_TOOL:
         toolId = f"T{operation.toolId}"
-        if toolIdIndex > 1:
-            toolId += f"_{toolIdIndex}"
+        if tool_id_index > 1:
+            toolId += f"_{tool_id_index}"
         if settings.fileSequence:
-            toolId = f"{fileNumber}_{toolId}"
-        operation.SetFileName(sanitizeFilename(f"{ctx.fileName}_{toolId}"))
+            toolId = f"{file_number}_{toolId}"
+        file_name = sanitize_filename(f"{base_file_name}_{toolId}")
     elif settings.operationsGrouping == Constants.OperationsGroupings.PER_OPERATION:
-        name = f"{fileNumber}_{operation.name}" if settings.fileSequence else operation.name
-        operation.SetFileName(sanitizeFilename(name))
+        name = f"{file_number}_{operation.name}" if settings.fileSequence else operation.name
+        file_name = sanitize_filename(name)
+
+    return file_name, base_file_name

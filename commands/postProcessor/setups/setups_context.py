@@ -90,6 +90,10 @@ class SetupsContext:
         for setup in self.selected:
             setup.SetFileExtension(extension)
 
+    @staticmethod
+    def sanitizeFilename(name: str) -> str:
+        return _sanitizeFilename(name)
+
 
 def _sanitizeFilename(name: str) -> str:
     from ....lib.fusionAddInUtils.general_utils import Utils
