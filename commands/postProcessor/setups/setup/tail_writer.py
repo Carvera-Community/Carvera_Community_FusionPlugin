@@ -1,15 +1,45 @@
-from .setup_context import SetupContext
+from dataclasses import dataclass
+from typing import Protocol
 
 from ...settings.settings import Settings
-  
-def writeTail(ctx: SetupContext):
-    if ctx.operations.hasTail if ctx.operations is not None else False:
-        if ctx.operations is None:
-            raise ValueError("ctx.operations is None")
-        
-        # SETUP writes the tail from the first operation.
-        if Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SINGLE_FILE,
-                                                        Settings.OperationsGroupings.SETUP]:
-            ctx.operations.WriteFirstTail()
-        else: # SETUP_AND_TOOL, PER_OPERATION
-            ctx.operations.WriteTail()
+from ...settings.constants import Constants
+
+
+class SetupTailOperations(Protocol):
+    hasTail: bool
+
+    def WriteFirstTail(self) -> None: ...
+    def WriteTail(self) -> None: ...
+
+
+class SetupTailContext(Protocol):
+    operations: SetupTailOperations | None
+
+
+@dataclass(frozen=True)
+class SetupTailWriterSettings:
+    operationsGrouping: Constants.OperationsGroupings
+
+    @classmethod
+    def fromCurrentSettings(cls) -> "SetupTailWriterSettings":
+        return cls(
+            operationsGrouping=Settings.Get(Settings.OPERATIONS_GROUPING),
+        )
+
+
+def writeTail(
+    ctx: SetupTailContext,
+    settings: SetupTailWriterSettings | None = None,
+):
+    settings = settings or SetupTailWriterSettings.fromCurrentSettings()
+    if ctx.operations is None or not ctx.operations.hasTail:
+        return
+
+    # SINGLE_FILE and SETUP use one shared result file at this level.
+    if settings.operationsGrouping in (
+        Constants.OperationsGroupings.SINGLE_FILE,
+        Constants.OperationsGroupings.SETUP,
+    ):
+        ctx.operations.WriteFirstTail()
+    else:  # SETUP_AND_TOOL, PER_OPERATION
+        ctx.operations.WriteTail()
