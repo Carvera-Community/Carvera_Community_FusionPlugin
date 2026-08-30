@@ -9,6 +9,8 @@ class FusionOperationAdapter:
         return cam.Operation.cast(value)
 
     def getToolNumber(self, operation) -> int:
+        if hasattr(operation, "toolNumber"):
+            return operation.toolNumber
         return castCAMParam.ToInt(
             operation.tool.parameters.itemByName("tool_number")
         )
