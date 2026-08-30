@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Protocol, TextIO, cast
+from typing import Protocol, TextIO
 
 from .operation_context import OperationContext
 
@@ -28,14 +28,11 @@ class TailWriterSettings:
         )
 
 
-_CURRENT_PROGRAM = object()
-
-
 def writeTail(
     ctx: OperationContext,
     fileHandle: TextIO,
     settings: TailWriterSettings | None = None,
-    fileNameTarget: FileNameTarget | None | object = _CURRENT_PROGRAM,
+    fileNameTarget: FileNameTarget | None = None,
 ):
     settings = settings or TailWriterSettings.fromCurrentSettings()
 
@@ -51,18 +48,12 @@ def writeTail(
                 ctx.write(fileHandle, line)
             line = operationFile.readline()
             row += 1
-    if fileNameTarget is _CURRENT_PROGRAM:
-        from ...programs import Programs
-
-        fileNameTarget = Programs.Current
-
-    target = cast(FileNameTarget | None, fileNameTarget)
     if (
         settings.numericName
-        and target is not None
-        and target.fileName is not None
-        and target.fileName.isnumeric()
+        and fileNameTarget is not None
+        and fileNameTarget.fileName is not None
+        and fileNameTarget.fileName.isnumeric()
     ):
-        target.SetFileName(
-            str(int(target.fileName) + 1).rjust(settings.fileSequenceDigits, "0")
+        fileNameTarget.SetFileName(
+            str(int(fileNameTarget.fileName) + 1).rjust(settings.fileSequenceDigits, "0")
         )

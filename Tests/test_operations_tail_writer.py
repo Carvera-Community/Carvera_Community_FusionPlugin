@@ -14,8 +14,9 @@ class FakeOperation:
         self.tail = tail
         self.fileName = None
 
-    def WriteTail(self, output) -> None:
+    def WriteTail(self, output, fileNameTarget=None) -> None:
         output.write(self.tail)
+        self.fileNameTarget = fileNameTarget
 
 
 def context(tmp_path: Path, operations, operation_with_tail, file_name="setup"):
@@ -25,6 +26,7 @@ def context(tmp_path: Path, operations, operation_with_tail, file_name="setup"):
         path=tmp_path,
         fileName=file_name,
         fileExtension=".nc",
+        fileNameTarget=None,
     )
 
 

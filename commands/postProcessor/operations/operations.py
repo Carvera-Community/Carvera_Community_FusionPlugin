@@ -86,6 +86,7 @@ class Operations():
         return tools
 
     def Parse(self, tmpPath: Path, program) -> None:
+        self.ctx.fileNameTarget = program
         for operation in self.ctx.operations:
             operation.Parse(tmpPath, program)
         self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)

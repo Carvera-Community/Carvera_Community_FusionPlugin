@@ -158,4 +158,5 @@ class Operation():
     def WriteToolComment(self, fileHandle: TextIO) -> None: writeToolComment(self.ctx, fileHandle)
     def WriteHeader(self, fileHandle: TextIO) -> None: writeHeader(self.ctx, fileHandle)
     def WriteBody(self, fileHandle: TextIO) -> None: writeBody(self.ctx, fileHandle)
-    def WriteTail(self, fileHandle: TextIO) -> None: writeTail(self.ctx, fileHandle)
+    def WriteTail(self, fileHandle: TextIO, fileNameTarget=None) -> None:
+        writeTail(self.ctx, fileHandle, fileNameTarget=fileNameTarget)

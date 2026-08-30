@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .operation.operation import Operation
 
@@ -13,3 +14,4 @@ class OperationsContext:
     preserveRotation: bool = False
     operationWithHeader: Operation | None = None
     operationWithTail: Operation | None = None
+    fileNameTarget: Any = None

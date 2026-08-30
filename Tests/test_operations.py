@@ -84,5 +84,6 @@ def test_parse_records_first_tail_and_header_operation(tmp_path):
     operations.Parse(tmp_path, program)
 
     assert calls == [(tmp_path, program), (tmp_path, program)]
+    assert operations.ctx.fileNameTarget is program
     assert operations.ctx.operationWithTail is operations[0]
     assert operations.ctx.operationWithHeader is operations[1]
