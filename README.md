@@ -146,6 +146,24 @@ There is a possibility to change the language of the dialog if you want to do so
 You can choose to `Use Python regular expressions` (2) if you want to do some advanced search and replace. Otherwise you just type in whatever you want to replace in `Search for this string`(3) and in `Replace with this string` (4) you enter what you want to have there instead. Rather simple, really. As an extra boon you can also limit the replacement to `Only selected Setups` (5) so that you don't have to do it to all. Once you're happy with your replacement parameters, just press `Search and replace` (6) and Presto! your wish has been granted. An extra little feature is that if you leave the `Search for this string` empty it will actually prepend the names with the string entered in `Replace with this string`. Magic. 
 
 ## Development
+
+### Host tests
+
+The initial host-side regression suite uses `pytest` and does not require
+Fusion 360:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 -m pytest
+```
+
+The test command prints a coverage summary for the currently testable host-side
+modules and writes a browsable report to `htmlcov/index.html`.
+
+These tests cover source logic that has already been isolated from the Fusion
+API. They do not replace validation inside Fusion for NC Program interaction,
+post processing, output routing, or generated machine behavior.
+
 - Create a development branch:
 
 ```bash

@@ -2,12 +2,14 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, overload
 
-from adsk.core import Attributes as adskAttributes
+if TYPE_CHECKING:
+    from adsk.core import Attributes as adskAttributes
+else:
+    adskAttributes = Any
 
 from .. import config
 from ..const import *
 from ....config import PLUGIN_VERSION as GLOBAL_PLUGIN_VERSION
-from ....lib.fusionAddInUtils.general_utils import *
 
 from .constants import Constants
 

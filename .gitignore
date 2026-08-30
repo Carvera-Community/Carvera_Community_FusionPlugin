@@ -3,6 +3,9 @@
 .assistant_rules.*
 **/settings.settings
 Tests/**
+!Tests/*.py
 .vscode/**
 __pycache__
+.coverage
+htmlcov/
 TODO.md

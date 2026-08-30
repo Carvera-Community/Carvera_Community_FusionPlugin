@@ -511,7 +511,7 @@ class AnalysisSegment:
 
     def getEffectiveLength(self) -> float:
         zDist = abs(self.deltaZUp) + abs(self.deltaZDown)
-        return zDist + zDist
+        return max(self.totalXYDistance, zDist)
 
     def asDict(self) -> dict[str, Any]:
         d: dict[str, Any] = {}

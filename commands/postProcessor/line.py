@@ -2,8 +2,6 @@
 import re
 from typing import Final, TextIO
 
-from .settings.settings import Settings
-
 class Line():
 
     _BODY_RE: Final = re.compile(r""
