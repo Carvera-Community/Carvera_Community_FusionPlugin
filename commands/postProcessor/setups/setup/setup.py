@@ -69,10 +69,6 @@ class Setup():
         return self.ctx.setup.name
     
     @property
-    def hasOperationWithHeader(self) -> bool:
-        return self.ctx.operations.hasHeader if self.ctx.operations is not None else False
-
-    @property
     def origin(self):
         return self._fusionAdapter.origin(self.ctx.setup)
 

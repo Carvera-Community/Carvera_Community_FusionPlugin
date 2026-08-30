@@ -62,14 +62,6 @@ class Operations():
         self.ctx.fileExtension = extension
 
     @property
-    def hasHeader(self):
-        return self.ctx.operationWithHeader is not None
-    
-    @property
-    def hasTail(self):
-        return self.ctx.operationWithTail is not None
-
-    @property
     def tools(self) -> list[Any]:
         tools = []
         for operation in self.ctx.operations:
@@ -78,8 +70,6 @@ class Operations():
         return tools
 
     def parse(self, tmpPath: Path, program) -> None:
-        self.ctx.fileNameTarget = program
         for operation in self.ctx.operations:
             operation.parse(tmpPath, program)
         self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)
-        self.ctx.operationWithHeader = next((operation for operation in self.ctx.operations if operation.hasHeader), None)

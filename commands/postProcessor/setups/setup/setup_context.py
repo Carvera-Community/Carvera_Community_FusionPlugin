@@ -30,14 +30,6 @@ class SetupContext:
         return self.setup is not None and self.setup.hasWarning
 
     @property
-    def hasHeader(self) -> bool:
-        return False if self.operations is None else self.operations.hasHeader
-
-    @property
-    def hasTail(self) -> bool:
-        return False if self.operations is None else self.operations.hasTail
-
-    @property
     def name(self) -> str:
         if self.setup is None:
             raise ValueError("SetupContext.setup is not set.")

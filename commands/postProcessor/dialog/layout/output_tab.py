@@ -61,7 +61,7 @@ class OutputTab(Constants):
                     newValue =  str(Programs.Current.get_output_folder().resolve()) if Programs.Current else Strings("<Select program>")
                     if input.value != newValue:
                         input.value = newValue
-            except:
+            except RuntimeError:
                 pass # Every now and then the setting of the value gets an error that the object is no longer valid. Ignore and move on for now.           
 
         EventRegistry.register(cls.PROGRAM_DROPDOWN_ID, setoutputFolder)

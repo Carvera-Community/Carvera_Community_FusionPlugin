@@ -11,7 +11,7 @@ Settings = import_addin_module("commands.postProcessor.settings.settings").Setti
 
 
 def test_capture_returns_an_immutable_snapshot():
-    Settings._items = dict(Settings._defaultSettings)
+    Settings._items = dict(Settings._default_settings)
     Settings._items[Settings.NUMERIC_NAME] = True
     snapshot = ProcessingSettings.capture()
 

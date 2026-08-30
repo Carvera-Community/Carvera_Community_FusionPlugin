@@ -269,12 +269,3 @@ class PostDialog(PostDialogLayout):
         # General logging for debug.
 
         args.areInputsValid = can_process(Programs.Current, cls._ctx)
-
-        # TODO: Set up so that the Process button is only enabled when things are set up properly
-
-        # # Verify the validity of the input values. This controls if the OK button is enabled or not.
-        # valueInput = inputs.itemById('value_input')
-        # if valueInput.value >= 0:
-        #     args.areInputsValid = True
-        # else:
-        #     args.areInputsValid = False

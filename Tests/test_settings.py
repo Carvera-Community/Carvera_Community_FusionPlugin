@@ -38,11 +38,11 @@ def isolated_settings(tmp_path):
     Settings._items = {}
     Settings._default = None
     Settings._path = str(tmp_path / "settings.settings")
-    Settings._fMustSave = False
+    Settings._must_save = False
 
 
 def test_save_excludes_session_only_safety_settings():
-    Settings._items = dict(Settings._defaultSettings)
+    Settings._items = dict(Settings._default_settings)
     Settings.set(Constants.LANGUAGE, "sv")
     Settings.set(Constants.OVERWRITE_FILES, True)
     Settings.set(Constants.CLEAR_FOLDER, True)
@@ -59,7 +59,7 @@ def test_save_excludes_session_only_safety_settings():
 
 
 def test_load_resets_legacy_persisted_safety_settings():
-    persisted = dict(Settings._defaultSettings)
+    persisted = dict(Settings._default_settings)
     persisted[Constants.OVERWRITE_FILES] = True
     persisted[Constants.CLEAR_FOLDER] = True
 
@@ -70,7 +70,7 @@ def test_load_resets_legacy_persisted_safety_settings():
 
 
 def test_save_default_excludes_session_only_settings():
-    Settings._items = dict(Settings._defaultSettings)
+    Settings._items = dict(Settings._default_settings)
     Settings.set(Constants.OVERWRITE_FILES, True)
     Settings.set(Constants.CLEAR_FOLDER, True)
 

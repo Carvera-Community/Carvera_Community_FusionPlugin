@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .operation.operation import Operation
 
@@ -13,7 +13,5 @@ class OperationsContext:
     path: Path = field(default_factory=Path)
     fileName: str = ''
     fileExtension: str = ''
-    operationWithHeader: Operation | None = None
     operationWithTail: Operation | None = None
-    fileNameTarget: Any = None
     processingSettings: "ProcessingSettings | None" = None

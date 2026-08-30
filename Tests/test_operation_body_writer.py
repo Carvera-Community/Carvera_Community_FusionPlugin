@@ -39,7 +39,7 @@ def test_operation_context_instances_have_independent_line_writers():
 
 
 def test_body_writer_uses_captured_retraction_settings(tmp_path):
-    Settings._items = dict(Settings._defaultSettings)
+    Settings._items = dict(Settings._default_settings)
     Settings._items[Settings.SAFE_Y_RETRACTION] = False
     snapshot = ProcessingSettings.capture()
     Settings._items[Settings.SAFE_Y_RETRACTION] = True
