@@ -105,7 +105,7 @@ class Operation():
     
     @property
     def has_rotation(self) -> bool:
-        return self.ctx.hasRotation
+        return self.ctx.has_rotation
 
     def parse(self, tmpPath: Path, program: PostProcessingProgram):
         def postProcess(operations, outputFolder, fileName):

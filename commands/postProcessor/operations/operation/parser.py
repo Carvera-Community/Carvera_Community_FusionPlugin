@@ -116,14 +116,14 @@ def parse_file(ctx: OperationContext, settings: ParserSettings | None = None):
 
                         if gCode == 0:
                             # We're only interested in the first rotation move
-                            if not ctx.hasRotation:
+                            if not ctx.has_rotation:
                                 aCode = float(lineMatch.group("A"))
                                 if aCode == 0.0:
                                     # Found A-axis rotation move
                                     ctx.rotationLine = lineNumber
                         elif gCode == 92.4:
                             # Find out if this is a shrink line (G92.4 A0 R0)
-                            if not ctx.hasShrink \
+                            if not ctx.has_shrink \
                                 and lineMatch.group("R") is not None:
                                 ctx.shrinkLine = lineNumber
                         

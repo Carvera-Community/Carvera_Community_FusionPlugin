@@ -46,7 +46,7 @@ def write_body(
         return out + ("\n" if hasNewline else "")
 
     def _match_line(line: str, row: int) -> bool:
-        lineMatch = ctx.matchLine(line)
+        lineMatch = ctx.match_line(line)
         if lineMatch:
             if lineMatch.group("G") is not None:
                 gCode = lineMatch.group("G")
@@ -104,7 +104,7 @@ def write_body(
                 if rapid_rewrite is not None: # Add rapids comments if this line is the start of a rapid move
                     rapidsEnds = rapid_rewrite.end_line
                     startHasFeed = rapid_rewrite.start_has_feed
-                    lineMatch = ctx.matchLine(line)
+                    lineMatch = ctx.match_line(line)
                     if lineMatch:
                         if startHasFeed: 
                             line = _strip_feed(line)

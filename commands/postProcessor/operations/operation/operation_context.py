@@ -33,14 +33,14 @@ class OperationContext:
 
 
     @property
-    def hasRotation(self) -> bool:
+    def has_rotation(self) -> bool:
         # Parsing happens before the setup rotation angle is assigned.
         # Track whether the source operation's rotation line has already been found
         # so later A0 moves cannot replace it.
         return self.rotationLine != -1
 
     @property
-    def hasShrink(self) -> bool:
+    def has_shrink(self) -> bool:
         # check if the output contains a row that shrinks the A-axis as it can only be 
         # in the last operation otherwise it will break things.
         return self.shrinkLine != -1
@@ -48,7 +48,7 @@ class OperationContext:
     def write_line(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.write_line(fileHandle, line)
     def write(self, fileHandle: TextIO, line: str) -> None: self.lineWriter.write(fileHandle, line)
 
-    def matchLine(self, line: str) -> (Match[str] | None):
+    def match_line(self, line: str) -> Match[str] | None:
         return self.lineWriter._PARSE_LINE_RE.match(line)
     
     def remove_feed_from_line(self, line: str) -> str:
