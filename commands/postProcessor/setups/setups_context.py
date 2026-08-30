@@ -5,6 +5,7 @@ from ....lib.fusionAddInUtils.general_utils import Utils
 from ..settings.settings import Settings
 from .setup.setup_context import SetupContext
 from .setup.setup import Setup
+from .output_path_planning import SetupOutputPathSettings, getSetupOutputPath
 
 class SetupsContext:
     _items: list[Setup] = []
@@ -50,14 +51,20 @@ class SetupsContext:
             setup.Rename(find, replace, isRegex)
     
     def setPath(self, path: Path) -> None:
-        outputPath: Path = path
+        settings = SetupOutputPathSettings(
+            flatFileStructure=bool(Settings(Settings.FLAT_FILE_STRUCTURE)),
+            numericName=bool(Settings(Settings.NUMERIC_NAME)),
+            operationsGrouping=Settings(Settings.OPERATIONS_GROUPING),
+            fileSequence=bool(Settings(Settings.FILE_SEQUENCE)),
+            fileSequenceDigits=Settings(Settings.FILE_SEQUENCE_DIGITS),
+        )
         for setup in self.selected:
-            if (not (Settings(Settings.FLAT_FILE_STRUCTURE) 
-                    or Settings(Settings.NUMERIC_NAME) 
-                    or Settings(Settings.OPERATIONS_GROUPING) in [Settings.OperationsGroupings.SINGLE_FILE, 
-                                                                    Settings.OperationsGroupings.SETUP])):
-                fileNumber = str(setup.index + 1).rjust(Settings(Settings.FILE_SEQUENCE_DIGITS), "0") + '_' if Settings(Settings.FILE_SEQUENCE) else ""
-                outputPath = path / f"{fileNumber}{Utils.sanitizeFilename(setup.name, preserveExtension = False)}"
+            outputPath = getSetupOutputPath(
+                path,
+                setup,
+                settings,
+                lambda name: Utils.sanitizeFilename(name, preserveExtension=False),
+            )
             setup.SetOutputPath(outputPath)
 
     def setFileName(self, fileName: str) -> None:
