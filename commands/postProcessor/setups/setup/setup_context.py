@@ -1,17 +1,16 @@
-from typing import Optional
-from adsk.core import Point3D
-from adsk.cam import Setup as adskSetup
+from typing import Any, Optional, TYPE_CHECKING
 
-from ...operations.operations import Operations
+if TYPE_CHECKING:
+    from ...operations.operations import Operations
 
 class SetupContext:
     index: int = -1
-    setup: adskSetup
+    setup: Any = None
     isSelected: bool = False
-    operations: Optional[Operations] = None
+    operations: Optional["Operations"] = None
     rotationAngle: float | None = None
     preserveRotation: bool = False
-    origin: Optional[Point3D] = None
+    origin: Optional[Any] = None
 
     @property
     def isValid(self) -> bool:

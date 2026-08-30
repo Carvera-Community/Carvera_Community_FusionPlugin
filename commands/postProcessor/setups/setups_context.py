@@ -1,7 +1,6 @@
 from pathlib import Path
-from adsk import cam
+from typing import Any, Callable
 
-from ....lib.fusionAddInUtils.general_utils import Utils
 from ..settings.settings import Settings
 from .setup.setup_context import SetupContext
 from .setup.setup import Setup
@@ -25,17 +24,17 @@ class SetupsContext:
         return any(self.selected)
 
     @property
-    def tools(self) -> list[cam.Tool]:
-        tools = list[cam.Tool]()
+    def tools(self) -> list[Any]:
+        tools = []
         for setup in self.selected:
             tools.extend(setup.tools)
         return tools
 
-    def load(self, setups: cam.Setups) -> None:
+    def load(self, setups, setupFactory: Callable = Setup) -> None:
         # If there is no setup currently selected that is a valid setup, select all setups as default
         selectAll = not any((setup.isSelected for setup in setups if not setup.isSuppressed and not setup.hasError))
         # Intentionally loading all setups to make sure that the order is preserved
-        self._items = [Setup(SetupContext(), setup, index, selectAll or setup.isSelected) for index, setup in enumerate(setups)]
+        self._items = [setupFactory(SetupContext(), setup, index, selectAll or setup.isSelected) for index, setup in enumerate(setups)]
 
     def parse(self, tempPath: Path) -> None:
         if not self.selected:
@@ -50,7 +49,8 @@ class SetupsContext:
         for setup in setupsToRename:
             setup.Rename(find, replace, isRegex)
     
-    def setPath(self, path: Path) -> None:
+    def setPath(self, path: Path, sanitizeFilename: Callable | None = None) -> None:
+        sanitizeFilename = sanitizeFilename or _sanitizeFilename
         settings = SetupOutputPathSettings(
             flatFileStructure=bool(Settings(Settings.FLAT_FILE_STRUCTURE)),
             numericName=bool(Settings(Settings.NUMERIC_NAME)),
@@ -63,7 +63,7 @@ class SetupsContext:
                 path,
                 setup,
                 settings,
-                lambda name: Utils.sanitizeFilename(name, preserveExtension=False),
+                sanitizeFilename,
             )
             setup.SetOutputPath(outputPath)
 
@@ -80,3 +80,9 @@ class SetupsContext:
     def setFileExtension(self, extension: str) -> None:
         for setup in self.selected:
             setup.SetFileExtension(extension)
+
+
+def _sanitizeFilename(name: str) -> str:
+    from ....lib.fusionAddInUtils.general_utils import Utils
+
+    return Utils.sanitizeFilename(name, preserveExtension=False)

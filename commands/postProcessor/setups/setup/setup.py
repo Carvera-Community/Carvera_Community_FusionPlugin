@@ -5,15 +5,13 @@ from pathlib import Path
 import re
 
 from typing import (
+    Any,
+    Callable,
     Optional, 
-    Union
+    Protocol,
+    Union,
 )
 
-from adsk import cam
-from adsk.core import (
-    Point3D,
-    Vector3D
-)
 from ...operations.operations_context import OperationsContext
 from .setup_context import SetupContext
 
@@ -29,8 +27,31 @@ from .body_writer import writeBody
 from .tail_writer import writeTail
 from .vector_rotation import getSignedRotationAroundAxis
 
+
+class SetupFusionAdapter(Protocol):
+    def origin(self, setup): ...
+    def normal(self, setup, direction: tuple[float, float, float]): ...
+    def globalVector(self, direction: tuple[float, float, float]): ...
+    def castOperation(self, value): ...
+
 class Setup():
-    def __init__(self, ctx: SetupContext, setup: cam.Setup, index: int, isDefaultSelected: bool = False):
+    def __init__(
+        self,
+        ctx: SetupContext,
+        setup: Any,
+        index: int,
+        isDefaultSelected: bool = False,
+        fusionAdapter: SetupFusionAdapter | None = None,
+        operationsFactory: Callable = Operations,
+        programRegistry=None,
+    ):
+        if fusionAdapter is None:
+            from ...fusion_adapters.setup import FusionSetupAdapter
+
+            fusionAdapter = FusionSetupAdapter()
+        self._fusionAdapter = fusionAdapter
+        self._operationsFactory = operationsFactory
+        self._programRegistry = programRegistry
         self.ctx = ctx
         ctx.setup = setup
         ctx.index = index
@@ -56,38 +77,27 @@ class Setup():
         return self.ctx.operations.hasHeader if self.ctx.operations is not None else False
 
     @property
-    def origin(self) -> Point3D:
-        origin = Point3D.create(0,0,0)
-        origin.transformBy(self.ctx.setup.workCoordinateSystem)
-        return origin
+    def origin(self):
+        return self._fusionAdapter.origin(self.ctx.setup)
 
     @property
-    def zNormal(self) -> Vector3D:
-        zAxis = Vector3D.create(0,0,1)
-        zAxis.transformBy(self.ctx.setup.workCoordinateSystem)
-        zAxis.normalize()
-        return zAxis
+    def zNormal(self):
+        return self._fusionAdapter.normal(self.ctx.setup, (0, 0, 1))
     
     @property
-    def xNormal(self) -> Vector3D:
-        xAxis = Vector3D.create(1,0,0)
-        xAxis.transformBy(self.ctx.setup.workCoordinateSystem)
-        xAxis.normalize()
-        return xAxis
+    def xNormal(self):
+        return self._fusionAdapter.normal(self.ctx.setup, (1, 0, 0))
 
     @property
-    def yNormal(self) -> Vector3D:
-        yAxis = Vector3D.create(0,1,0)
-        yAxis.transformBy(self.ctx.setup.workCoordinateSystem)
-        yAxis.normalize()
-        return yAxis
+    def yNormal(self):
+        return self._fusionAdapter.normal(self.ctx.setup, (0, 1, 0))
 
     @property
     def hasMachine(self) -> bool:
         return self.ctx.setup.machine is not None
 
     @property
-    def tools(self) -> list[cam.Tool]:
+    def tools(self) -> list[Any]:
         return self.ctx.operations.tools if self.ctx.operations is not None else []
 
     def SetOutputPath(self, path: Path):
@@ -132,8 +142,8 @@ class Setup():
     #endregion
 
     def GetAbsoluteRotationAroundXAxis(self) -> float:
-        gZNormal = Vector3D.create(0, 0, 1)
-        gYNormal = Vector3D.create(0, 1, 0)
+        gZNormal = self._fusionAdapter.globalVector((0, 0, 1))
+        gYNormal = self._fusionAdapter.globalVector((0, 1, 0))
         return self.GetRotationAroundXAxisRelativeTo(gZNormal, gYNormal)
     
     def GetAbsoluteRotationAroundXAxisDeg(self) -> float:
@@ -142,7 +152,7 @@ class Setup():
     def GetRotationAroundXAxisRelativeToSetup(self, otherSetup: Setup) -> float:
         return self.GetRotationAroundXAxisRelativeTo(otherSetup)
     
-    def GetRotationAroundXAxisRelativeTo(self, zNormalOrSetup: Union[Vector3D, Setup], yNormal: Optional[Vector3D] = None) -> float:
+    def GetRotationAroundXAxisRelativeTo(self, zNormalOrSetup, yNormal=None) -> float:
         # Compute the signed rotation around this setup's X axis that
         # transforms this setup's local Z into the other setup's local Z.
         #
@@ -155,18 +165,18 @@ class Setup():
         #   back to project the Y normals instead.
 
         xNormal = self.xNormal
-        zNormal: Vector3D
+        zNormal = None
         if isinstance(zNormalOrSetup, Setup) and yNormal is None: # unwrap if a Setup is given
             yNormal = zNormalOrSetup.yNormal
             zNormal = zNormalOrSetup.zNormal
-        elif isinstance(zNormalOrSetup, Vector3D):
+        elif all(hasattr(zNormalOrSetup, coordinate) for coordinate in ("x", "y", "z")):
             zNormal = zNormalOrSetup
             if yNormal is None:
                 raise ValueError("yNormal can not be None")
         else:
             raise TypeError("Expected Setup or Vector3D")
 
-        def coordinates(vector: Vector3D) -> tuple[float, float, float]:
+        def coordinates(vector) -> tuple[float, float, float]:
             return (vector.x, vector.y, vector.z)
 
         return getSignedRotationAroundAxis(
@@ -194,7 +204,11 @@ class Setup():
             self.ctx.setup.name = newName
     
     def Parse(self, tmpPath: Path):
-        from ...programs import Programs
+        if self._programRegistry is None:
+            from ...programs import Programs
+
+            self._programRegistry = Programs
+        programs = self._programRegistry
 
         # JIT parsing of operations to make sure that if settings are 
         # changed while the dialog is open, they are applied to all 
@@ -205,19 +219,22 @@ class Setup():
         self.ctx.operations = (None if 
                                not (self.ctx.isSelected
                                     and not (self.ctx.isSuppressed or self.ctx.hasError))
-                               else Operations(OperationsContext(), [operation for x in self.ctx.setup.allOperations 
-                                                                     if (operation := cam.Operation.cast(x)) is not None]))
+                               else self._operationsFactory(
+                                   OperationsContext(),
+                                   [operation for x in self.ctx.setup.allOperations
+                                    if (operation := self._fusionAdapter.castOperation(x)) is not None],
+                               ))
 
 
         if not self.ctx.operations:
             return # Don't process this setup.
 
         # Don't spam the user with temporary files that will be deleted anyway
-        if Programs.Current is not None:
-            Programs.Current.DisableOpenInEditor()
+        if programs.Current is not None:
+            programs.Current.DisableOpenInEditor()
 
         # Make sure that the setup has all its toolpaths generated
-        Programs.CheckAndGenerateToolpath(self.ctx.setup)
+        programs.CheckAndGenerateToolpath(self.ctx.setup)
 
         self.ctx.operations.Parse(tmpPath)
 
