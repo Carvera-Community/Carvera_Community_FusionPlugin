@@ -11,17 +11,6 @@ from .operation_file_naming import (
     setOperationFileName as applyOperationFileName,
 )
 
-from .header_writer import (
-    writeFirstHeaderStart,
-    writeToolComments,
-    writeFirstHeaderEnd,
-    writeHeader
-)
-from .body_writer import writeBody
-from .tail_writer import (
-    writeFirstTail,
-    writeTail
-)
 
 class Operations():
     def __iter__(self):
@@ -101,20 +90,6 @@ class Operations():
             operation.Parse(tmpPath, program)
         self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)
         self.ctx.operationWithHeader = next((operation for operation in self.ctx.operations if operation.hasHeader), None)
-
-    def WriteFirstHeaderStart(self) -> None: writeFirstHeaderStart(self.ctx)
-    def WriteToolComments(self) -> None: writeToolComments(self.ctx)
-    def WriteFirstHeaderEnd(self) -> None: writeFirstHeaderEnd(self.ctx)
-    def WriteHeader(self) -> None: writeHeader(self.ctx)
-
-    def WriteBody(self, rotationAngle: float|None, preserveRotation: bool) -> None: 
-        self.ctx.rotationAngle = rotationAngle
-        self.ctx.preserveRotation = preserveRotation
-        writeBody(self.ctx)
-
-    def WriteFirstTail(self) -> None: writeFirstTail(self.ctx)
-    def WriteTail(self) -> None: writeTail(self.ctx)
-
 
 def setOperationFileName(ctx: OperationsContext, operation: Operation, toolIdIndex: int) -> None:
     current = ctx.processingSettings

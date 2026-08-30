@@ -17,14 +17,6 @@ from .setup_context import SetupContext
 
 from ...operations.operations import Operations
 
-from .header_writer import (
-    writeHeader,
-    writeHeaderStart,
-    writeToolComments,
-    writeHeaderEnd
-)
-from .body_writer import writeBody
-from .tail_writer import writeTail
 from .vector_rotation import getSignedRotationAroundAxis
 from ..setup_source import raw_setup
 
@@ -247,10 +239,3 @@ class Setup():
         programs.CheckAndGenerateToolpath(raw_setup(self.ctx.setup))
 
         self.ctx.operations.Parse(tmpPath, program)
-
-    def WriteHeader(self) -> None: writeHeader(self.ctx)
-    def WriteHeaderStart(self) -> None: writeHeaderStart(self.ctx)
-    def WriteToolComments(self) -> None: writeToolComments(self.ctx)
-    def WriteHeaderEnd(self) -> None: writeHeaderEnd(self.ctx)
-    def WriteBody(self) -> None: writeBody(self.ctx)
-    def WriteTail(self) -> None: writeTail(self.ctx)
