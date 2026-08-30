@@ -54,9 +54,17 @@ def source(name, selected=False, suppressed=False, error=False, tools=()):
 
 def context_with(sources):
     context = SetupsContext()
-    context._items = []
     context.load(sources, FakeSetup)
     return context
+
+
+def test_context_instances_do_not_share_setup_collections():
+    first = SetupsContext()
+    second = SetupsContext()
+
+    first._items.append(object())
+
+    assert second._items == []
 
 
 def configure_paths(grouping, **overrides):

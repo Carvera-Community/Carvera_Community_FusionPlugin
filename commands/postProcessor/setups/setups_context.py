@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
@@ -6,10 +7,11 @@ from .setup.setup_context import SetupContext
 from .setup.setup import Setup
 from .output_path_planning import SetupOutputPathSettings, getSetupOutputPath
 
+@dataclass
 class SetupsContext:
-    _items: list[Setup] = []
-    tempPath: Path
-    fileName: str | None
+    _items: list[Setup] = field(default_factory=list)
+    tempPath: Path | None = None
+    fileName: str | None = None
 
     @property
     def valid(self) -> list[Setup]:

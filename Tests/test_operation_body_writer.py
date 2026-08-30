@@ -23,6 +23,15 @@ def writer_settings(**overrides) -> BodyWriterSettings:
     return BodyWriterSettings(**values)
 
 
+def test_operation_context_instances_have_independent_line_writers():
+    first = OperationContext(0)
+    second = OperationContext(1)
+
+    assert first.lineWriter is not second.lineWriter
+    assert first.tempFilePath == Path()
+    assert second.tempFilePath == Path()
+
+
 def write_operation_body(
     tmp_path: Path,
     contents: str,

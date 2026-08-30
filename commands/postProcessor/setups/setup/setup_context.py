@@ -1,16 +1,18 @@
-from typing import Any, Optional, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...operations.operations import Operations
 
+@dataclass
 class SetupContext:
     index: int = -1
     setup: Any = None
     isSelected: bool = False
-    operations: Optional["Operations"] = None
+    operations: "Operations | None" = None
     rotationAngle: float | None = None
     preserveRotation: bool = False
-    origin: Optional[Any] = None
+    origin: Any = None
 
     @property
     def isValid(self) -> bool:

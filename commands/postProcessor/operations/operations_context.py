@@ -6,7 +6,7 @@ from .operation.operation import Operation
 @dataclass
 class OperationsContext:
     operations: list[Operation] = field(default_factory=list)
-    path: Path = Path()
+    path: Path = field(default_factory=Path)
     fileName: str = ''
     fileExtension: str = ''
     rotationAngle: float | None = None

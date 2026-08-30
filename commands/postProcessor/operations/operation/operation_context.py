@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from re import Match
 import re
@@ -8,13 +8,10 @@ from ...line import Line
 
 @dataclass
 class OperationContext:
-    def __init__(self, index: int) -> None:
-        self.index = index
-
     index: int
     name: str = ''
-    tempFilePath: Path = Path()
-    lineWriter: Line = Line()
+    tempFilePath: Path = field(default_factory=Path)
+    lineWriter: Line = field(default_factory=Line)
     allowBlankLines: bool = False
     toolCommentLine: int = -1
     headerEndLine: int = -1

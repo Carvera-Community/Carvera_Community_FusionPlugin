@@ -33,6 +33,8 @@ class Operation():
             fusionAdapter = FusionOperationAdapter()
         self._fusionAdapter = fusionAdapter
         self._outputFilePath: Path | None = None
+        self._fileName: str | None = None
+        self._lineNumber: int = -1
         self.ctx = ctx
         # As there can be multiple operations without tools they are 
         # grouped with the previous operation (or next if it is the 
