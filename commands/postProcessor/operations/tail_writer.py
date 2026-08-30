@@ -20,12 +20,17 @@ class TailContext(Protocol):
     path: Path
     fileName: str
     fileExtension: str
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
 class OperationsTailWriterSettings:
     numericName: bool
     fileSequenceDigits: int
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.numericName, settings.fileSequenceDigits)
 
     @classmethod
     def fromCurrentSettings(cls) -> "OperationsTailWriterSettings":
@@ -45,7 +50,7 @@ def writeFirstTail(
     ctx: TailContext,
     settings: OperationsTailWriterSettings | None = None,
 ) -> None:
-    settings = settings or OperationsTailWriterSettings.fromCurrentSettings()
+    settings = settings or (OperationsTailWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else OperationsTailWriterSettings.fromCurrentSettings())
     # SINGLE_FILE, SETUP
 
     if ctx.operationWithTail is None:

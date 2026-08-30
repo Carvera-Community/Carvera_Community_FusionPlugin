@@ -14,11 +14,16 @@ class SetupTailOperations(Protocol):
 
 class SetupTailContext(Protocol):
     operations: SetupTailOperations | None
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
 class SetupTailWriterSettings:
     operationsGrouping: Constants.OperationsGroupings
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.operationsGrouping)
 
     @classmethod
     def fromCurrentSettings(cls) -> "SetupTailWriterSettings":
@@ -31,7 +36,7 @@ def writeTail(
     ctx: SetupTailContext,
     settings: SetupTailWriterSettings | None = None,
 ):
-    settings = settings or SetupTailWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupTailWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupTailWriterSettings.fromCurrentSettings())
     if ctx.operations is None or not ctx.operations.hasTail:
         return
 

@@ -1,8 +1,11 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from .operation.operation import Operation
+
+if TYPE_CHECKING:
+    from ..processing_settings import ProcessingSettings
 
 @dataclass
 class OperationsContext:
@@ -15,3 +18,4 @@ class OperationsContext:
     operationWithHeader: Operation | None = None
     operationWithTail: Operation | None = None
     fileNameTarget: Any = None
+    processingSettings: "ProcessingSettings | None" = None

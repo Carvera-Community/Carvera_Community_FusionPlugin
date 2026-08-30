@@ -12,6 +12,9 @@ Operations = import_addin_module(
 Settings = import_addin_module(
     "commands.postProcessor.settings.settings"
 ).Settings
+ProcessingSettings = import_addin_module(
+    "commands.postProcessor.processing_settings"
+).ProcessingSettings
 
 
 class FakeFusionAdapter:
@@ -58,6 +61,21 @@ def test_operations_combines_consecutive_same_tool_when_enabled():
 
     assert len(operations) == 1
     assert operations[0].name == "Rough-Finish"
+
+
+def test_operations_uses_captured_grouping_setting():
+    Settings._items = dict(Settings._defaultSettings)
+    Settings._items[Settings.COMBINE_TOOL] = True
+    snapshot = ProcessingSettings.capture()
+    Settings._items[Settings.COMBINE_TOOL] = False
+
+    operations = Operations(
+        OperationsContext(processingSettings=snapshot),
+        [source("Rough", 1), source("Finish", 1)],
+        FakeFusionAdapter(),
+    )
+
+    assert len(operations) == 1
 
 
 def test_operations_exposes_unique_tools_in_source_order():

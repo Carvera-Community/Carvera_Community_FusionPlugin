@@ -2,9 +2,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from re import Match
 import re
-from typing import Any, TextIO
+from typing import Any, TextIO, TYPE_CHECKING
 
 from ...line import Line
+
+if TYPE_CHECKING:
+    from ...processing_settings import ProcessingSettings
 
 @dataclass
 class OperationContext:
@@ -24,6 +27,7 @@ class OperationContext:
     rapidsAnalysis: dict[int, dict[str, Any]] | None = None
     shrinkLine: int = -1
     isLastOp: bool = False
+    processingSettings: "ProcessingSettings | None" = None
 
 
     @property

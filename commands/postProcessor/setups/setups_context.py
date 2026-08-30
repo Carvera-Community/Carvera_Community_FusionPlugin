@@ -48,6 +48,7 @@ class SetupsContext:
             return
         self.tempPath = tempPath
         for setup in self.selected:
+            setup.ctx.processingSettings = self.processingSettings
             setup.Parse(self.tempPath)
 #        return
 

@@ -38,6 +38,7 @@ class RoutedSetup(Protocol):
 class SetupsBodyContext(Protocol):
     selected: list[RoutedSetup]
     fileName: str | None
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,10 @@ class SetupsBodyWriterSettings:
     operationsGrouping: Constants.OperationsGroupings
     numericName: bool
     rotateAAxis: bool
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.operationsGrouping, settings.numericName, settings.rotateAAxis)
 
     @classmethod
     def fromCurrentSettings(cls) -> "SetupsBodyWriterSettings":
@@ -59,7 +64,7 @@ def writeBody(
     ctx: SetupsBodyContext,
     settings: SetupsBodyWriterSettings | None = None,
 ):
-    settings = settings or SetupsBodyWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupsBodyWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupsBodyWriterSettings.fromCurrentSettings())
     firstSetup: RoutedSetup | None = None
     currentRotationAngle: float | None = None
 

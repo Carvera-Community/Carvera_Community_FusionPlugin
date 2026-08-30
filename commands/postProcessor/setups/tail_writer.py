@@ -24,12 +24,17 @@ class RoutedTailSetup(Protocol):
 
 class SetupsTailContext(Protocol):
     selected: list[RoutedTailSetup]
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
 class SetupsTailWriterSettings:
     operationsGrouping: Constants.OperationsGroupings
     numericName: bool
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.operationsGrouping, settings.numericName)
 
     @classmethod
     def fromCurrentSettings(cls) -> "SetupsTailWriterSettings":
@@ -43,7 +48,7 @@ def writeTail(
     ctx: SetupsTailContext,
     settings: SetupsTailWriterSettings | None = None,
 ):
-    settings = settings or SetupsTailWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupsTailWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupsTailWriterSettings.fromCurrentSettings())
 
     if settings.operationsGrouping == Constants.OperationsGroupings.SINGLE_FILE:
         firstSetup = next((setup for setup in ctx.selected if setup.ctx.hasTail), None)

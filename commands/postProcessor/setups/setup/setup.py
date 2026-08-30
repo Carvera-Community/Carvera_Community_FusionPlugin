@@ -220,7 +220,7 @@ class Setup():
                                not (self.ctx.isSelected
                                     and not (self.ctx.isSuppressed or self.ctx.hasError))
                                else self._operationsFactory(
-                                   OperationsContext(),
+                                   OperationsContext(processingSettings=self.ctx.processingSettings),
                                    [operation for x in self.ctx.setup.allOperations
                                     if (operation := self._fusionAdapter.castOperation(x)) is not None],
                                ))

@@ -19,6 +19,7 @@ class SetupHeaderContext(Protocol):
     operations: SetupHeaderOperations | None
     index: int
     name: str
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,10 @@ class SetupHeaderWriterSettings:
     operationsGrouping: Constants.OperationsGroupings
     fileSequence: bool
     fileSequenceDigits: int
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.numericName, settings.operationsGrouping, settings.fileSequence, settings.fileSequenceDigits)
 
     @classmethod
     def fromCurrentSettings(cls) -> "SetupHeaderWriterSettings":
@@ -54,7 +59,7 @@ def writeHeaderEnd(
     ctx: SetupHeaderContext,
     settings: SetupHeaderWriterSettings | None = None,
 ) -> None:
-    settings = settings or SetupHeaderWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupHeaderWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupHeaderWriterSettings.fromCurrentSettings())
     if ctx.operations is None:
         raise ValueError("_operations is None")
 
@@ -79,7 +84,7 @@ def writeHeader(
     ctx: SetupHeaderContext,
     settings: SetupHeaderWriterSettings | None = None,
 ) -> None:
-    settings = settings or SetupHeaderWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupHeaderWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupHeaderWriterSettings.fromCurrentSettings())
 
     if ctx.operations is None:
         raise ValueError("ctx.operations is None")

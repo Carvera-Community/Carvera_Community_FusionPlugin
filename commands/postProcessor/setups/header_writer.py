@@ -27,12 +27,17 @@ class RoutedHeaderSetup(Protocol):
 
 class SetupsHeaderContext(Protocol):
     selected: list[RoutedHeaderSetup]
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
 class SetupsHeaderWriterSettings:
     operationsGrouping: Constants.OperationsGroupings
     numericName: bool
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.operationsGrouping, settings.numericName)
 
     @classmethod
     def fromCurrentSettings(cls) -> "SetupsHeaderWriterSettings":
@@ -46,7 +51,7 @@ def writeHeader(
     ctx: SetupsHeaderContext,
     settings: SetupsHeaderWriterSettings | None = None,
 ):
-    settings = settings or SetupsHeaderWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupsHeaderWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupsHeaderWriterSettings.fromCurrentSettings())
     # SINGLE_FILE
     if settings.operationsGrouping == Constants.OperationsGroupings.SINGLE_FILE:
         firstSetup = next((setup for setup in ctx.selected if setup.hasOperationWithHeader), None)

@@ -16,6 +16,7 @@ class SetupBodyContext(Protocol):
     operations: SetupOperations | None
     rotationAngle: float | None
     preserveRotation: bool
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,10 @@ class SetupBodyWriterSettings:
     numericName: bool
     operationsGrouping: Constants.OperationsGroupings
     fileSequenceDigits: int
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.numericName, settings.operationsGrouping, settings.fileSequenceDigits)
 
     @classmethod
     def fromCurrentSettings(cls) -> "SetupBodyWriterSettings":
@@ -37,7 +42,7 @@ def writeBody(
     ctx: SetupBodyContext,
     settings: SetupBodyWriterSettings | None = None,
 ):
-    settings = settings or SetupBodyWriterSettings.fromCurrentSettings()
+    settings = settings or (SetupBodyWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else SetupBodyWriterSettings.fromCurrentSettings())
     if ctx.operations is None:
         raise ValueError("ctx.operations is None")
     ctx.operations.WriteBody(ctx.rotationAngle, ctx.preserveRotation)

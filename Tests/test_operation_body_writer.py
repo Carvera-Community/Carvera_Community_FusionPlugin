@@ -12,6 +12,12 @@ body_writer = import_addin_module(
 )
 BodyWriterSettings = body_writer.BodyWriterSettings
 writeBody = body_writer.writeBody
+ProcessingSettings = import_addin_module(
+    "commands.postProcessor.processing_settings"
+).ProcessingSettings
+Settings = import_addin_module(
+    "commands.postProcessor.settings.settings"
+).Settings
 
 
 def writer_settings(**overrides) -> BodyWriterSettings:
@@ -30,6 +36,26 @@ def test_operation_context_instances_have_independent_line_writers():
     assert first.lineWriter is not second.lineWriter
     assert first.tempFilePath == Path()
     assert second.tempFilePath == Path()
+
+
+def test_body_writer_uses_captured_retraction_settings(tmp_path):
+    Settings._items = dict(Settings._defaultSettings)
+    Settings._items[Settings.SAFE_Y_RETRACTION] = False
+    snapshot = ProcessingSettings.capture()
+    Settings._items[Settings.SAFE_Y_RETRACTION] = True
+    context = OperationContext(0, processingSettings=snapshot)
+    context.tempFilePath = tmp_path / "operation.nc"
+    context.tempFilePath.write_text("G0 A0\nM30\n", encoding="utf-8")
+    context.bodyStartLine = 0
+    context.tailStartLine = 1
+    context.rotationLine = 0
+    context.rotationAngle = 10
+
+    output = StringIO()
+    writeBody(context, output)
+
+    assert "G90 G53 G0 Z-3\n" in output.getvalue()
+    assert " Y" not in output.getvalue()
 
 
 def write_operation_body(

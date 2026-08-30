@@ -16,6 +16,14 @@ class HeaderWriterSettings:
     rapidMovesMinimumDistance: float
 
     @classmethod
+    def fromProcessingSettings(cls, settings) -> "HeaderWriterSettings":
+        return cls(
+            settings.restoreRapidMoves,
+            settings.rapidMovesMaxSteps,
+            settings.rapidMovesMinimumDistance,
+        )
+
+    @classmethod
     def fromCurrentSettings(cls) -> "HeaderWriterSettings":
         return cls(
             restoreRapidMoves=bool(Settings.Get(Settings.RESTORE_RAPID_MOVES)),
@@ -31,7 +39,11 @@ def writeHeaderStart(
     fileHandle: TextIO,
     settings: HeaderWriterSettings | None = None,
 ):
-    settings = settings or HeaderWriterSettings.fromCurrentSettings()
+    settings = settings or (
+        HeaderWriterSettings.fromProcessingSettings(ctx.processingSettings)
+        if ctx.processingSettings is not None
+        else HeaderWriterSettings.fromCurrentSettings()
+    )
     with ctx.tempFilePath.open("r") as tempFile:
         
         file = Path(fileHandle.name).stem

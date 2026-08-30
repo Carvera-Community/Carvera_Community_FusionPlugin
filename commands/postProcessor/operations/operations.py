@@ -47,11 +47,21 @@ class Operations():
 
         groups = groupOperationSources(
             adskOperations,
-            combineTool=bool(Settings.Get(Settings.COMBINE_TOOL)),
+            combineTool=(
+                self.ctx.processingSettings.combineTool
+                if self.ctx.processingSettings is not None
+                else bool(Settings.Get(Settings.COMBINE_TOOL))
+            ),
             getToolNumber=fusionAdapter.getToolNumber,
         )
         for group in groups:
-            operation = Operation(OperationContext(group[0].index), fusionAdapter)
+            operation = Operation(
+                OperationContext(
+                    group[0].index,
+                    processingSettings=self.ctx.processingSettings,
+                ),
+                fusionAdapter,
+            )
             for item in group:
                 operation.Append(item.source, item.index, item.source.hasToolpath)
             self.ctx.operations.append(operation)
@@ -107,11 +117,12 @@ class Operations():
 
 
 def setOperationFileName(ctx: OperationsContext, operation: Operation, toolIdIndex: int) -> None:
+    current = ctx.processingSettings
     settings = OperationFileNamingSettings(
-        operationsGrouping=Settings(Settings.OPERATIONS_GROUPING),
-        fileSequenceDigits=Settings(Settings.FILE_SEQUENCE_DIGITS),
-        numericName=Settings(Settings.NUMERIC_NAME),
-        fileSequence=Settings(Settings.FILE_SEQUENCE),
+        operationsGrouping=(current.operationsGrouping if current else Settings(Settings.OPERATIONS_GROUPING)),
+        fileSequenceDigits=(current.fileSequenceDigits if current else Settings(Settings.FILE_SEQUENCE_DIGITS)),
+        numericName=(current.numericName if current else Settings(Settings.NUMERIC_NAME)),
+        fileSequence=(current.fileSequence if current else Settings(Settings.FILE_SEQUENCE)),
     )
     applyOperationFileName(
         ctx,

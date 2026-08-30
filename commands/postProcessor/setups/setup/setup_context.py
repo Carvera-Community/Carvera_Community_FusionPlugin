@@ -3,6 +3,7 @@ from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...operations.operations import Operations
+    from ...processing_settings import ProcessingSettings
 
 @dataclass
 class SetupContext:
@@ -13,6 +14,7 @@ class SetupContext:
     rotationAngle: float | None = None
     preserveRotation: bool = False
     origin: Any = None
+    processingSettings: "ProcessingSettings | None" = None
 
     @property
     def isValid(self) -> bool:

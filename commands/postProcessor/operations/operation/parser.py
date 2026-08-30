@@ -17,6 +17,16 @@ class ParserSettings:
     rapidMovesMaxSteps: int
 
     @classmethod
+    def fromProcessingSettings(cls, settings) -> "ParserSettings":
+        return cls(
+            headerEndCodes=settings.headerEndCodes,
+            endCodes=settings.endCodes,
+            restoreRapidMoves=settings.restoreRapidMoves,
+            rapidMovesMinimumDistance=settings.rapidMovesMinimumDistance,
+            rapidMovesMaxSteps=settings.rapidMovesMaxSteps,
+        )
+
+    @classmethod
     def fromCurrentSettings(cls) -> "ParserSettings":
         minimumDistance = Settings.Get(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
         maximumSteps = Settings.Get(Settings.RAPID_MOVES_MAX_STEPS)
@@ -30,7 +40,11 @@ class ParserSettings:
 
 
 def parseFile(ctx: OperationContext, settings: ParserSettings | None = None):
-    settings = settings or ParserSettings.fromCurrentSettings()
+    settings = settings or (
+        ParserSettings.fromProcessingSettings(ctx.processingSettings)
+        if ctx.processingSettings is not None
+        else ParserSettings.fromCurrentSettings()
+    )
     #region Header example
     # Find the start of the header and body in the generated file
 

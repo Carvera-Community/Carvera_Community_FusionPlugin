@@ -21,12 +21,17 @@ class HeaderContext(Protocol):
     path: Path
     fileName: str
     fileExtension: str
+    processingSettings: object | None
 
 
 @dataclass(frozen=True)
 class OperationsHeaderWriterSettings:
     overwriteFiles: bool
     operationsGrouping: Constants.OperationsGroupings
+
+    @classmethod
+    def fromProcessingSettings(cls, settings):
+        return cls(settings.overwriteFiles, settings.operationsGrouping)
 
     @classmethod
     def fromCurrentSettings(cls) -> "OperationsHeaderWriterSettings":
@@ -46,7 +51,7 @@ def writeFirstHeaderStart(
     ctx: HeaderContext,
     settings: OperationsHeaderWriterSettings | None = None,
 ) -> None:
-    settings = settings or OperationsHeaderWriterSettings.fromCurrentSettings()
+    settings = settings or (OperationsHeaderWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else OperationsHeaderWriterSettings.fromCurrentSettings())
     # SINGLE_FILE, SETUP
     if len(ctx.operations) != 0:
         pathToOpen: Path = ctx.path / f"{ctx.fileName}{ctx.fileExtension}"
@@ -85,7 +90,7 @@ def writeHeader(
     settings: OperationsHeaderWriterSettings | None = None,
     setFileName: Callable | None = None,
 ) -> None:
-    settings = settings or OperationsHeaderWriterSettings.fromCurrentSettings()
+    settings = settings or (OperationsHeaderWriterSettings.fromProcessingSettings(ctx.processingSettings) if getattr(ctx, "processingSettings", None) else OperationsHeaderWriterSettings.fromCurrentSettings())
     setFileName = setFileName or _currentFileNameSetter()
 
     # SETUP_AND_TOOL, PER_OPERATION

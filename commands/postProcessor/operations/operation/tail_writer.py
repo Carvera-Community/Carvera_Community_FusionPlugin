@@ -19,6 +19,10 @@ class TailWriterSettings:
     fileSequenceDigits: int
 
     @classmethod
+    def fromProcessingSettings(cls, settings) -> "TailWriterSettings":
+        return cls(settings.numericName, settings.fileSequenceDigits)
+
+    @classmethod
     def fromCurrentSettings(cls) -> "TailWriterSettings":
         from ...settings.settings import Settings
 
@@ -34,7 +38,11 @@ def writeTail(
     settings: TailWriterSettings | None = None,
     fileNameTarget: FileNameTarget | None = None,
 ):
-    settings = settings or TailWriterSettings.fromCurrentSettings()
+    settings = settings or (
+        TailWriterSettings.fromProcessingSettings(ctx.processingSettings)
+        if ctx.processingSettings is not None
+        else TailWriterSettings.fromCurrentSettings()
+    )
 
     with ctx.tempFilePath.open(FileModes.READ) as operationFile:
         line = operationFile.readline()
