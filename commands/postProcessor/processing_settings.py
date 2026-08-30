@@ -25,23 +25,23 @@ class ProcessingSettings:
 
     @classmethod
     def capture(cls) -> "ProcessingSettings":
-        minimum_distance = Settings.Get(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
-        maximum_steps = Settings.Get(Settings.RAPID_MOVES_MAX_STEPS)
+        minimum_distance = Settings.get(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
+        maximum_steps = Settings.get(Settings.RAPID_MOVES_MAX_STEPS)
         return cls(
-            operationsGrouping=Settings.Get(Settings.OPERATIONS_GROUPING),
-            combineTool=bool(Settings.Get(Settings.COMBINE_TOOL)),
-            flatFileStructure=bool(Settings.Get(Settings.FLAT_FILE_STRUCTURE)),
-            numericName=bool(Settings.Get(Settings.NUMERIC_NAME)),
-            clearFolder=bool(Settings.Get(Settings.CLEAR_FOLDER)),
-            fileSequence=bool(Settings.Get(Settings.FILE_SEQUENCE)),
-            fileSequenceDigits=Settings.Get(Settings.FILE_SEQUENCE_DIGITS),
-            overwriteFiles=bool(Settings.Get(Settings.OVERWRITE_FILES)),
-            rotateAAxis=bool(Settings.Get(Settings.ROTATE_A_AXIS)),
-            safeYRetraction=bool(Settings.Get(Settings.SAFE_Y_RETRACTION)),
-            yRetractionCoordinate=Settings.Get(Settings.Y_RETRACTION_COORDINATE),
-            restoreRapidMoves=bool(Settings.Get(Settings.RESTORE_RAPID_MOVES)),
+            operationsGrouping=Settings.get(Settings.OPERATIONS_GROUPING),
+            combineTool=bool(Settings.get(Settings.COMBINE_TOOL)),
+            flatFileStructure=bool(Settings.get(Settings.FLAT_FILE_STRUCTURE)),
+            numericName=bool(Settings.get(Settings.NUMERIC_NAME)),
+            clearFolder=bool(Settings.get(Settings.CLEAR_FOLDER)),
+            fileSequence=bool(Settings.get(Settings.FILE_SEQUENCE)),
+            fileSequenceDigits=Settings.get(Settings.FILE_SEQUENCE_DIGITS),
+            overwriteFiles=bool(Settings.get(Settings.OVERWRITE_FILES)),
+            rotateAAxis=bool(Settings.get(Settings.ROTATE_A_AXIS)),
+            safeYRetraction=bool(Settings.get(Settings.SAFE_Y_RETRACTION)),
+            yRetractionCoordinate=Settings.get(Settings.Y_RETRACTION_COORDINATE),
+            restoreRapidMoves=bool(Settings.get(Settings.RESTORE_RAPID_MOVES)),
             rapidMovesMinimumDistance=20 if minimum_distance is None else minimum_distance,
             rapidMovesMaxSteps=3 if maximum_steps is None else maximum_steps,
-            headerEndCodes=Settings.Get(Settings.HEADER_END_CODES) or "",
-            endCodes=Settings.Get(Settings.END_CODES) or "",
+            headerEndCodes=Settings.get(Settings.HEADER_END_CODES) or "",
+            endCodes=Settings.get(Settings.END_CODES) or "",
         )

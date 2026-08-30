@@ -19,7 +19,7 @@ def test_flatten_ignores_metadata_and_flattens_sections():
 
     Strings._flatten(
         {
-            "__meta__": {"fileVersion": "1"},
+            "__meta__": {"file_version": "1"},
             "section": {"Hello": "Hej"},
             "Plain": "Value",
         },
@@ -30,11 +30,11 @@ def test_flatten_ignores_metadata_and_flattens_sections():
 
 
 def test_extract_translation_separates_metadata():
-    meta, translations = Strings._extractTranslation(
-        {"__meta__": {"fileVersion": "2"}, "Hello": "Hej"}
+    meta, translations = Strings._extract_translation(
+        {"__meta__": {"file_version": "2"}, "Hello": "Hej"}
     )
 
-    assert meta == {"fileVersion": "2"}
+    assert meta == {"file_version": "2"}
     assert translations == {"Hello": "Hej"}
 
 
@@ -49,7 +49,7 @@ def test_get_returns_translation_fallback_and_formatting():
 def test_set_language_loads_translation_file(tmp_path, monkeypatch):
     reset_strings()
     translation = {
-        "__meta__": {"fileVersion": "3"},
+        "__meta__": {"file_version": "3"},
         "Hello": "Hej",
     }
     (tmp_path / "sv.json").write_text(json.dumps(translation), encoding="utf-8")
@@ -58,7 +58,7 @@ def test_set_language_loads_translation_file(tmp_path, monkeypatch):
     Strings.set_language("sv")
 
     assert Strings("Hello") == "Hej"
-    assert Strings.fileVersion == "3"
+    assert Strings.file_version == "3"
 
 
 def test_missing_language_resets_current_translation(tmp_path, monkeypatch):
@@ -88,7 +88,7 @@ def test_available_languages_uses_metadata_and_filename_fallback(tmp_path, monke
     (tmp_path / "plain.json").write_text("{}", encoding="utf-8")
     monkeypatch.setattr(Strings, "_i18n_dir", classmethod(lambda cls: tmp_path))
 
-    languages = Strings.GetAvailableLanguages()
+    languages = Strings.available_languages()
 
     assert languages == {"plain": "plain", "sv": "Svenska (Swedish)"}
-    assert Strings.GetLanguageSetting("Svenska (Swedish)") == "sv"
+    assert Strings.language_setting("Svenska (Swedish)") == "sv"

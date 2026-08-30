@@ -119,11 +119,11 @@ class Program():
     @property
     def fileName(self):
         """Returns the file name of the NCProgram."""
-        return self.parameters.Get(Parameters.FILE_NAME, str)
+        return self.parameters.get(Parameters.FILE_NAME, str)
 
     def set_file_name(self, fileName: str):
         """Sets the file name of the NCProgram."""
-        self.parameters.Set(Parameters.FILE_NAME, fileName)
+        self.parameters.set(Parameters.FILE_NAME, fileName)
 
     @property
     def fileExtension(self):
@@ -138,16 +138,16 @@ class Program():
 
         outputFolder = self.get_output_folder()
         fileName = self.fileName
-        name = self.parameters.Get(Parameters.NAME, str)
+        name = self.parameters.get(Parameters.NAME, str)
 
         try:
             ctx.parse(tmpPath)
         finally:
             self.set_output_folder(outputFolder)
             if fileName is not None:
-                self.parameters.Set(Parameters.FILE_NAME, fileName)
+                self.parameters.set(Parameters.FILE_NAME, fileName)
             if name is not None:
-                self.parameters.Set(Parameters.NAME, name)
+                self.parameters.set(Parameters.NAME, name)
 
         # Restore the output folder in the NC Program parameters
         self.set_output_folder(oldOutputFolder)
@@ -156,7 +156,7 @@ class Program():
         """Write the final G-code files from the results of the post processing."""
         initialPath = self.get_output_folder()
         initialFileName = self.fileName
-        programName = self.parameters.Get(Parameters.NAME, str)
+        programName = self.parameters.get(Parameters.NAME, str)
 
         try:
             return render_program_output(
@@ -168,13 +168,13 @@ class Program():
         finally:
             self.set_output_folder(initialPath)
             if initialFileName is not None:
-                self.parameters.Set(Parameters.FILE_NAME, initialFileName)
+                self.parameters.set(Parameters.FILE_NAME, initialFileName)
             if programName is not None:
-                self.parameters.Set(Parameters.NAME, programName)
+                self.parameters.set(Parameters.NAME, programName)
 
     def disable_open_in_editor(self):
         """Convenience method for disabling "Open in Editor" option"""
-        self.parameters.Set(Parameters.OPEN_IN_EDITOR, False)
+        self.parameters.set(Parameters.OPEN_IN_EDITOR, False)
 
     def post_process(self, operations):
         if len(operations) == 0:
@@ -184,12 +184,12 @@ class Program():
 
     def set_output_folder(self, folder: Path):
         """Convenience method to set and verify output folder"""
-        self.parameters.Set(Parameters.OUTPUT_FOLDER, folder.as_posix())
+        self.parameters.set(Parameters.OUTPUT_FOLDER, folder.as_posix())
         result = self.get_output_folder()
         if result != folder and str(folder)[0:2] == "\\\\":
-            self.parameters.Set(Parameters.OUTPUT_FOLDER, "\\\\" + str(folder))    # double up leading "\"
+            self.parameters.set(Parameters.OUTPUT_FOLDER, "\\\\" + str(folder))    # double up leading "\"
         return None
 
     def get_output_folder(self) -> Path:
         """Convenience method to get output folder"""
-        return Path(str(self.parameters.Get(Parameters.OUTPUT_FOLDER, str)))
+        return Path(str(self.parameters.get(Parameters.OUTPUT_FOLDER, str)))

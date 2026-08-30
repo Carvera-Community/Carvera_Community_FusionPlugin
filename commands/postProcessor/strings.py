@@ -58,7 +58,7 @@ class Strings(metaclass=_StringsMeta):
             return
         try:
             buffer = json.loads(languageFile.read_text(encoding="utf-8"))
-            cls._meta, cls._current = cls._extractTranslation(buffer)
+            cls._meta, cls._current = cls._extract_translation(buffer)
         except Exception:
             pass
 
@@ -83,12 +83,12 @@ class Strings(metaclass=_StringsMeta):
                     out[key] = value
 
     @classproperty
-    def fileVersion(cls) -> str | None:
-        return cls._meta.get('fileVersion')
+    def file_version(cls) -> str | None:
+        return cls._meta.get('file_version')
         
 
     @classmethod
-    def _extractTranslation(cls, buffer: any) -> Tuple[Dict[str, str], Dict[str, str]]:
+    def _extract_translation(cls, buffer: any) -> Tuple[Dict[str, str], Dict[str, str]]:
         meta = buffer['__meta__'] if buffer.get('__meta__') is not None else {}
         translations = {}
         cls._flatten(buffer, translations)
@@ -97,7 +97,7 @@ class Strings(metaclass=_StringsMeta):
     _availableLanguages = None
 
     @classmethod
-    def GetAvailableLanguages(cls) -> dict[str, str]:
+    def available_languages(cls) -> dict[str, str]:
         if cls._availableLanguages is not None:
             return cls._availableLanguages
         
@@ -132,5 +132,5 @@ class Strings(metaclass=_StringsMeta):
         return cls._availableLanguages
     
     @classmethod
-    def GetLanguageSetting(cls, text: str) -> str:
+    def language_setting(cls, text: str) -> str:
        return {v: k for k, v in cls._availableLanguages.items()}.get(text)

@@ -47,7 +47,7 @@ class PostDialogLayout(Constants):
         saveButton.isFullWidth = True
         saveButton.isEnabled = False
 
-        EventRegistry.register(cls.SAVE_ID, lambda input: Settings.SaveDefault())
+        EventRegistry.register(cls.SAVE_ID, lambda input: Settings.save_default())
 
         def setSaveButtonEnabled(input: CommandInput):
             input.parentCommand.commandInputs.itemById(cls.SAVE_ID).isEnabled = Programs.Current is not None

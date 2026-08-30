@@ -101,7 +101,7 @@ def test_program_exposes_source_state_and_parameters():
     program.disable_open_in_editor()
 
     assert program.fileName == "updated"
-    assert not program.parameters.Get(Parameters.OPEN_IN_EDITOR, bool)
+    assert not program.parameters.get(Parameters.OPEN_IN_EDITOR, bool)
 
 
 def test_machine_capabilities_are_delegated_to_fusion_adapter():
@@ -168,7 +168,7 @@ def test_process_restores_program_parameters_after_parser_failure():
         def parse(self, _path):
             program.set_output_folder(Path("/tmp/temporary"))
             program.set_file_name("temporary")
-            program.parameters.Set(Parameters.NAME, "Temporary")
+            program.parameters.set(Parameters.NAME, "Temporary")
             raise RuntimeError("parse failed")
 
     with pytest.raises(RuntimeError, match="parse failed"):
@@ -176,7 +176,7 @@ def test_process_restores_program_parameters_after_parser_failure():
 
     assert program.get_output_folder() == Path("/tmp/output")
     assert program.fileName == "job"
-    assert program.parameters.Get(Parameters.NAME, str) == "Program"
+    assert program.parameters.get(Parameters.NAME, str) == "Program"
 
 
 def test_write_output_restores_parameters_after_renderer_failure(monkeypatch):
@@ -186,7 +186,7 @@ def test_write_output_restores_parameters_after_renderer_failure(monkeypatch):
     def fail_render(*_args):
         program.set_output_folder(Path("/tmp/temporary"))
         program.set_file_name("temporary")
-        program.parameters.Set(Parameters.NAME, "Temporary")
+        program.parameters.set(Parameters.NAME, "Temporary")
         raise RuntimeError("render failed")
 
     monkeypatch.setattr(program_module, "render_program_output", fail_render)
@@ -196,4 +196,4 @@ def test_write_output_restores_parameters_after_renderer_failure(monkeypatch):
 
     assert program.get_output_folder() == Path("/tmp/output")
     assert program.fileName == "job"
-    assert program.parameters.Get(Parameters.NAME, str) == "Program"
+    assert program.parameters.get(Parameters.NAME, str) == "Program"

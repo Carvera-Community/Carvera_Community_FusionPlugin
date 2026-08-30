@@ -121,7 +121,7 @@ class OutputTab(Constants):
         numericName.tooltip = Strings("TOOLTIP: Name must be numeric")
         numericName.tooltipDescription = Strings("TOOLTIP TEXT: Name must be numeric")
 
-        EventRegistry.register(cls.NUMERIC_NAME_ID, lambda checkbox: Settings.Set(Settings.NUMERIC_NAME, checkbox.value))
+        EventRegistry.register(cls.NUMERIC_NAME_ID, lambda checkbox: Settings.set(Settings.NUMERIC_NAME, checkbox.value))
 
         def ensureNumericFileName(input: CommandInput):
             textbox = StringValueCommandInput.cast(input.parentCommand.commandInputs.itemById(cls.FILE_NAME_ID))
@@ -141,7 +141,7 @@ class OutputTab(Constants):
         prependFileNumber.tooltip = Strings("TOOLTIP: Prepend file sequence number")
         prependFileNumber.tooltipDescription = Strings("TOOLTIP TEXT: Prepend file sequence number")
 
-        EventRegistry.register(cls.FILE_SEQUENCE_ID, lambda checkbox: Settings.Set(Settings.FILE_SEQUENCE, checkbox.value))
+        EventRegistry.register(cls.FILE_SEQUENCE_ID, lambda checkbox: Settings.set(Settings.FILE_SEQUENCE, checkbox.value))
         #endregion
 
         #region Numbering digits spinner input
@@ -160,7 +160,7 @@ class OutputTab(Constants):
                 Programs.Current.fileName if Programs.Current else None
             )
             if checkbox.value and digits is not None:
-                Settings.Set(Settings.FILE_SEQUENCE_DIGITS, digits)
+                Settings.set(Settings.FILE_SEQUENCE_DIGITS, digits)
                 input.valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
                 input.isEnabled = False
                 prependFileNumbers.isEnabled = False
@@ -174,10 +174,10 @@ class OutputTab(Constants):
             )
             if (digits is not None
                     and BoolValueCommandInput.cast(textbox.parentCommand.commandInputs.itemById(cls.NUMERIC_NAME_ID)).value):
-                Settings.Set(Settings.FILE_SEQUENCE_DIGITS, digits)
+                Settings.set(Settings.FILE_SEQUENCE_DIGITS, digits)
                 IntegerSliderCommandInput.cast(textbox.commandInputs.itemById(cls.FILE_SEQUENCE_DIGITS_ID)).valueOne = Settings(Settings.FILE_SEQUENCE_DIGITS)
 
-        EventRegistry.register(cls.FILE_SEQUENCE_DIGITS_ID, lambda spinner: Settings.Set(Settings.FILE_SEQUENCE_DIGITS, spinner.valueOne))
+        EventRegistry.register(cls.FILE_SEQUENCE_DIGITS_ID, lambda spinner: Settings.set(Settings.FILE_SEQUENCE_DIGITS, spinner.valueOne))
         EventRegistry.register(cls.NUMERIC_NAME_ID, setNumberingDigitsOnNumericFileName) # Disable numbering digits when "Name must be numeric" is enabled, as it doesn't make sense in that context
         EventRegistry.register(cls.FILE_SEQUENCE_ID, setNumberingDigitsEnabled)
         EventRegistry.register(cls.FILE_NAME_ID, setNumberingDigitsOnFileName) # Disable numbering digits when "Prepend sequence number" is disabled, as it doesn't make sense in that context
@@ -199,7 +199,7 @@ class OutputTab(Constants):
         for grouping in operationsGroupingsTexts:
             operationsGrouping.listItems.add(grouping, operationsGroupingsTexts[grouping] == Settings(Settings.OPERATIONS_GROUPING))
 
-        EventRegistry.register(cls.OPERATIONS_GROUPING_ID, lambda dropdown: Settings.Set(Settings.OPERATIONS_GROUPING, operationsGroupingsTexts[dropdown.selectedItem.name]))
+        EventRegistry.register(cls.OPERATIONS_GROUPING_ID, lambda dropdown: Settings.set(Settings.OPERATIONS_GROUPING, operationsGroupingsTexts[dropdown.selectedItem.name]))
         #endregion
 
         #region Combine tool checkbox
@@ -217,7 +217,7 @@ class OutputTab(Constants):
         flatFileStructure.tooltip = Strings("TOOLTIP: Flatten the file structure")
         flatFileStructure.tooltipDescription = Strings("TOOLTIP TEXT: Flatten the file structure")
 
-        EventRegistry.register(cls.FLAT_FILE_STRUCTURE_ID, lambda checkbox: Settings.Set(Settings.FLAT_FILE_STRUCTURE, checkbox.value))
+        EventRegistry.register(cls.FLAT_FILE_STRUCTURE_ID, lambda checkbox: Settings.set(Settings.FLAT_FILE_STRUCTURE, checkbox.value))
         #endregion
 
         #region Overwrite existing files checkbox
@@ -242,7 +242,7 @@ class OutputTab(Constants):
                 Settings(Settings.CLEAR_FOLDER, False) # Uncheck "Clear output folder" when "Overwrite existing files" is disabled, as it doesn't make sense to clear the output folder if we're not overwriting existing files
                 clearFolderCheckbox.value = False
 
-        EventRegistry.register(cls.CLEAR_OUTPUT_FOLDER_ID, lambda checkbox: Settings.Set(Settings.CLEAR_FOLDER, checkbox.value))
+        EventRegistry.register(cls.CLEAR_OUTPUT_FOLDER_ID, lambda checkbox: Settings.set(Settings.CLEAR_FOLDER, checkbox.value))
         EventRegistry.register(cls.OVERWRITE_EXISTING_FILES_ID, setClearOutputFolderEnabled) # Enable "Clear output folder" when "Overwrite existing files" is enabled
         setClearOutputFolderEnabled(overwriteExistingFiles) # initialize state based on current value
         #endregion -----

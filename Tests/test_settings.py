@@ -43,19 +43,19 @@ def isolated_settings(tmp_path):
 
 def test_save_excludes_session_only_safety_settings():
     Settings._items = dict(Settings._defaultSettings)
-    Settings.Set(Constants.LANGUAGE, "sv")
-    Settings.Set(Constants.OVERWRITE_FILES, True)
-    Settings.Set(Constants.CLEAR_FOLDER, True)
+    Settings.set(Constants.LANGUAGE, "sv")
+    Settings.set(Constants.OVERWRITE_FILES, True)
+    Settings.set(Constants.CLEAR_FOLDER, True)
     attributes = FakeAttributes()
 
-    Settings.Save(attributes)
+    Settings.save(attributes)
 
     saved = json.loads(attributes.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
     assert saved[Constants.LANGUAGE] == "sv"
     assert Constants.OVERWRITE_FILES not in saved
     assert Constants.CLEAR_FOLDER not in saved
-    assert Settings.Get(Constants.OVERWRITE_FILES)
-    assert Settings.Get(Constants.CLEAR_FOLDER)
+    assert Settings.get(Constants.OVERWRITE_FILES)
+    assert Settings.get(Constants.CLEAR_FOLDER)
 
 
 def test_load_resets_legacy_persisted_safety_settings():
@@ -63,18 +63,18 @@ def test_load_resets_legacy_persisted_safety_settings():
     persisted[Constants.OVERWRITE_FILES] = True
     persisted[Constants.CLEAR_FOLDER] = True
 
-    Settings.Load(FakeAttributes(persisted))
+    Settings.load(FakeAttributes(persisted))
 
-    assert not Settings.Get(Constants.OVERWRITE_FILES)
-    assert not Settings.Get(Constants.CLEAR_FOLDER)
+    assert not Settings.get(Constants.OVERWRITE_FILES)
+    assert not Settings.get(Constants.CLEAR_FOLDER)
 
 
 def test_save_default_excludes_session_only_settings():
     Settings._items = dict(Settings._defaultSettings)
-    Settings.Set(Constants.OVERWRITE_FILES, True)
-    Settings.Set(Constants.CLEAR_FOLDER, True)
+    Settings.set(Constants.OVERWRITE_FILES, True)
+    Settings.set(Constants.CLEAR_FOLDER, True)
 
-    Settings.SaveDefault()
+    Settings.save_default()
 
     saved = json.loads(Path(Settings._path).read_text(encoding="utf-8"))
     assert Constants.OVERWRITE_FILES not in saved

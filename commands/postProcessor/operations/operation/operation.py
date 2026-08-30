@@ -110,8 +110,8 @@ class Operation():
     def parse(self, tmpPath: Path, program: PostProcessingProgram):
         def postProcess(operations, outputFolder, fileName):
             program.set_output_folder(outputFolder)
-            program.parameters.Set(Parameters.FILE_NAME, fileName)
-            program.parameters.Set(Parameters.NAME, fileName)
+            program.parameters.set(Parameters.FILE_NAME, fileName)
+            program.parameters.set(Parameters.NAME, fileName)
             return program.post_process(operations)
 
         create_temporary_operation_file(

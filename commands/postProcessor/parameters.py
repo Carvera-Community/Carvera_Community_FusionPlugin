@@ -31,7 +31,7 @@ class Parameters:
     NAME: Final           = 'nc_program_name'
     EXTENSION: Final      = 'nc_program_nc_extension'
 
-    def Get(self, name: str, t: type[T]) -> T | None:
+    def get(self, name: str, t: type[T]) -> T | None:
         """Returns the value of the NCParameter with the given name, or None if it does not exist."""
         param = self._parameters.itemByName(name)
         if param is None:
@@ -41,7 +41,7 @@ class Parameters:
             raise TypeError(f"Unhandled type '{t}' of parameter '{name}'")
         return cast(T, self._valueAdapter.get(param, t))
     
-    def Set(self, name: str, value: T) -> None:
+    def set(self, name: str, value: T) -> None:
         """Sets the value of the NCParameter with the given name."""
         param = self._parameters.itemByName(name)
 

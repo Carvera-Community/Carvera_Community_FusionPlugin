@@ -33,14 +33,14 @@ class MiscTab(Constants):
         #region Language dropdown
         languageDropdown = miscTab.children.addDropDownCommandInput(cls.LANGUAGE_ID, Strings("Language"), cast(DropDownStyles, DropDownStyles.TextListDropDownStyle))
         languageDropdown.tooltip = Strings("TOOLTIP: Language")
-        languageDropdown.tooltipDescription = (Strings("TOOLTIP TEXT: Language {fileVersion}")).format(fileVersion = Strings.fileVersion)
+        languageDropdown.tooltipDescription = (Strings("TOOLTIP TEXT: Language {file_version}")).format(file_version = Strings.file_version)
 
-        languageTexts = Strings.GetAvailableLanguages()
+        languageTexts = Strings.available_languages()
 
         for language in languageTexts:
             languageDropdown.listItems.add(languageTexts[language], language == Settings(Settings.LANGUAGE))
 
-        EventRegistry.register(cls.LANGUAGE_ID, lambda dropdown: Settings(Settings.LANGUAGE, Strings.GetLanguageSetting(dropdown.selectedItem.name)))
+        EventRegistry.register(cls.LANGUAGE_ID, lambda dropdown: Settings(Settings.LANGUAGE, Strings.language_setting(dropdown.selectedItem.name)))
         #endregion
 
 
@@ -52,28 +52,28 @@ class MiscTab(Constants):
         useRegex.tooltip = Strings("TOOLTIP: Use Python regular expressions")
         useRegex.tooltipDescription = Strings("TOOLTIP TEXT: Use Python regular expressions")
 
-        EventRegistry.register(cls.USE_REGEX_ID, lambda input: Settings.Set(Settings.USE_REGEX, input.value))
+        EventRegistry.register(cls.USE_REGEX_ID, lambda input: Settings.set(Settings.USE_REGEX, input.value))
         #endregion
 
         #region Find string input
         findText = group.children.addStringValueInput(cls.FIND_STRING_ID, Strings("Search for this string"), str(Settings(Settings.FIND_STRING)))
         findText.tooltip = Strings("TOOLTIP: Search for this string")
         findText.tooltipDescription = Strings("TOOLTIP TEXT: Search for this string")
-        EventRegistry.register(cls.FIND_STRING_ID, lambda input: Settings.Set(Settings.FIND_STRING, input.value))
+        EventRegistry.register(cls.FIND_STRING_ID, lambda input: Settings.set(Settings.FIND_STRING, input.value))
         #endregion
 
         #region Replace string input
         replaceText = group.children.addStringValueInput(cls.REPLACE_STRING_ID, Strings("Replace with this string"), Settings(Settings.REPLACE_STRING))
         replaceText.tooltip = Strings("TOOLTIP: Replace with this string")
         replaceText.tooltipDescription = Strings("TOOLTIP TEXT: Replace with this string")
-        EventRegistry.register(cls.REPLACE_STRING_ID, lambda input: Settings.Set(Settings.REPLACE_STRING, input.value))
+        EventRegistry.register(cls.REPLACE_STRING_ID, lambda input: Settings.set(Settings.REPLACE_STRING, input.value))
         #endregion
 
         #region Only selected Setups checkbox
         replaceOnlySelected = group.children.addBoolValueInput(cls.REPLACE_ONLY_SELECTED_ID, Strings("Only selected Setups"),  True, "", Settings(Settings.REPLACE_ONLY_SELECTED))
         replaceOnlySelected.tooltip = Strings("TOOLTIP: Only selected Setups")
         replaceOnlySelected.tooltipDescription = Strings("TOOLTIP TEXT: Only selected Setups")
-        EventRegistry.register(cls.REPLACE_ONLY_SELECTED_ID, lambda input: Settings.Set(Settings.REPLACE_ONLY_SELECTED, input.value))
+        EventRegistry.register(cls.REPLACE_ONLY_SELECTED_ID, lambda input: Settings.set(Settings.REPLACE_ONLY_SELECTED, input.value))
         #endregion
 
         #region Replace button

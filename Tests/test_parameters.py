@@ -42,36 +42,36 @@ def parameters(values):
 def test_get_returns_typed_parameter_value(value, value_type):
     instance = parameters({"parameter": value})
 
-    assert instance.Get("parameter", value_type) == value
+    assert instance.get("parameter", value_type) == value
 
 
 def test_get_returns_none_for_missing_parameter():
-    assert parameters({}).Get("missing", str) is None
+    assert parameters({}).get("missing", str) is None
 
 
 def test_get_rejects_unsupported_requested_type():
     instance = parameters({"parameter": [1]})
 
     with pytest.raises(TypeError, match="Unhandled type"):
-        instance.Get("parameter", list)
+        instance.get("parameter", list)
 
 
 @pytest.mark.parametrize("value", [8, 3.5, False, "updated"])
 def test_set_updates_parameter_through_adapter(value):
     instance = parameters({"parameter": type(value)()})
 
-    instance.Set("parameter", value)
+    instance.set("parameter", value)
 
-    assert instance.Get("parameter", type(value)) == value
+    assert instance.get("parameter", type(value)) == value
 
 
 def test_set_rejects_missing_parameter():
     with pytest.raises(KeyError, match="does not exist"):
-        parameters({}).Set("missing", "value")
+        parameters({}).set("missing", "value")
 
 
 def test_set_preserves_adapter_type_validation():
     instance = parameters({"parameter": "text"})
 
     with pytest.raises(TypeError, match="wrong type"):
-        instance.Set("parameter", 4)
+        instance.set("parameter", 4)

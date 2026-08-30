@@ -147,7 +147,7 @@ class PostDialog(PostDialogLayout):
         ui = app.userInterface
 
         doc: Document = app.activeDocument
-        Settings.Save(doc.attributes)  # Save settings for the current document
+        Settings.save(doc.attributes)  # Save settings for the current document
 
         workspace = ui.workspaces.itemById(Const.CAM_WORKSPACE_ID)
         panel = workspace.toolbarPanels.itemById(Const.CAM_ACTIONS_PANEL_ID)
@@ -179,7 +179,7 @@ class PostDialog(PostDialogLayout):
         doc: Document = app.activeDocument
         cam = CAM.cast(app.activeDocument.products.itemByProductType(Const.CAM_PRODUCT_ID))
 
-        Settings.Load(doc.attributes) # Load settings from the document
+        Settings.load(doc.attributes) # Load settings from the document
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
         Programs.load(
             cls._ctx,

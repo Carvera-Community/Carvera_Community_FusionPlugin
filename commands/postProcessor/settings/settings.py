@@ -21,8 +21,8 @@ class _SettingsMeta(type):
 
     # Just to help Pylance to understand the code.
     if TYPE_CHECKING:
-        def Get(cls, key: str) -> Any: ...
-        def Set(cls, key: str, value: Any) -> None: ...
+        def get(cls, key: str) -> Any: ...
+        def set(cls, key: str, value: Any) -> None: ...
     
     def __iter__(cls):
         return iter(cls._items)
@@ -35,9 +35,9 @@ class _SettingsMeta(type):
 
     def __call__(cls, key, /, value = _UNSET):
         if value is _UNSET:
-            return cls.Get(key)
-        cls.Set(key, value)
-        return cls.Get(key)
+            return cls.get(key)
+        cls.set(key, value)
+        return cls.get(key)
 
 class Settings(Constants, metaclass=_SettingsMeta):
     """Manages the user settings for the Post Processor Add-In."""
@@ -88,7 +88,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
     #endregion
 
     @classmethod
-    def Load(cls, attr: Optional[adskAttributes] = None):
+    def load(cls, attr: Optional[adskAttributes] = None):
         if attr and attr.count > 0:
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
@@ -107,7 +107,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
                     with open(path) as file:
                         cls._default = json.load(file)
                     if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
-                        cls.Update(Settings._defaultSettings, cls._default)
+                        cls.update(Settings._defaultSettings, cls._default)
             else:
                 cls._default = dict(Settings._defaultSettings)
                 cls._fMustSave = True
@@ -115,12 +115,12 @@ class Settings(Constants, metaclass=_SettingsMeta):
         if not cls._items:
             cls._items = dict(cls._default)
         else:
-            cls.Update(cls._default, cls._items)
+            cls.update(cls._default, cls._items)
 
         cls._resetSessionOnlySettings()
 
     @classmethod
-    def SaveDefault(cls):
+    def save_default(cls):
         cls._fMustSave = False
         persistentItems = cls._getPersistentItems()
         cls._default = dict(persistentItems)
@@ -133,9 +133,9 @@ class Settings(Constants, metaclass=_SettingsMeta):
             pass
 
     @classmethod
-    def Save(cls, attr: adskAttributes):
+    def save(cls, attr: adskAttributes):
         if cls._fMustSave:
-            cls.SaveDefault()
+            cls.save_default()
         attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._getPersistentItems()))
 
     @classmethod
@@ -152,7 +152,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
             cls._items[key] = False
             
     @classmethod
-    def Update(cls, src, dst):
+    def update(cls, src, dst):
         for item in src:
             if not (item in dst):
                 dst[item] = src[item]
@@ -168,10 +168,10 @@ class Settings(Constants, metaclass=_SettingsMeta):
         return Path(cls._path)
     
     @classmethod
-    def Get(cls, key) -> Any:
+    def get(cls, key) -> Any:
         return cls._items.get(key, None)
     
     @classmethod
-    def Set(cls, key: str, value: Any):
+    def set(cls, key: str, value: Any):
         cls._items[key] = value
         cls._fMustSave = True
