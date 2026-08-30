@@ -80,7 +80,7 @@ def parseFile(ctx: OperationContext):
                         return (True, inHeader)
                 
             return (not inHeader, inHeader)
-    
+
     def _parseBodyLine(line: str, lineNumber: int):
         bodyMatch = ctx.lineWriter._BODY_RE.match(line)
         if bodyMatch:
@@ -116,10 +116,15 @@ def parseFile(ctx: OperationContext):
                     return True # File analysis complete
         return False
 
-
     if Settings(Settings.RESTORE_RAPID_MOVES):
-        minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE) | 20
-        maxStepsInbetween = Settings(Settings.RAPID_MOVES_MAX_STEPS) | 3
+        minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
+        if minDist is None:
+            minDist = 20
+
+        maxStepsInbetween = Settings(Settings.RAPID_MOVES_MAX_STEPS)
+        if maxStepsInbetween is None:
+            maxStepsInbetween = 3
+
         ctx.rapidsAnalysis = {seg["startLine"]: { 
             "endLine": seg["endLine"], 
             "startHasFeed": seg["startHasFeed"]}

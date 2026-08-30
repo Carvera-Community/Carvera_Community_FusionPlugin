@@ -97,6 +97,7 @@ class Program():
         axes = cam.ControllerConfigurationMachineElement.cast(
             machine.elements.defaultItemByType('controller')).axisConfigurations
 
+        unreadable_extra_axis = False
         for index in range(axes.count):
             try:
                 axis = axes.item(index)

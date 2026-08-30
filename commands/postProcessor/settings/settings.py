@@ -40,6 +40,11 @@ class _SettingsMeta(type):
 class Settings(Constants, metaclass=_SettingsMeta):
     """Manages the user settings for the Post Processor Add-In."""
 
+    _sessionOnlySettings = frozenset({
+        Constants.OVERWRITE_FILES,
+        Constants.CLEAR_FOLDER,
+    })
+
     _default = None
     _path = None
     _fMustSave = False
@@ -86,6 +91,7 @@ class Settings(Constants, metaclass=_SettingsMeta):
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
                 if cls._items.get(Constants.VERSION) is not None and cls._items[Constants.VERSION] == config.SETTINGS_VERSION:
+                    cls._resetSessionOnlySettings()
                     return  # settings are valid for this version
             except Exception:
                 pass
@@ -109,12 +115,15 @@ class Settings(Constants, metaclass=_SettingsMeta):
         else:
             cls.Update(cls._default, cls._items)
 
+        cls._resetSessionOnlySettings()
+
     @classmethod
     def SaveDefault(cls):
         cls._fMustSave = False
-        cls._default = dict(cls._items)
+        persistentItems = cls._getPersistentItems()
+        cls._default = dict(persistentItems)
         try:
-            strSettings = json.dumps(cls._items, indent=4, sort_keys=True)
+            strSettings = json.dumps(persistentItems, indent=4, sort_keys=True)
             file = open(cls._getPath(), "w")
             file.write(strSettings)
             file.close()
@@ -125,7 +134,20 @@ class Settings(Constants, metaclass=_SettingsMeta):
     def Save(cls, attr: adskAttributes):
         if cls._fMustSave:
             cls.SaveDefault()
-        attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._items))
+        attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._getPersistentItems()))
+
+    @classmethod
+    def _getPersistentItems(cls) -> dict[str, Any]:
+        return {
+            key: value
+            for key, value in cls._items.items()
+            if key not in cls._sessionOnlySettings
+        }
+
+    @classmethod
+    def _resetSessionOnlySettings(cls) -> None:
+        for key in cls._sessionOnlySettings:
+            cls._items[key] = False
             
     @classmethod
     def Update(cls, src, dst):

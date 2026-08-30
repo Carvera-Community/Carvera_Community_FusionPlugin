@@ -36,4 +36,4 @@ def writeTail(ctx: OperationsContext):
 
         pathToOpen: Path = ctx.path / f"{operation.fileName}{ctx.fileExtension}"
         with pathToOpen.open(FileModes.APPEND) as fileHandler:
-            operation.WriteTail(fileHandler)
+            ctx.operationWithTail.WriteTail(fileHandler)

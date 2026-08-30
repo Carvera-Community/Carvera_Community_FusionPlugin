@@ -69,7 +69,7 @@ class Operation():
 
     @property
     def hasTool(self) -> bool:
-        return self.ctx.subOperationIndexWithTool is not -1 and self._operationsDict[self.ctx.subOperationIndexWithTool].hasToolpath
+        return self.ctx.subOperationIndexWithTool != -1 and self._operationsDict[self.ctx.subOperationIndexWithTool].hasToolpath
 
     @property
     def tool(self) -> Optional[cam.Tool]:
