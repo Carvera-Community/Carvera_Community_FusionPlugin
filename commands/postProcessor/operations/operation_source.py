@@ -12,5 +12,5 @@ class OperationSource:
     toolNumber: int | None
 
 
-def rawOperation(source: Any) -> Any:
+def raw_operation(source: Any) -> Any:
     return source.raw if isinstance(source, OperationSource) else source

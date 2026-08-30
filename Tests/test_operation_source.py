@@ -5,7 +5,7 @@ from addin_import import import_addin_module
 
 module = import_addin_module("commands.postProcessor.operations.operation_source")
 OperationSource = module.OperationSource
-rawOperation = module.rawOperation
+raw_operation = module.raw_operation
 
 
 def test_snapshot_keeps_decision_data_separate_from_runtime_identity():
@@ -14,10 +14,10 @@ def test_snapshot_keeps_decision_data_separate_from_runtime_identity():
 
     assert source.name == "Pocket"
     assert source.toolNumber == 7
-    assert rawOperation(source) is raw
+    assert raw_operation(source) is raw
 
 
 def test_legacy_sources_remain_valid_runtime_identities():
     source = SimpleNamespace(name="Pocket")
 
-    assert rawOperation(source) is source
+    assert raw_operation(source) is source

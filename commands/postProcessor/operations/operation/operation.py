@@ -14,7 +14,7 @@ from .header_writer import (
 from .body_writer import writeBody
 from .tail_writer import writeTail
 from .temporary_post_processing import createTemporaryOperationFile
-from ..operation_source import rawOperation
+from ..operation_source import raw_operation
 
 
 class OperationFusionAdapter(Protocol):
@@ -148,7 +148,7 @@ class Operation():
         createTemporaryOperationFile(
             self.ctx,
             tmpPath,
-            [rawOperation(operation) for operation in self._operationsDict.values()],
+            [raw_operation(operation) for operation in self._operationsDict.values()],
             program.fileExtension,
             postProcess,
             parseFile,

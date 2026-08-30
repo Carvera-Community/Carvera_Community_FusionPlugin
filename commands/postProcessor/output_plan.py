@@ -19,7 +19,7 @@ class ResultFilePlan:
     operations: tuple[Any, ...]
 
 
-def planResultFiles(
+def plan_result_files(
     setups: Iterable[PlannedSetup],
     grouping: Constants.OperationsGroupings,
 ) -> tuple[ResultFilePlan, ...]:
@@ -52,7 +52,7 @@ def planResultFiles(
     )
 
 
-def assignFinalOperations(
+def assign_final_operations(
     setups: Iterable[PlannedSetup],
     plans: Iterable[ResultFilePlan],
 ) -> None:

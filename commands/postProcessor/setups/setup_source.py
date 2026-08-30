@@ -14,5 +14,5 @@ class SetupSource:
     allOperations: tuple[Any, ...]
 
 
-def rawSetup(source: Any) -> Any:
+def raw_setup(source: Any) -> Any:
     return source.raw if isinstance(source, SetupSource) else source

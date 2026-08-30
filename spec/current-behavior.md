@@ -259,6 +259,23 @@ The following items describe current source behavior that should not silently be
 
 ## 14. Refactoring constraints
 
+The host-testable architecture now has the following enforced runtime boundaries:
+
+- Processing options are captured once at execution start in an immutable
+  `ProcessingSettings` snapshot and propagated through setup and operation
+  contexts. Direct global setting reads remain compatibility fallbacks for
+  isolated legacy calls, not the normal execution path.
+- Fusion setup and operation objects are converted at the adapter boundary to
+  small Python source records. Opaque raw handles are retained only for calls
+  that must return to Fusion, including toolpath generation, renaming, geometry,
+  and NC post processing.
+- Result-file operation membership is planned before body output. Shrink
+  retention is derived from that plan, so final-operation state follows output
+  grouping rather than source selection position.
+- Core modules may not import `adsk` or `fusion_adapters` at module import time.
+  Architecture tests enforce both rules so every core module remains importable
+  on the host.
+
 - **MCB-150 — Confirmed intent:** Refactoring shall preserve the requirements in this document except known deviations explicitly selected for correction.
 - **MCB-151 — Confirmed intent:** Core parsing and transformation logic should become host-testable without importing or emulating the complete Fusion `adsk` API.
 - **MCB-152 — Confirmed intent:** Fusion-specific objects and mutations should remain at adapter boundaries.

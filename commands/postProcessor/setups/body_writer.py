@@ -3,7 +3,7 @@ from typing import Iterable, Protocol
 
 from ..settings.settings import Settings
 from ..settings.constants import Constants
-from ..output_plan import assignFinalOperations, planResultFiles
+from ..output_plan import assign_final_operations, plan_result_files
 
 
 class ResultOperationContext(Protocol):
@@ -106,8 +106,8 @@ def writeBody(
 
         return currentRotation, newRotation, preserveRotation
 
-    resultFiles = planResultFiles(ctx.selected, operationsGrouping)
-    assignFinalOperations(ctx.selected, resultFiles)
+    resultFiles = plan_result_files(ctx.selected, operationsGrouping)
+    assign_final_operations(ctx.selected, resultFiles)
 
     for setup in ctx.selected:
         currentRotationAngle, setup.ctx.rotationAngle, setup.ctx.preserveRotation = _getRotation(

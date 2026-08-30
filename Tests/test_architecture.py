@@ -39,3 +39,16 @@ def test_core_has_no_top_level_adsk_imports():
                 violations.append(str(relative))
 
     assert violations == []
+
+
+def test_core_has_no_top_level_fusion_adapter_imports():
+    violations = []
+    for path, relative in core_module_paths():
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in tree.body:
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if "fusion_adapters" in (node.module or ""):
+                violations.append(str(relative))
+
+    assert violations == []

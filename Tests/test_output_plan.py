@@ -19,8 +19,8 @@ def test_single_file_plan_contains_all_body_operations_in_order():
     first, ignored, last = operation(), operation(False), operation()
     setups = [setup(first, ignored), setup(last)]
 
-    plans = module.planResultFiles(setups, Constants.OperationsGroupings.SINGLE_FILE)
-    module.assignFinalOperations(setups, plans)
+    plans = module.plan_result_files(setups, Constants.OperationsGroupings.SINGLE_FILE)
+    module.assign_final_operations(setups, plans)
 
     assert len(plans) == 1
     assert plans[0].operations == (first, last)
@@ -31,8 +31,8 @@ def test_setup_and_split_plans_express_result_file_membership():
     first, second, third = operation(), operation(), operation()
     setups = [setup(first, second), setup(third)]
 
-    per_setup = module.planResultFiles(setups, Constants.OperationsGroupings.SETUP)
-    split = module.planResultFiles(setups, Constants.OperationsGroupings.PER_OPERATION)
+    per_setup = module.plan_result_files(setups, Constants.OperationsGroupings.SETUP)
+    split = module.plan_result_files(setups, Constants.OperationsGroupings.PER_OPERATION)
 
     assert [plan.operations for plan in per_setup] == [(first, second), (third,)]
     assert [plan.operations for plan in split] == [(first,), (second,), (third,)]

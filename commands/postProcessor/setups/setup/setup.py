@@ -26,7 +26,7 @@ from .header_writer import (
 from .body_writer import writeBody
 from .tail_writer import writeTail
 from .vector_rotation import getSignedRotationAroundAxis
-from ..setup_source import rawSetup
+from ..setup_source import raw_setup
 
 
 class SetupFusionAdapter(Protocol):
@@ -244,7 +244,7 @@ class Setup():
         program.DisableOpenInEditor()
 
         # Make sure that the setup has all its toolpaths generated
-        programs.CheckAndGenerateToolpath(rawSetup(self.ctx.setup))
+        programs.CheckAndGenerateToolpath(raw_setup(self.ctx.setup))
 
         self.ctx.operations.Parse(tmpPath, program)
 
