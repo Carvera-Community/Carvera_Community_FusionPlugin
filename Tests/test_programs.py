@@ -28,7 +28,7 @@ def test_load_wraps_programs_selects_saved_name_and_loads_setups():
     cam_source = SimpleNamespace(ncPrograms=sources, setups=setups)
     context = FakeContext()
 
-    Programs.Load(context, cam_source, lambda source: source, "Second")
+    Programs.load(context, cam_source, lambda source: source, "Second")
 
     assert list(Programs) == sources
     assert Programs.Current is sources[1]
@@ -39,7 +39,7 @@ def test_load_leaves_current_empty_when_saved_program_is_missing():
     reset_programs()
     source = SimpleNamespace(name="First")
 
-    Programs.Load(
+    Programs.load(
         FakeContext(),
         SimpleNamespace(ncPrograms=[source], setups=[]),
         lambda item: item,
@@ -52,4 +52,4 @@ def test_load_leaves_current_empty_when_saved_program_is_missing():
 def test_toolpath_check_is_skipped_without_cam_source():
     reset_programs()
 
-    Programs.CheckAndGenerateToolpath(object())
+    Programs.check_and_generate_toolpath(object())

@@ -17,22 +17,22 @@ class FakeOperation:
         self.name = name
         self.ctx = SimpleNamespace()
 
-    def WriteHeaderStart(self, output):
+    def write_header_start(self, output):
         output.write(f"HEADER {self.name}\n")
 
-    def WriteToolComment(self, output):
+    def write_tool_comment(self, output):
         output.write(f"TOOL {self.name}\n")
 
-    def WriteHeaderEnd(self, output):
+    def write_header_end(self, output):
         output.write("HEADER END\n")
 
-    def WriteBody(self, output):
+    def write_body(self, output):
         output.write(
             f"BODY {self.name} rotation={self.ctx.rotationAngle} "
             f"final={self.ctx.isLastOp}\n"
         )
 
-    def WriteTail(self, output):
+    def write_tail(self, output):
         output.write(f"TAIL {self.name}\n")
 
 

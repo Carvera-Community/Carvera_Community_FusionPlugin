@@ -29,7 +29,7 @@ class FakeSetup:
         self.xNormal = ComparableAxis(axis)
         self.angle = angle
 
-    def GetRotationAroundXAxisRelativeToDeg(self, other):
+    def rotation_relative_to_degrees(self, other):
         return other.angle
 
 

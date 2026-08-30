@@ -46,6 +46,6 @@ class SetupContext:
             raise ValueError("SetupContext.setup is not set.")
         return self.setup.name
 
-    def SetFileName(self, fileName: str):
+    def set_file_name(self, fileName: str):
         if self.operations is not None:
-            self.operations.SetFileName(fileName)
+            self.operations.set_file_name(fileName)

@@ -180,7 +180,7 @@ class PostDialog(PostDialogLayout):
 
         Settings.Load(doc.attributes) # Load settings from the document
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
-        Programs.Load(
+        Programs.load(
             cls._ctx,
             cam,
             selectedProgramName=Settings(Settings.NC_PROGRAM),
@@ -252,8 +252,8 @@ class PostDialog(PostDialogLayout):
             # Create a temporary folder to prepare all files in
             if Programs.Current is not None:
                 with tempfile.TemporaryDirectory() as tmpdir:
-                    Programs.Current.Process(cls._ctx, Path(tmpdir))
-                    Programs.Current.WriteOutput(cls._ctx)
+                    Programs.Current.process(cls._ctx, Path(tmpdir))
+                    Programs.Current.write_output(cls._ctx)
         except FileExistsError as e:
             Utils.log(f'PostDialog: {str(e)}', LogLevels.ErrorLogLevel)
             ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))

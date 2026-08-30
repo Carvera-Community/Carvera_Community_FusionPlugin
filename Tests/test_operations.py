@@ -100,11 +100,11 @@ def test_parse_records_first_tail_and_header_operation(tmp_path):
     program = object()
     calls = []
     for index, operation in enumerate(operations):
-        operation.Parse = lambda path, active_program: calls.append((path, active_program))
+        operation.parse = lambda path, active_program: calls.append((path, active_program))
         operation.ctx.headerEndLine = 4 if index == 1 else -1
         operation.ctx.tailStartLine = 8 if index == 0 else -1
 
-    operations.Parse(tmp_path, program)
+    operations.parse(tmp_path, program)
 
     assert calls == [(tmp_path, program), (tmp_path, program)]
     assert operations.ctx.fileNameTarget is program

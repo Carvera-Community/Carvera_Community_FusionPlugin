@@ -45,20 +45,20 @@ class Operations():
                 fusionAdapter,
             )
             for item in group:
-                operation.Append(item.source, item.index, item.source.hasToolpath)
+                operation.append(item.source, item.index, item.source.hasToolpath)
             self.ctx.operations.append(operation)
 
     @property
     def fileName(self) -> str:
         return self.ctx.fileName
     
-    def SetFileName(self, fileName: str) -> None:
+    def set_file_name(self, fileName: str) -> None:
         self.ctx.fileName = fileName
 
-    def SetOutputPath(self, path: Path) -> None:
+    def set_output_path(self, path: Path) -> None:
         self.ctx.path = path
 
-    def SetFileExtension(self, extension: str) -> None:
+    def set_file_extension(self, extension: str) -> None:
         self.ctx.fileExtension = extension
 
     @property
@@ -77,9 +77,9 @@ class Operations():
                 tools.append(operation.tool)
         return tools
 
-    def Parse(self, tmpPath: Path, program) -> None:
+    def parse(self, tmpPath: Path, program) -> None:
         self.ctx.fileNameTarget = program
         for operation in self.ctx.operations:
-            operation.Parse(tmpPath, program)
+            operation.parse(tmpPath, program)
         self.ctx.operationWithTail = next((operation for operation in self.ctx.operations if operation.hasTail), None)
         self.ctx.operationWithHeader = next((operation for operation in self.ctx.operations if operation.hasHeader), None)

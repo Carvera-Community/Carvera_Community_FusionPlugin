@@ -37,7 +37,7 @@ class Programs(metaclass=_ProgramsMeta):
     _cam: Any | None = None
 
     @classmethod
-    def Load(
+    def load(
         cls,
         ctx: "SetupsContext",
         camSource: Any,
@@ -59,7 +59,7 @@ class Programs(metaclass=_ProgramsMeta):
         ctx.load(camSource.setups)
 
     @classmethod
-    def CheckAndGenerateToolpath(cls, setup):
+    def check_and_generate_toolpath(cls, setup):
         """Ensure that the toolpath for the given setup is generated."""
         if cls._cam is not None:
             ensureToolpathGenerated(

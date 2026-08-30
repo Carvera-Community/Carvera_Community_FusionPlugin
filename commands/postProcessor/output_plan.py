@@ -198,7 +198,7 @@ def _plan_rotations(setups, rotate_a_axis):
         rotation_angle = None
         preserve_rotation = True
         if rotate_a_axis and first_setup is not None:
-            angle = setup.GetRotationAroundXAxisRelativeToDeg(first_setup)
+            angle = setup.rotation_relative_to_degrees(first_setup)
             preserve_rotation = angle == current_rotation
             if not preserve_rotation:
                 current_rotation = angle

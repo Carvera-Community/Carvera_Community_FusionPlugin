@@ -100,7 +100,7 @@ class InputTab(Constants):
 
         def setAllSetups(checkbox):
             for setup in ctx.valid:
-                setup.Select(checkbox.value)
+                setup.select(checkbox.value)
             cls._updateSetups(checkbox, ctx) # Update the table to enable/disable inputs based on the new selection
             
         EventRegistry.registerWithOnlyChange(cls.SELECT_ALL_SETUPS_ID, setAllSetups) # For some reason the checkbox generates duplicate events, so we use a special registry method that ignores duplicates. See EventRegistry for details.
@@ -131,7 +131,7 @@ class InputTab(Constants):
             setup = next((s for s in ctx.valid if s.index == setupIndex), None)
             if setup and setup.isSelected != checkbox.value:
                 Utils.log(f'Updating setup selection from dialog: {setup.name} selected={checkbox.value}')
-                setup.Select(checkbox.value)
+                setup.select(checkbox.value)
                 cls._updateSetups(checkbox, ctx) # Update the table to enable/disable inputs based on the new selection
                 EventRegistry.setValue(cls.SELECT_ALL_SETUPS_ID, areAllSetupsSelected(checkbox.parentCommand.commandInputs))
 
@@ -238,7 +238,7 @@ class InputTab(Constants):
 
         firstSetup: Setup | None = None
         for setup in ctx.valid:
-            rotation = 0 if firstSetup is None else round(setup.GetRotationAroundXAxisRelativeToDeg(firstSetup), 3)
+            rotation = 0 if firstSetup is None else round(setup.rotation_relative_to_degrees(firstSetup), 3)
             rowState = cls._getSetupRowState(
                 setup,
                 firstSetup is not None,
@@ -250,7 +250,7 @@ class InputTab(Constants):
 
             cls._setTableRowValues(inputs, rowState)
             
-            setup.Select(rowState[cls._SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
+            setup.select(rowState[cls._SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
 
             if firstSetup is None and setup.isSelected:
                 firstSetup = setup

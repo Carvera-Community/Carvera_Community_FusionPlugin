@@ -71,7 +71,7 @@ class FullSetup:
         self.ctx = SimpleNamespace(operations=FullOperations(path, operations))
         self.angle = angle
 
-    def GetRotationAroundXAxisRelativeToDeg(self, other):
+    def rotation_relative_to_degrees(self, other):
         return self.angle
 
 

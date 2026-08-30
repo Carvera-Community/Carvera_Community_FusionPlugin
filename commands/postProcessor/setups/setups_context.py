@@ -49,13 +49,13 @@ class SetupsContext:
         self.tempPath = tempPath
         for setup in self.selected:
             setup.ctx.processingSettings = self.processingSettings
-            setup.Parse(self.tempPath)
+            setup.parse(self.tempPath)
 #        return
 
     def renameSetups(self, find: str, replace: str, isRegex: bool, onlySelected: bool) -> None:
         setupsToRename = self.selected if onlySelected else self._items
         for setup in setupsToRename:
-            setup.Rename(find, replace, isRegex)
+            setup.rename(find, replace, isRegex)
     
     def setPath(self, path: Path, sanitizeFilename: Callable | None = None) -> None:
         sanitizeFilename = sanitizeFilename or _sanitizeFilename
@@ -74,7 +74,7 @@ class SetupsContext:
                 settings,
                 sanitizeFilename,
             )
-            setup.SetOutputPath(outputPath)
+            setup.set_output_path(outputPath)
 
     def setFileName(self, fileName: str) -> None:
         # This check should not be needed
@@ -84,11 +84,11 @@ class SetupsContext:
 
         setup: Setup
         for setup in self.selected:
-                setup.ctx.SetFileName(self.fileName)
+                setup.ctx.set_file_name(self.fileName)
 
     def setFileExtension(self, extension: str) -> None:
         for setup in self.selected:
-            setup.SetFileExtension(extension)
+            setup.set_file_extension(extension)
 
     @staticmethod
     def sanitizeFilename(name: str) -> str:

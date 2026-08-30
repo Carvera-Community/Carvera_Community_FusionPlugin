@@ -80,7 +80,7 @@ class Program():
         return self._program.warning
 
     @property
-    def Parameters(self):
+    def parameters(self):
         return self._parameters
     
     @property
@@ -126,47 +126,47 @@ class Program():
     @property
     def fileName(self):
         """Returns the file name of the NCProgram."""
-        return self.Parameters.Get(Parameters.FILE_NAME, str)
+        return self.parameters.Get(Parameters.FILE_NAME, str)
 
-    def SetFileName(self, fileName: str):
+    def set_file_name(self, fileName: str):
         """Sets the file name of the NCProgram."""
-        self.Parameters.Set(Parameters.FILE_NAME, fileName)
+        self.parameters.Set(Parameters.FILE_NAME, fileName)
 
     @property
     def fileExtension(self):
         """Returns the file extension of the NCProgram."""
         return self._program.postConfiguration.extension if self._program.postConfiguration else None
 
-    def Process(self, ctx: "SetupsContext", tmpPath: Path):
+    def process(self, ctx: "SetupsContext", tmpPath: Path):
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
-        oldOutputFolder = self.GetOutputFolder()
+        oldOutputFolder = self.get_output_folder()
         ctx.captureProcessingSettings()
 
         # TODO: Start showing progress here
         #endregion
 
-        outputFolder = self.GetOutputFolder()
+        outputFolder = self.get_output_folder()
         fileName = self.fileName
-        name = self.Parameters.Get(Parameters.NAME, str)
+        name = self.parameters.Get(Parameters.NAME, str)
 
         try:
             ctx.parse(tmpPath)
         finally:
-            self.SetOutputFolder(outputFolder)
+            self.set_output_folder(outputFolder)
             if fileName is not None:
-                self.Parameters.Set(Parameters.FILE_NAME, fileName)
+                self.parameters.Set(Parameters.FILE_NAME, fileName)
             if name is not None:
-                self.Parameters.Set(Parameters.NAME, name)
+                self.parameters.Set(Parameters.NAME, name)
 
         # Restore the output folder in the NC Program parameters
-        self.SetOutputFolder(oldOutputFolder)
+        self.set_output_folder(oldOutputFolder)
 
-    def WriteOutput(self, ctx: "SetupsContext"):
+    def write_output(self, ctx: "SetupsContext"):
         """Write the final G-code files from the results of the post processing."""
-        initialPath = self.GetOutputFolder()
+        initialPath = self.get_output_folder()
         initialFileName = self.fileName
-        programName = self.Parameters.Get(Parameters.NAME, str)
+        programName = self.parameters.Get(Parameters.NAME, str)
 
         try:
             current = ctx.processingSettings or ctx.captureProcessingSettings()
@@ -197,30 +197,30 @@ class Program():
             render_output_files(plans, current.overwriteFiles)
 
         finally:
-            self.SetOutputFolder(initialPath)
+            self.set_output_folder(initialPath)
             if initialFileName is not None:
-                self.Parameters.Set(Parameters.FILE_NAME, initialFileName)
+                self.parameters.Set(Parameters.FILE_NAME, initialFileName)
             if programName is not None:
-                self.Parameters.Set(Parameters.NAME, programName)
+                self.parameters.Set(Parameters.NAME, programName)
 
-    def DisableOpenInEditor(self):
+    def disable_open_in_editor(self):
         """Convenience method for disabling "Open in Editor" option"""
-        self.Parameters.Set(Parameters.OPEN_IN_EDITOR, False)
+        self.parameters.Set(Parameters.OPEN_IN_EDITOR, False)
 
-    def PostProcess(self, operations):
+    def post_process(self, operations):
         if len(operations) == 0:
             return False # Nothing to process
         self._program.operations = operations
         return self._fusionAdapter.postProcess(self._program)
 
-    def SetOutputFolder(self, folder: Path):
+    def set_output_folder(self, folder: Path):
         """Convenience method to set and verify output folder"""
-        self.Parameters.Set(Parameters.OUTPUT_FOLDER, folder.as_posix())
-        result = self.GetOutputFolder()
+        self.parameters.Set(Parameters.OUTPUT_FOLDER, folder.as_posix())
+        result = self.get_output_folder()
         if result != folder and str(folder)[0:2] == "\\\\":
-            self.Parameters.Set(Parameters.OUTPUT_FOLDER, "\\\\" + str(folder))    # double up leading "\"
+            self.parameters.Set(Parameters.OUTPUT_FOLDER, "\\\\" + str(folder))    # double up leading "\"
         return None
 
-    def GetOutputFolder(self) -> Path:
+    def get_output_folder(self) -> Path:
         """Convenience method to get output folder"""
-        return Path(str(self.Parameters.Get(Parameters.OUTPUT_FOLDER, str)))
+        return Path(str(self.parameters.Get(Parameters.OUTPUT_FOLDER, str)))

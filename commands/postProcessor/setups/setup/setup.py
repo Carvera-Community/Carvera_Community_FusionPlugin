@@ -62,7 +62,7 @@ class Setup():
     def isSelected(self) -> bool:
         return self.ctx.isSelected
 
-    def Select(self, value: bool):
+    def select(self, value: bool):
         self.ctx.isSelected = value
 
     @property
@@ -97,14 +97,14 @@ class Setup():
     def tools(self) -> list[Any]:
         return self.ctx.operations.tools if self.ctx.operations is not None else []
 
-    def SetOutputPath(self, path: Path):
+    def set_output_path(self, path: Path):
         path.mkdir(parents=True, exist_ok=True)
         if self.ctx.operations is not None:
-            self.ctx.operations.SetOutputPath(path)
+            self.ctx.operations.set_output_path(path)
 
-    def SetFileExtension(self, fileExtension: str):
+    def set_file_extension(self, fileExtension: str):
         if self.ctx.operations is not None:
-            self.ctx.operations.SetFileExtension(fileExtension)
+            self.ctx.operations.set_file_extension(fileExtension)
 
     #region Compute signed rotation around the setup's X axis.
     #
@@ -138,18 +138,18 @@ class Setup():
     #   simply supplies global axes.
     #endregion
 
-    def GetAbsoluteRotationAroundXAxis(self) -> float:
+    def absolute_rotation(self) -> float:
         gZNormal = self._fusionAdapter.globalVector((0, 0, 1))
         gYNormal = self._fusionAdapter.globalVector((0, 1, 0))
-        return self.GetRotationAroundXAxisRelativeTo(gZNormal, gYNormal)
+        return self.rotation_relative_to(gZNormal, gYNormal)
     
-    def GetAbsoluteRotationAroundXAxisDeg(self) -> float:
-        return math.degrees(self.GetAbsoluteRotationAroundXAxis())
+    def absolute_rotation_degrees(self) -> float:
+        return math.degrees(self.absolute_rotation())
     
-    def GetRotationAroundXAxisRelativeToSetup(self, otherSetup: Setup) -> float:
-        return self.GetRotationAroundXAxisRelativeTo(otherSetup)
+    def rotation_relative_to_setup(self, otherSetup: Setup) -> float:
+        return self.rotation_relative_to(otherSetup)
     
-    def GetRotationAroundXAxisRelativeTo(self, zNormalOrSetup, yNormal=None) -> float:
+    def rotation_relative_to(self, zNormalOrSetup, yNormal=None) -> float:
         # Compute the signed rotation around this setup's X axis that
         # transforms this setup's local Z into the other setup's local Z.
         #
@@ -184,10 +184,10 @@ class Setup():
             targetFallback=coordinates(yNormal),
         )
     
-    def GetRotationAroundXAxisRelativeToDeg(self, otherSetup) -> float:
-        return math.degrees(self.GetRotationAroundXAxisRelativeTo(otherSetup.zNormal, otherSetup.yNormal))
+    def rotation_relative_to_degrees(self, otherSetup) -> float:
+        return math.degrees(self.rotation_relative_to(otherSetup.zNormal, otherSetup.yNormal))
     
-    def Rename(self, find, replace, isRegex):
+    def rename(self, find, replace, isRegex):
         if isRegex:
             newName = re.sub(find, replace, self.ctx.setup.name)
         else:
@@ -203,7 +203,7 @@ class Setup():
             else:
                 self.ctx.setup.name = newName
     
-    def Parse(self, tmpPath: Path):
+    def parse(self, tmpPath: Path):
         if self._programRegistry is None:
             from ...programs import Programs
 
@@ -233,9 +233,9 @@ class Setup():
         program = programs.Current
         if program is None:
             raise ValueError("Programs.Current is None")
-        program.DisableOpenInEditor()
+        program.disable_open_in_editor()
 
         # Make sure that the setup has all its toolpaths generated
-        programs.CheckAndGenerateToolpath(raw_setup(self.ctx.setup))
+        programs.check_and_generate_toolpath(raw_setup(self.ctx.setup))
 
-        self.ctx.operations.Parse(tmpPath, program)
+        self.ctx.operations.parse(tmpPath, program)

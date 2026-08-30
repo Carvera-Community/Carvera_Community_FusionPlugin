@@ -57,7 +57,7 @@ class OutputTab(Constants):
             input = StringValueCommandInput.cast(dropdown.parentCommand.commandInputs.itemById(cls.OUTPUT_FOLDER_ID))
             try:
                 if input.isValid: # Apparently the input can become invalid when the program is changed, so we check if it's valid before trying to set the value
-                    newValue =  str(Programs.Current.GetOutputFolder().resolve()) if Programs.Current else Strings("<Select program>")
+                    newValue =  str(Programs.Current.get_output_folder().resolve()) if Programs.Current else Strings("<Select program>")
                     if input.value != newValue:
                         input.value = newValue
             except:
@@ -87,7 +87,7 @@ class OutputTab(Constants):
                 return
             folder = dialog.folder
             if folder and Programs.Current is not None:
-                Programs.Current.SetOutputFolder(Path(folder))
+                Programs.Current.set_output_folder(Path(folder))
                 StringValueCommandInput.cast(inputs.itemById(cls.OUTPUT_FOLDER_ID)).value = folder
 
         EventRegistry.register(cls.OUTPUT_FOLDER_BUTTON_ID, openFolderDialog)
@@ -102,7 +102,7 @@ class OutputTab(Constants):
 
         def setFilename(stringInput: StringValueCommandInput):
             if Programs.Current is not None:
-                Programs.Current.SetFileName(stringInput.value)
+                Programs.Current.set_file_name(stringInput.value)
 
         EventRegistry.register(cls.FILE_NAME_ID, setFilename)
 

@@ -43,22 +43,22 @@ class FakeOperations:
     def __len__(self):
         return len(self.sources)
 
-    def Parse(self, path, program):
+    def parse(self, path, program):
         self.parse_paths.append((path, program))
 
-    def SetOutputPath(self, path):
+    def set_output_path(self, path):
         self.path = path
 
-    def SetFileExtension(self, extension):
+    def set_file_extension(self, extension):
         self.extension = extension
 
 
 class FakePrograms:
-    Current = SimpleNamespace(DisableOpenInEditor=lambda: None)
+    Current = SimpleNamespace(disable_open_in_editor=lambda: None)
     checked = []
 
     @classmethod
-    def CheckAndGenerateToolpath(cls, setup):
+    def check_and_generate_toolpath(cls, setup):
         cls.checked.append(setup)
 
 
@@ -107,9 +107,9 @@ def test_setup_exposes_selection_name_geometry_and_machine_state():
 def test_setup_rename_supports_plain_prepend_and_regex():
     setup = make_setup(source_setup("Rough Setup"))
 
-    setup.Rename("", "01_", False)
+    setup.rename("", "01_", False)
     assert setup.name == "01_Rough Setup"
-    setup.Rename(r"Rough\s+", "Finish ", True)
+    setup.rename(r"Rough\s+", "Finish ", True)
     assert setup.name == "01_Finish Setup"
 
 
@@ -120,7 +120,7 @@ def test_setup_parse_casts_operations_generates_toolpath_and_parses(tmp_path):
     source.allOperations = [first, ignored]
     setup = make_setup(source)
 
-    setup.Parse(tmp_path)
+    setup.parse(tmp_path)
 
     assert setup.ctx.operations.sources == [first]
     assert setup.ctx.operations.parse_paths == [(tmp_path, FakePrograms.Current)]
@@ -130,7 +130,7 @@ def test_setup_parse_casts_operations_generates_toolpath_and_parses(tmp_path):
 def test_invalid_or_unselected_setup_does_not_create_operations(tmp_path):
     setup = make_setup(selected=False)
 
-    setup.Parse(tmp_path)
+    setup.parse(tmp_path)
 
     assert setup.ctx.operations is None
     assert FakePrograms.checked == []
@@ -140,11 +140,11 @@ def test_output_path_and_extension_are_forwarded(tmp_path):
     source = source_setup()
     source.allOperations = [SimpleNamespace(is_operation=True)]
     setup = make_setup(source)
-    setup.Parse(tmp_path)
+    setup.parse(tmp_path)
     output = tmp_path / "nested"
 
-    setup.SetOutputPath(output)
-    setup.SetFileExtension(".nc")
+    setup.set_output_path(output)
+    setup.set_file_extension(".nc")
 
     assert output.is_dir()
     assert setup.ctx.operations.path == output

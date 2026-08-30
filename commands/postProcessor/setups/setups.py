@@ -29,7 +29,7 @@ def aAxisRotationRequired(ctx: SetupsContext) -> tuple[bool, list[tuple[str, flo
         if first is None:
             first = setup
         else:
-            signed_angle = round(first.GetRotationAroundXAxisRelativeToDeg(setup), 3)
+            signed_angle = round(first.rotation_relative_to_degrees(setup), 3)
             if signed_angle != 0:
                 needsRotation.append((setup.name, signed_angle))
                 _log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")

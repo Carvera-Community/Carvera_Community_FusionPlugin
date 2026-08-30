@@ -28,16 +28,16 @@ class FakeSetup:
         self.parse_paths = []
         self.rename_calls = []
 
-    def Parse(self, path):
+    def parse(self, path):
         self.parse_paths.append(path)
 
-    def Rename(self, find, replace, is_regex):
+    def rename(self, find, replace, is_regex):
         self.rename_calls.append((find, replace, is_regex))
 
-    def SetOutputPath(self, path):
+    def set_output_path(self, path):
         self.outputPath = path
 
-    def SetFileExtension(self, extension):
+    def set_file_extension(self, extension):
         self.extension = extension
 
 
@@ -126,7 +126,7 @@ def test_output_path_file_name_and_extension_are_forwarded(tmp_path):
     context = context_with([source("First Setup")])
     operations = SimpleNamespace(fileName=None)
     context.selected[0].ctx.operations = operations
-    context.selected[0].ctx.SetFileName = lambda name: setattr(operations, "fileName", name)
+    context.selected[0].ctx.set_file_name = lambda name: setattr(operations, "fileName", name)
     configure_paths(Constants.OperationsGroupings.PER_OPERATION)
 
     context.setPath(tmp_path, lambda name: name.replace(" ", "_"))

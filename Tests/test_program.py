@@ -95,11 +95,11 @@ def test_program_exposes_source_state_and_parameters():
     assert not program.hasWarning
     assert program.fileName == "job"
 
-    program.SetFileName("updated")
-    program.DisableOpenInEditor()
+    program.set_file_name("updated")
+    program.disable_open_in_editor()
 
     assert program.fileName == "updated"
-    assert not program.Parameters.Get(Parameters.OPEN_IN_EDITOR, bool)
+    assert not program.parameters.Get(Parameters.OPEN_IN_EDITOR, bool)
 
 
 def test_machine_capabilities_are_delegated_to_fusion_adapter():
@@ -135,7 +135,7 @@ def test_post_configuration_metadata_is_exposed():
 def test_post_process_rejects_empty_operation_list():
     program, _, adapter = make_program()
 
-    assert not program.PostProcess([])
+    assert not program.post_process([])
     assert adapter.post_calls == []
 
 
@@ -143,7 +143,7 @@ def test_post_process_assigns_operations_and_delegates():
     program, source, adapter = make_program()
     operations = [object(), object()]
 
-    assert program.PostProcess(operations)
+    assert program.post_process(operations)
     assert source.operations == operations
     assert adapter.post_calls == [operations]
 
@@ -151,6 +151,6 @@ def test_post_process_assigns_operations_and_delegates():
 def test_output_folder_round_trips_through_parameters():
     program, _, _ = make_program()
 
-    program.SetOutputFolder(Path("/tmp/new-output"))
+    program.set_output_folder(Path("/tmp/new-output"))
 
-    assert program.GetOutputFolder() == Path("/tmp/new-output")
+    assert program.get_output_folder() == Path("/tmp/new-output")

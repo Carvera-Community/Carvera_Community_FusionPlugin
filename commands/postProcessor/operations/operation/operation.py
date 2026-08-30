@@ -9,7 +9,6 @@ from .header_writer import (
     writeHeaderStart,
     writeHeaderEnd,
     writeToolComment,
-    writeHeader
 )
 from .body_writer import writeBody
 from .tail_writer import writeTail
@@ -26,8 +25,8 @@ class PostProcessingProgram(Protocol):
     fileExtension: str | None
     Parameters: Parameters
 
-    def SetOutputFolder(self, folder: Path) -> None: ...
-    def PostProcess(self, operations) -> bool: ...
+    def set_output_folder(self, folder: Path) -> None: ...
+    def post_process(self, operations) -> bool: ...
 
 
 class Operation():    
@@ -48,7 +47,7 @@ class Operation():
         self._operationsDict: dict[int, Any] = {}
         
 
-    def Append(self, operation: Any, index, hasTool: bool):
+    def append(self, operation: Any, index, hasTool: bool):
         self._operationsDict[index] = operation
         if hasTool:
             self.ctx.subOperationIndexWithTool = index
@@ -108,12 +107,12 @@ class Operation():
     def hasRotation(self) -> bool:
         return self.ctx.hasRotation
 
-    def Parse(self, tmpPath: Path, program: PostProcessingProgram):
+    def parse(self, tmpPath: Path, program: PostProcessingProgram):
         def postProcess(operations, outputFolder, fileName):
-            program.SetOutputFolder(outputFolder)
-            program.Parameters.Set(Parameters.FILE_NAME, fileName)
-            program.Parameters.Set(Parameters.NAME, fileName)
-            return program.PostProcess(operations)
+            program.set_output_folder(outputFolder)
+            program.parameters.Set(Parameters.FILE_NAME, fileName)
+            program.parameters.Set(Parameters.NAME, fileName)
+            return program.post_process(operations)
 
         createTemporaryOperationFile(
             self.ctx,
@@ -124,10 +123,9 @@ class Operation():
             parseFile,
         )
 
-    def WriteHeaderStart(self, fileHandle: TextIO) -> None: writeHeaderStart(self.ctx, fileHandle)
-    def WriteHeaderEnd(self, fileHandle: TextIO) -> None : writeHeaderEnd(self.ctx, fileHandle)
-    def WriteToolComment(self, fileHandle: TextIO) -> None: writeToolComment(self.ctx, fileHandle)
-    def WriteHeader(self, fileHandle: TextIO) -> None: writeHeader(self.ctx, fileHandle)
-    def WriteBody(self, fileHandle: TextIO) -> None: writeBody(self.ctx, fileHandle)
-    def WriteTail(self, fileHandle: TextIO) -> None:
+    def write_header_start(self, fileHandle: TextIO) -> None: writeHeaderStart(self.ctx, fileHandle)
+    def write_header_end(self, fileHandle: TextIO) -> None : writeHeaderEnd(self.ctx, fileHandle)
+    def write_tool_comment(self, fileHandle: TextIO) -> None: writeToolComment(self.ctx, fileHandle)
+    def write_body(self, fileHandle: TextIO) -> None: writeBody(self.ctx, fileHandle)
+    def write_tail(self, fileHandle: TextIO) -> None:
         writeTail(self.ctx, fileHandle)

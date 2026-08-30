@@ -19,18 +19,18 @@ def render_output_files(
         plan.path.parent.mkdir(parents=True, exist_ok=True)
         with plan.path.open("w") as output:
             if plan.header_source is not None:
-                plan.header_source.WriteHeaderStart(output)
+                plan.header_source.write_header_start(output)
                 for operation in plan.tool_comments:
-                    operation.WriteToolComment(output)
-                plan.header_source.WriteHeaderEnd(output)
+                    operation.write_tool_comment(output)
+                plan.header_source.write_header_end(output)
 
             for body in plan.bodies:
                 body.operation.ctx.rotationAngle = body.rotation_angle
                 body.operation.ctx.preserveRotation = body.preserve_rotation
                 body.operation.ctx.isLastOp = body.is_final
-                body.operation.WriteBody(output)
+                body.operation.write_body(output)
 
             if plan.tail_source is not None:
-                plan.tail_source.WriteTail(output)
+                plan.tail_source.write_tail(output)
         written.append(plan.path)
     return tuple(written)
