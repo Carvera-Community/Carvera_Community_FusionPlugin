@@ -1,13 +1,31 @@
-from pathlib import Path
-import re
-from typing import Any, TextIO
+from dataclasses import dataclass
+from typing import TextIO
 
 from .operation_context import OperationContext
 
 from ...file_modes import FileModes
 from ...settings.settings import Settings
 
-def writeBody(ctx: OperationContext, fileHandle: TextIO):
+
+@dataclass(frozen=True)
+class BodyWriterSettings:
+    safeYRetraction: bool
+    yRetractionCoordinate: float
+
+    @classmethod
+    def fromCurrentSettings(cls) -> "BodyWriterSettings":
+        return cls(
+            safeYRetraction=bool(Settings.Get(Settings.SAFE_Y_RETRACTION)),
+            yRetractionCoordinate=Settings.Get(Settings.Y_RETRACTION_COORDINATE),
+        )
+
+
+def writeBody(
+    ctx: OperationContext,
+    fileHandle: TextIO,
+    settings: BodyWriterSettings | None = None,
+):
+    settings = settings or BodyWriterSettings.fromCurrentSettings()
 
     def _stripFeed(line: str) -> str:
         # Preserve newline exactly as it was
@@ -57,8 +75,8 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
             # Adding our own rotation gcodes
             ctx.writeLine(fileHandle, "(Rotating a-axis between setups)")
             # Using G53 for absolute machine coordinates for safe retraction
-            if Settings(Settings.SAFE_Y_RETRACTION):
-                ctx.writeLine(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = Settings(Settings.Y_RETRACTION_COORDINATE)))
+            if settings.safeYRetraction:
+                ctx.writeLine(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = settings.yRetractionCoordinate))
             else:
                 ctx.writeLine(fileHandle, "G90 G53 G0 Z-3")
             ctx.writeLine(fileHandle, "G90 G54 G0 A{angle}".format(angle = f"{ctx.rotationAngle:.3f}".rstrip("0").rstrip(".")))
@@ -74,6 +92,8 @@ def writeBody(ctx: OperationContext, fileHandle: TextIO):
                 line = operationFile.readline() 
                 row += 1
                 readNextLine = False
+                if len(line) == 0 or row >= ctx.tailStartLine:
+                    break
 
             if row >= ctx.bodyStartLine:
                 if row == ctx.bodyStartLine: # Add an extra line marking where this operation starts
