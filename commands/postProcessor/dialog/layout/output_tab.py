@@ -4,7 +4,6 @@ from adsk.core import BoolValueCommandInput
 from adsk.core import CommandInput
 from adsk.core import DialogResults
 from adsk.core import DropDownCommandInput
-from adsk.core import DropDownStyles
 from adsk.core import StringValueCommandInput
 from adsk.core import TablePresentationStyles
 from adsk.core import IntegerSliderCommandInput
@@ -17,6 +16,7 @@ from ..state import is_output_name_valid, numeric_name_digits
 from ...programs import Programs
 
 from ..constants import Constants
+from .output_grouping_section import create_grouping_and_safety_options
 
 class OutputTab(Constants):
     @classmethod
@@ -185,64 +185,4 @@ class OutputTab(Constants):
         setNumberingDigitsOnNumericFileName(numericName)
         #endregion
 
-        #region Operations grouping dropdown
-        operationsGrouping = outputTab.children.addDropDownCommandInput(cls.OPERATIONS_GROUPING_ID, Strings("Operations grouping"), DropDownStyles.TextListDropDownStyle)
-        operationsGrouping.tooltip = Strings("TOOLTIP: Operations grouping")
-        operationsGrouping.tooltipDescription = Strings("TOOLTIP TEXT: Operations grouping")
-
-        operationsGroupingsTexts = {
-            Strings("Single file"):                     Settings.OperationsGroupings.SINGLE_FILE,
-            Strings("Group on setup"):                  Settings.OperationsGroupings.SETUP,
-            Strings("Group on setup and tool"):         Settings.OperationsGroupings.SETUP_AND_TOOL,
-            Strings("None, one file per operation"):    Settings.OperationsGroupings.PER_OPERATION
-        }
-        for grouping in operationsGroupingsTexts:
-            operationsGrouping.listItems.add(grouping, operationsGroupingsTexts[grouping] == Settings(Settings.OPERATIONS_GROUPING))
-
-        EventRegistry.register(cls.OPERATIONS_GROUPING_ID, lambda dropdown: Settings.set(Settings.OPERATIONS_GROUPING, operationsGroupingsTexts[dropdown.selectedItem.name]))
-        #endregion
-
-        #region Combine tool checkbox
-        combineTools = outputTab.children.addBoolValueInput(cls.COMBINE_TOOLS_ID, Strings('Combine operations using same tool'), True, "", Settings(Settings.COMBINE_TOOL))
-        combineTools.tooltip = Strings("TOOLTIP: Combine operations using same tool")
-        combineTools.tooltipDescription = Strings("TOOLTIP TEXT: Combine operations using same tool")
-
-        EventRegistry.register(cls.COMBINE_TOOLS_ID, lambda checkbox: Settings(Settings.COMBINE_TOOL, checkbox.value)) # Save settings
-
-        #endregion
-
-
-        #region Flat file structure checkbox
-        flatFileStructure = outputTab.children.addBoolValueInput(cls.FLAT_FILE_STRUCTURE_ID, Strings("Flat file structure"), True, "", Settings(Settings.FLAT_FILE_STRUCTURE))
-        flatFileStructure.tooltip = Strings("TOOLTIP: Flatten the file structure")
-        flatFileStructure.tooltipDescription = Strings("TOOLTIP TEXT: Flatten the file structure")
-
-        EventRegistry.register(cls.FLAT_FILE_STRUCTURE_ID, lambda checkbox: Settings.set(Settings.FLAT_FILE_STRUCTURE, checkbox.value))
-        #endregion
-
-        #region Overwrite existing files checkbox
-        overwriteExistingFiles = outputTab.children.addBoolValueInput(cls.OVERWRITE_EXISTING_FILES_ID, Strings("Overwrite existing files"),  True, "", Settings(Settings.OVERWRITE_FILES))
-        overwriteExistingFiles.tooltip = Strings("TOOLTIP: Overwrite existing files")
-        overwriteExistingFiles.tooltipDescription = Strings("TOOLTIP TEXT: Overwrite existing files")
-        overwriteExistingFiles.isEnabled = True
-
-        EventRegistry.register(cls.OVERWRITE_EXISTING_FILES_ID, lambda checkbox: Settings(Settings.OVERWRITE_FILES, checkbox.value))
-        #endregion
-
-        #region Clear output folder checkbox
-        clearOutputFolder = outputTab.children.addBoolValueInput(cls.CLEAR_OUTPUT_FOLDER_ID, Strings("Clear output folder"),  True, "", Settings(Settings.CLEAR_FOLDER))
-        clearOutputFolder.tooltip = Strings("TOOLTIP: Clear output folder")
-        clearOutputFolder.tooltipDescription = Strings("TOOLTIP TEXT: Clear output folder")
-
-        def setClearOutputFolderEnabled(checkbox: BoolValueCommandInput):
-            clearFolderCheckbox = BoolValueCommandInput.cast(checkbox.parentCommand.commandInputs.itemById(cls.CLEAR_OUTPUT_FOLDER_ID))
-            clearFolderCheckbox.isEnabled = checkbox.value
-
-            if not checkbox.value:
-                Settings(Settings.CLEAR_FOLDER, False) # Uncheck "Clear output folder" when "Overwrite existing files" is disabled, as it doesn't make sense to clear the output folder if we're not overwriting existing files
-                clearFolderCheckbox.value = False
-
-        EventRegistry.register(cls.CLEAR_OUTPUT_FOLDER_ID, lambda checkbox: Settings.set(Settings.CLEAR_FOLDER, checkbox.value))
-        EventRegistry.register(cls.OVERWRITE_EXISTING_FILES_ID, setClearOutputFolderEnabled) # Enable "Clear output folder" when "Overwrite existing files" is enabled
-        setClearOutputFolderEnabled(overwriteExistingFiles) # initialize state based on current value
-        #endregion -----
+        create_grouping_and_safety_options(outputTab, cls)

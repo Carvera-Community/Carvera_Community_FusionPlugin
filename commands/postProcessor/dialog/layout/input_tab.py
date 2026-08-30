@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import cast
 from adsk.core import DropDownStyles, TableCommandInput
 from adsk.core import MessageBoxButtonTypes
 from adsk.core import MessageBoxIconTypes
@@ -8,7 +8,6 @@ from adsk.core import TabCommandInput
 from adsk.core import BoolValueCommandInput
 from adsk.core import DropDownCommandInput
 from adsk.core import Application
-from adsk.core import StringValueCommandInput
 
 from .....lib.fusionAddInUtils.general_utils import Utils
 
@@ -23,7 +22,7 @@ from ...strings import Strings
 
 from ..constants import Constants
 from ..event_registry import EventRegistry
-from ..state import is_setup_selectable
+from .setup_table import SELECTED, apply_row_state, get_row_state
 
 class InputTab(Constants):
 
@@ -240,98 +239,20 @@ class InputTab(Constants):
         firstSetup: Setup | None = None
         for setup in ctx.valid:
             rotation = 0 if firstSetup is None else round(setup.rotation_relative_to_degrees(firstSetup), 3)
-            rowState = cls._getSetupRowState(
+            rowState = get_row_state(
                 setup,
-                firstSetup is not None,
-                validProgram,
-                setup.origin.isEqualTo(firstSetup.origin) if firstSetup is not None else True,
-                setup.x_normal.isParallelTo(firstSetup.x_normal) if firstSetup is not None else True,
-                rotateAAxisCheckbox.value,
-                rotation)
+                has_reference=firstSetup is not None,
+                valid_program=validProgram,
+                same_origin=setup.origin.isEqualTo(firstSetup.origin) if firstSetup is not None else True,
+                parallel_x_axis=setup.x_normal.isParallelTo(firstSetup.x_normal) if firstSetup is not None else True,
+                can_rotate=rotateAAxisCheckbox.value,
+                rotation=rotation,
+                machine_has_a_axis=Programs.Current is not None and Programs.Current.machine_has_a_axis,
+            )
 
-            cls._setTableRowValues(inputs, rowState)
+            apply_row_state(inputs, rowState)
             
-            setup.select(rowState[cls._SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
+            setup.select(rowState[SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
 
             if firstSetup is None and setup.is_selected:
                 firstSetup = setup
-
-
-    _INDEX = "index"
-    _ENABLED = "enabled"
-    _SELECTED = "selected"
-    _NAME = "name"
-    _ORIGIN = "origin"
-    _X_NORMAL = "xNormal"
-    _ROTATION = "rotation"
-
-    @classmethod
-    def _getSetupRowState(cls, 
-                        setup: Setup,
-                        hasReference: bool,
-                        validProgram: bool,
-                        sameOrigin: bool,
-                        parallelXAxis: bool,
-                        canRotate: bool,
-                        rotation: float
-                    ) -> dict[str, Any]:
-        """Determines the enabled state, selected state, and displayed 
-        origin, xNormal, and rotation values for a given setup row in 
-        the table based on the setup's properties and the current 
-        program selection."""
-        
-        isSelectable = is_setup_selectable(
-            has_reference=hasReference,
-            valid_program=validProgram,
-            same_origin=sameOrigin,
-            parallel_x_axis=parallelXAxis,
-            can_rotate=canRotate,
-            required_rotation=rotation,
-            machine_has_a_axis=(
-                Programs.Current is not None
-                and Programs.Current.machine_has_a_axis
-            ),
-        )
-
-        isEnabled = isSelectable
-        isSelected = setup.is_selected if isSelectable else False
-
-        if hasReference:
-            originText = Strings("Same") if sameOrigin else Strings("Different")
-            xNormalText = Strings("Aligned") if parallelXAxis else Strings("Misaligned") 
-            rotationText = f"{rotation}°" if parallelXAxis else ''
-        else:
-            originText = xNormalText = rotationText = Strings("(reference)") if isSelected else '-'
-
-        return {
-            cls._INDEX: setup.index,
-            cls._NAME: setup.name,
-            cls._ENABLED: isEnabled, 
-            cls._SELECTED: isSelected, 
-            cls._ORIGIN: originText, 
-            cls._X_NORMAL: xNormalText, 
-            cls._ROTATION: rotationText
-        }
-
-    @classmethod
-    def _setTableRowValues(cls, inputs, rowState: dict):
-        """Sets the enabled state and values of the inputs in a given 
-        row of the setups table based on the provided row state."""
-
-        inputCheckbox = BoolValueCommandInput.cast(inputs.itemById(f"setupSelected_{rowState[cls._INDEX]}"))
-        setupName = StringValueCommandInput.cast(inputs.itemById(f"setupName_{rowState[cls._INDEX]}"))
-        origin = StringValueCommandInput.cast(inputs.itemById(f"setupOrigin_{rowState[cls._INDEX]}"))
-        xNormalInput = StringValueCommandInput.cast(inputs.itemById(f"setupXNormal_{rowState[cls._INDEX]}"))
-        aRotation = StringValueCommandInput.cast(inputs.itemById(f"setupARotation_{rowState[cls._INDEX]}"))
-
-        inputCheckbox.isEnabled = rowState[cls._ENABLED]
-        setupName.value = rowState[cls._NAME]
-        setupName.isEnabled = rowState[cls._ENABLED]
-        origin.isEnabled = rowState[cls._ENABLED]
-        xNormalInput.isEnabled = rowState[cls._ENABLED]
-        aRotation.isEnabled = rowState[cls._ENABLED]
-
-        inputCheckbox.value = rowState[cls._SELECTED]
-        origin.value = rowState[cls._ORIGIN] 
-        xNormalInput.value = rowState[cls._X_NORMAL]
-        aRotation.value = rowState[cls._ROTATION]
