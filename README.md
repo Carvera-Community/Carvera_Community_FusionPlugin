@@ -149,7 +149,7 @@ You can choose to `Use Python regular expressions` (2) if you want to do some ad
 
 ### Host tests
 
-The initial host-side regression suite uses `pytest` and does not require
+The host-side regression suite uses `pytest` and does not require
 Fusion 360:
 
 ```bash
@@ -165,6 +165,16 @@ runtime. Direct `adsk` access is restricted to `fusion_adapters/` and the
 dialog/UI layer; architecture tests enforce that boundary. Host tests do not
 replace validation inside Fusion for NC Program interaction, post processing,
 UI events, or generated machine behavior.
+
+The processing flow is split into explicit stages:
+
+1. Fusion adapters snapshot program, setup, and operation inputs.
+2. Temporary post output is analyzed as a stream and retained as bounded,
+   immutable metadata.
+3. `ResultFilePlan` defines each file's path, header, ordered bodies, tail, and
+   final operation.
+4. One streaming renderer writes each complete result file without loading the
+   source G-code files into memory.
 
 - Create a development branch:
 

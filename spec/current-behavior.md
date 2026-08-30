@@ -234,9 +234,9 @@ Default settings are defined in [`commands/postProcessor/settings/settings.py`](
 
 ## 12. Output mutation and failure behavior
 
-- **MCB-140 — Source-observed:** If the configured output path exists as a non-directory, output writing returns without producing output or raising a specific error.
+- **MCB-140 — Source-observed:** If the configured output path exists as a non-directory, output writing raises `NotADirectoryError` before result rendering.
 - **MCB-141 — Source-observed:** When clear-folder behavior is enabled, every direct child of the output directory is deleted recursively for real directories and unlinked otherwise.
-- **MCB-142 — Source-observed:** Failure to delete any child causes output writing to return without a specific user-facing failure.
+- **MCB-142 — Source-observed:** Failure to delete any child propagates the filesystem exception to the dialog error handler.
 - **MCB-143 — Source-observed:** Existing result files cause `FileExistsError` during header creation when overwrite is disabled.
 - **MCB-144 — Source-observed:** Dialog execution catches `FileExistsError` and general exceptions, logs them, and displays error UI.
 - **MCB-145 — Source-observed:** NC Program output parameters are restored in `finally` blocks after processing and output writing.
@@ -250,12 +250,14 @@ The following items describe current source behavior that should not silently be
 - **MCB-D03 — Handled in the current working tree; awaiting Fusion 360 verification — Numeric tail access:** The former hierarchical tail writer referred to `Setup.SetFileName` and `setup._operations`, neither of which existed in the current `Setup` class. Numeric filename sequencing is now owned by the result-file planner, so tail writing no longer mutates filenames.
 - **MCB-D04 — Handled in the current working tree; awaiting Fusion 360 verification — A-axis capability fallback:** `Program.machineHasAAxis` previously could return an uninitialized `unreadable_extra_axis` variable when no rotary axis and no matching read error were encountered. The fallback is now initialized to `False`; the existing recognized unreadable-extra-axis case still changes it to `True`.
 - **MCB-D05 — Handled in the current working tree; awaiting Fusion 360 verification — Integer identity comparison:** `Operation.hasTool` previously used `is not -1`. It now uses numeric inequality (`!= -1`).
-- **MCB-D06 — Duplicate per-operation names:** Without sequence numbering, identical operation-group names can resolve to the same result path.
-- **MCB-D07 — Error visibility:** Some invalid output-path and deletion failures return silently instead of propagating an actionable error.
+- **MCB-D06 — Handled in the current working tree; awaiting Fusion 360 verification — Duplicate per-operation names:** Without sequence numbering, identical operation-group names can resolve to the same result path. Planning now rejects duplicate paths before rendering rather than silently overwriting within one run.
+- **MCB-D07 — Handled in the current working tree; awaiting Fusion 360 verification — Error visibility:** Invalid output paths and deletion failures now raise explicit filesystem errors handled by the dialog's general error path.
 - **MCB-D08 — Target validation gap:** The newly corrected all-grouping body output and per-result-file shrink assignment have passed source checks but have not yet been executed in Fusion 360.
 - **MCB-D09 — Handled in the current working tree; awaiting Fusion 360 verification — Safety-setting persistence:** Overwrite and clear-folder choices were previously serialized despite the README contract. Both keys are now excluded from document and local-default serialization and reset to `False` whenever settings are loaded.
 - **MCB-D10 — Handled in the current working tree; awaiting Fusion 360 verification — Tail source in granular modes:** `SETUP_AND_TOOL` and `PER_OPERATION` previously called `WriteTail()` on each internal operation instead of reusing the first detected tail. Each result-file plan now explicitly references its reusable tail source. `SINGLE_FILE` chooses the first selected setup with a detected tail rather than selecting it by header presence.
 - **MCB-D11 — Handled in the current working tree; covered by a host regression test — Rapid effective distance:** `AnalysisSegment.getEffectiveLength()` previously returned doubled combined Z travel and ignored XY travel. It now returns the greater of total XY travel and combined Z travel, matching the documented analyzer rule.
+- **MCB-D12 — Handled in the current working tree; covered by complete-output host tests — Tool-run planning:** `SETUP_AND_TOOL` initially planned one file per internal operation. It now groups consecutive equal-tool operations and starts a new run when a tool returns after an intervening tool.
+- **MCB-D13 — Handled in the current working tree; covered by complete-output host tests — Multi-line header scan:** Body streaming previously stopped before reaching bodies whose start row followed more than one header row. The writer now scans to the body start before applying its end-of-range stop condition.
 
 ## 14. Refactoring constraints
 
