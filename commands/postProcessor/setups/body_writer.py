@@ -1,22 +1,75 @@
-from typing import Optional, Tuple
-
-from .setups_context import SetupsContext
+from dataclasses import dataclass
+from typing import Iterable, Protocol
 
 from ..settings.settings import Settings
-from .setup.setup import Setup
+from ..settings.constants import Constants
 
 
-def writeBody(ctx: SetupsContext):
-    firstSetup: Setup | None = None
+class ResultOperationContext(Protocol):
+    isLastOp: bool
+
+
+class ResultOperation(Protocol):
+    hasBody: bool
+    ctx: ResultOperationContext
+
+
+class SetupOperations(Protocol):
+    fileName: str | None
+
+    def __iter__(self) -> Iterable[ResultOperation]: ...
+
+
+class RoutedSetupContext(Protocol):
+    operations: SetupOperations | None
+    rotationAngle: float | None
+    preserveRotation: bool
+
+    def SetFileName(self, fileName: str) -> None: ...
+
+
+class RoutedSetup(Protocol):
+    ctx: RoutedSetupContext
+
+    def WriteBody(self) -> None: ...
+    def GetRotationAroundXAxisRelativeToDeg(self, otherSetup) -> float: ...
+
+
+class SetupsBodyContext(Protocol):
+    selected: list[RoutedSetup]
+    fileName: str | None
+
+
+@dataclass(frozen=True)
+class SetupsBodyWriterSettings:
+    operationsGrouping: Constants.OperationsGroupings
+    numericName: bool
+    rotateAAxis: bool
+
+    @classmethod
+    def fromCurrentSettings(cls) -> "SetupsBodyWriterSettings":
+        return cls(
+            operationsGrouping=Settings.Get(Settings.OPERATIONS_GROUPING),
+            numericName=bool(Settings.Get(Settings.NUMERIC_NAME)),
+            rotateAAxis=bool(Settings.Get(Settings.ROTATE_A_AXIS)),
+        )
+
+
+def writeBody(
+    ctx: SetupsBodyContext,
+    settings: SetupsBodyWriterSettings | None = None,
+):
+    settings = settings or SetupsBodyWriterSettings.fromCurrentSettings()
+    firstSetup: RoutedSetup | None = None
     currentRotationAngle: float | None = None
 
-    operationsGrouping = Settings(Settings.OPERATIONS_GROUPING)
-    numericName = Settings(Settings.NUMERIC_NAME)
-    rotateAAxis = Settings(Settings.ROTATE_A_AXIS)
+    operationsGrouping = settings.operationsGrouping
+    numericName = settings.numericName
+    rotateAAxis = settings.rotateAAxis
 
     singleFile = (
         operationsGrouping
-        == Settings.OperationsGroupings.SINGLE_FILE
+        == Constants.OperationsGroupings.SINGLE_FILE
     )
 
     fileName: str | None = None
@@ -41,10 +94,10 @@ def writeBody(ctx: SetupsContext):
                 operationsBySetup.append(bodyOperations)
                 allOperations.extend(bodyOperations)
 
-        if operationsGrouping == Settings.OperationsGroupings.SINGLE_FILE:
+        if operationsGrouping == Constants.OperationsGroupings.SINGLE_FILE:
             if allOperations:
                 allOperations[-1].ctx.isLastOp = True
-        elif operationsGrouping == Settings.OperationsGroupings.SETUP:
+        elif operationsGrouping == Constants.OperationsGroupings.SETUP:
             for operations in operationsBySetup:
                 operations[-1].ctx.isLastOp = True
         else:
@@ -55,10 +108,10 @@ def writeBody(ctx: SetupsContext):
                 operation.ctx.isLastOp = True
 
     def _getRotation(
-        setup: Setup,
-        firstSetup: Optional[Setup],
-        currentRotation: Optional[float],
-    ) -> Tuple[Optional[float], Optional[float], bool]:
+        setup: RoutedSetup,
+        firstSetup: RoutedSetup | None,
+        currentRotation: float | None,
+    ) -> tuple[float | None, float | None, bool]:
 
         newRotation = None
         preserveRotation = True
