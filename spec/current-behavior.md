@@ -34,7 +34,7 @@ Source entry points:
 
 ## 3. Inputs and selection
 
-`Programs.Load()` loads all Fusion NC Programs and `SetupsContext.load()` loads all Fusion setups in browser order.
+`Programs.load()` loads all Fusion NC Programs and `SetupsContext.load()` loads all Fusion setups in browser order.
 
 ### Requirements
 
@@ -117,8 +117,8 @@ The active `OperationsGroupings` value determines how internal operation groups 
 Sources:
 
 - [`commands/postProcessor/settings/constants.py`](../commands/postProcessor/settings/constants.py)
-- [`commands/postProcessor/setups/body_writer.py`](../commands/postProcessor/setups/body_writer.py)
-- [`commands/postProcessor/operations/operations.py`](../commands/postProcessor/operations/operations.py)
+- [`commands/postProcessor/output_plan.py`](../commands/postProcessor/output_plan.py)
+- [`commands/postProcessor/output_renderer.py`](../commands/postProcessor/output_renderer.py)
 
 | Mode | Intended result-file boundary | Last operation that retains shrink |
 |---|---|---|
@@ -134,7 +134,7 @@ Sources:
 - **MCB-052 — Confirmed intent:** `SETUP_AND_TOOL` shall emit one complete result file for each consecutive tool-run group. A tool that returns after another tool shall start a new file and may receive a repeated-tool suffix.
 - **MCB-053 — Confirmed intent:** `PER_OPERATION` shall emit one complete result file per internal operation group. When `COMBINE_TOOL` is enabled, a file may consequently contain multiple consecutive Fusion operations using the same tool.
 - **MCB-054 — Confirmed intent:** Every result file shall contain its applicable header, body content, and tail.
-- **MCB-055 — Source-observed working tree:** Every body-bearing internal operation is now passed to `Operation.WriteBody()` regardless of grouping mode.
+- **MCB-055 — Source-observed working tree:** Every body-bearing internal operation is now passed to `Operation.write_body()` regardless of grouping mode.
 - **MCB-056 — Confirmed intent:** Final-operation status shall be derived from output-file membership, not from the position of the input setup alone.
 - **MCB-057 — Source-observed working tree:** Before body output, all `isLastOp` flags are reset and reassigned according to the grouping table above.
 
@@ -144,8 +144,8 @@ Sources:
 
 - [`commands/postProcessor/program.py`](../commands/postProcessor/program.py)
 - [`commands/postProcessor/setups/setups_context.py`](../commands/postProcessor/setups/setups_context.py)
-- [`commands/postProcessor/setups/setup/header_writer.py`](../commands/postProcessor/setups/setup/header_writer.py)
-- [`commands/postProcessor/operations/operations.py`](../commands/postProcessor/operations/operations.py)
+- [`commands/postProcessor/output_plan.py`](../commands/postProcessor/output_plan.py)
+- [`commands/postProcessor/operations/operation_file_naming.py`](../commands/postProcessor/operations/operation_file_naming.py)
 
 ### Requirements
 
@@ -184,7 +184,7 @@ Sources:
 ### Tail
 
 - **MCB-092 — Confirmed intent:** The first detected tail is the reusable tail source; it is normally found in the first operation of the applicable operation collection.
-- **MCB-093 — Source-observed:** `Operations.Parse()` selects the first operation with a detected tail.
+- **MCB-093 — Source-observed:** `Operations.parse()` selects the first operation with a detected tail.
 - **MCB-094 — Confirmed intent:** A result file shall receive one tail after all body content assigned to that file.
 - **MCB-095 — Source-observed:** Tail copying begins at the detected tail-start line and continues to end of the temporary operation file.
 
@@ -247,14 +247,14 @@ The following items describe current source behavior that should not silently be
 
 - **MCB-D01 — Handled in the current working tree; awaiting Fusion 360 verification — Shrink filter condition:** `_matchLine()` previously returned `row != ctx.shrinkLine`. Because a true result causes the caller to skip the line, the registered shrink row was retained in a non-final operation instead of removed. The condition now returns `row == ctx.shrinkLine`, so the registered row is skipped when the operation is not final in its result file.
 - **MCB-D02 — Handled in the current working tree; awaiting Fusion 360 verification — Rapid setting bitwise OR:** Rapid minimum distance and maximum steps were previously combined with defaults using bitwise OR, which changed valid configured values. The configured values now pass through unchanged, with defaults of `20` and `3` applied only when the corresponding value is `None`.
-- **MCB-D03 — Handled in the current working tree; awaiting Fusion 360 verification — Numeric tail access:** The non-single-file numeric tail path previously referred to `Setup.SetFileName` and `setup._operations`, neither of which exists in the current `Setup` class. It now uses `setup.ctx.SetFileName()` and reads the next filename from `setup.ctx.operations` when that collection exists.
+- **MCB-D03 — Handled in the current working tree; awaiting Fusion 360 verification — Numeric tail access:** The former hierarchical tail writer referred to `Setup.SetFileName` and `setup._operations`, neither of which existed in the current `Setup` class. Numeric filename sequencing is now owned by the result-file planner, so tail writing no longer mutates filenames.
 - **MCB-D04 — Handled in the current working tree; awaiting Fusion 360 verification — A-axis capability fallback:** `Program.machineHasAAxis` previously could return an uninitialized `unreadable_extra_axis` variable when no rotary axis and no matching read error were encountered. The fallback is now initialized to `False`; the existing recognized unreadable-extra-axis case still changes it to `True`.
 - **MCB-D05 — Handled in the current working tree; awaiting Fusion 360 verification — Integer identity comparison:** `Operation.hasTool` previously used `is not -1`. It now uses numeric inequality (`!= -1`).
 - **MCB-D06 — Duplicate per-operation names:** Without sequence numbering, identical operation-group names can resolve to the same result path.
 - **MCB-D07 — Error visibility:** Some invalid output-path and deletion failures return silently instead of propagating an actionable error.
 - **MCB-D08 — Target validation gap:** The newly corrected all-grouping body output and per-result-file shrink assignment have passed source checks but have not yet been executed in Fusion 360.
 - **MCB-D09 — Handled in the current working tree; awaiting Fusion 360 verification — Safety-setting persistence:** Overwrite and clear-folder choices were previously serialized despite the README contract. Both keys are now excluded from document and local-default serialization and reset to `False` whenever settings are loaded.
-- **MCB-D10 — Handled in the current working tree; awaiting Fusion 360 verification — Tail source in granular modes:** `SETUP_AND_TOOL` and `PER_OPERATION` previously called `WriteTail()` on each internal operation instead of reusing `operationWithTail`. Granular modes now reuse the first detected tail in the setup for every result file. `SINGLE_FILE` now chooses the first setup with a detected tail rather than selecting it by header presence.
+- **MCB-D10 — Handled in the current working tree; awaiting Fusion 360 verification — Tail source in granular modes:** `SETUP_AND_TOOL` and `PER_OPERATION` previously called `WriteTail()` on each internal operation instead of reusing the first detected tail. Each result-file plan now explicitly references its reusable tail source. `SINGLE_FILE` chooses the first selected setup with a detected tail rather than selecting it by header presence.
 - **MCB-D11 — Handled in the current working tree; covered by a host regression test — Rapid effective distance:** `AnalysisSegment.getEffectiveLength()` previously returned doubled combined Z travel and ignored XY travel. It now returns the greater of total XY travel and combined Z travel, matching the documented analyzer rule.
 
 ## 14. Refactoring constraints
@@ -263,15 +263,25 @@ The host-testable architecture now has the following enforced runtime boundaries
 
 - Processing options are captured once at execution start in an immutable
   `ProcessingSettings` snapshot and propagated through setup and operation
-  contexts. Direct global setting reads remain compatibility fallbacks for
-  isolated legacy calls, not the normal execution path.
+  contexts. Parsing, transformation, planning, and rendering require that
+  explicit snapshot instead of reading mutable global settings.
 - Fusion setup and operation objects are converted at the adapter boundary to
   small Python source records. Opaque raw handles are retained only for calls
   that must return to Fusion, including toolpath generation, renaming, geometry,
   and NC post processing.
-- Result-file operation membership is planned before body output. Shrink
-  retention is derived from that plan, so final-operation state follows output
-  grouping rather than source selection position.
+- Parser results are stored as immutable `ParsedOperation`, `LineRange`, and
+  `RapidRewrite` values. They contain only bounded metadata; source files remain
+  on disk and are streamed again when output is rendered.
+- A complete `ResultFilePlan` owns each output path, header source, tool-comment
+  sources, ordered body operations, tail source, and final-operation decision.
+  Shrink retention therefore follows result-file membership rather than input
+  setup position.
+- `output_renderer.py` opens each result file once and renders its planned
+  header, bodies, and tail in order. The former setup- and collection-level
+  header/body/tail writer hierarchy has been removed.
+- Rapid tokenization and segment analysis live in focused modules under
+  `operations/operation/rapid_moves/`; the legacy streaming state machine is
+  retained as the orchestration boundary.
 - Core modules may not import `adsk` or `fusion_adapters` at module import time.
   Architecture tests enforce both rules so every core module remains importable
   on the host.
