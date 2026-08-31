@@ -4,6 +4,8 @@
 **/settings.settings
 Tests/**
 !Tests/*.py
+!Tests/UI/
+!Tests/UI/**
 .vscode/**
 __pycache__
 .coverage
