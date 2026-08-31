@@ -34,6 +34,12 @@ explicit **allow a stable release when the selected ref is not main** option.
 
 The workflow refuses to overwrite an existing tag.
 
+Version validation runs before dependency installation, tests, and packaging.
+The value must start with a digit and must not contain a leading `v`, another
+text prefix, or surrounding whitespace. GitHub does not validate free-text
+workflow inputs while they are being entered, so an invalid version is reported
+as the first failed step after the workflow starts.
+
 ## Version boundaries
 
 The release builder stamps exactly these packaged values:
