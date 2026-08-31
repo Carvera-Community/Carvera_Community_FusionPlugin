@@ -19,6 +19,29 @@ def test_numeric_name_digits_are_bounded():
     assert state.numeric_name_digits("job") is None
 
 
+def test_output_folder_validation_requires_an_existing_directory(tmp_path):
+    assert state.is_output_folder_valid(str(tmp_path))
+    assert not state.is_output_folder_valid(str(tmp_path / "missing"))
+    assert not state.is_output_folder_valid("")
+
+    file_path = tmp_path / "file.nc"
+    file_path.write_text("", encoding="utf-8")
+    assert not state.is_output_folder_valid(str(file_path))
+
+
+def test_combine_tools_is_only_available_for_setup_and_tool_grouping():
+    groupings = import_addin_module(
+        "commands.postProcessor.settings.constants"
+    ).Constants.OperationsGroupings
+    available = [
+        grouping
+        for grouping in groupings
+        if state.can_combine_tools(grouping, groupings)
+    ]
+
+    assert available == [groupings.SETUP_AND_TOOL]
+
+
 def test_first_setup_is_selectable_without_reference_program():
     assert state.is_setup_selectable(
         has_reference=False,

@@ -4,6 +4,7 @@ from ...programs import Programs
 from ...settings.settings import Settings
 from ...strings import Strings
 from ..event_registry import EventRegistry
+from ..state import can_combine_tools
 
 
 def create_grouping_and_safety_options(output_tab, constants) -> None:
@@ -46,6 +47,17 @@ def create_grouping_and_safety_options(output_tab, constants) -> None:
         constants.COMBINE_TOOLS_ID,
         lambda checkbox: Settings(Settings.COMBINE_TOOL, checkbox.value),
     )
+
+    def update_combine_tools(dropdown) -> None:
+        grouping = grouping_values[dropdown.selectedItem.name]
+        enabled = can_combine_tools(grouping, Settings.OperationsGroupings)
+        combine_tools.isEnabled = enabled
+        if not enabled:
+            combine_tools.value = False
+            Settings(Settings.COMBINE_TOOL, False)
+
+    EventRegistry.register(constants.OPERATIONS_GROUPING_ID, update_combine_tools)
+    update_combine_tools(grouping_input)
 
     flat_structure = output_tab.children.addBoolValueInput(
         constants.FLAT_FILE_STRUCTURE_ID,

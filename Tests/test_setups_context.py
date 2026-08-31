@@ -120,6 +120,10 @@ def test_rename_can_target_selected_or_all_setups():
 
     context.rename_setups("a", "b", True, onlySelected=False)
     assert context._items[0].rename_calls == [("a", "b", True)]
+    assert context._items[1].rename_calls == [
+        ("x", "y", False),
+        ("a", "b", True),
+    ]
 
 
 def test_output_path_file_name_and_extension_are_forwarded(tmp_path):

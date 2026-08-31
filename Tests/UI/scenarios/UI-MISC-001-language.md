@@ -7,6 +7,6 @@
 3. Select English, close, and reopen; confirm the saved selection and English labels.
 4. Confirm neither selection logs a missing-translation warning for the Language tooltip.
 
-## Unresolved assertion
-
-Whether labels must change immediately in the already open dialog is tracked by `UIQ-003`.
+Immediate relabelling of the already open dialog is desirable but is not a
+current pass condition because Fusion creates the command inputs when the dialog
+is loaded.

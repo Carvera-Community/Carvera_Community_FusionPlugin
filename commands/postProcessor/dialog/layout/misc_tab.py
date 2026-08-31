@@ -33,7 +33,7 @@ class MiscTab(Constants):
         #region Language dropdown
         languageDropdown = miscTab.children.addDropDownCommandInput(cls.LANGUAGE_ID, Strings("Language"), cast(DropDownStyles, DropDownStyles.TextListDropDownStyle))
         languageDropdown.tooltip = Strings("TOOLTIP: Language")
-        languageDropdown.tooltipDescription = (Strings("TOOLTIP TEXT: Language {file_version}")).format(file_version = Strings.file_version)
+        languageDropdown.tooltipDescription = (Strings("TOOLTIP TEXT: Language {fileVersion}")).format(fileVersion = Strings.file_version)
 
         languageTexts = Strings.available_languages()
 

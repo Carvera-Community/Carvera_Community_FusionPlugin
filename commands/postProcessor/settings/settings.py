@@ -134,6 +134,11 @@ class Settings(Constants, metaclass=_SettingsMeta):
     def save(cls, attr: adskAttributes):
         if cls._must_save:
             cls.save_default()
+        cls.save_document(attr)
+
+    @classmethod
+    def save_document(cls, attr: adskAttributes) -> None:
+        """Persist current settings to a Fusion document only."""
         attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._persistent_items()))
 
     @classmethod

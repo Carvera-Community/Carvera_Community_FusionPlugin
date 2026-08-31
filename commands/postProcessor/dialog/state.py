@@ -1,8 +1,17 @@
+from pathlib import Path
 from typing import Any
 
 
 def is_output_name_valid(file_name: str, numeric_name: bool) -> bool:
     return bool(file_name) and (not numeric_name or file_name.isnumeric())
+
+
+def is_output_folder_valid(folder: str) -> bool:
+    return bool(folder.strip()) and Path(folder).expanduser().is_dir()
+
+
+def can_combine_tools(grouping: Any, operations_groupings: Any) -> bool:
+    return grouping == operations_groupings.SETUP_AND_TOOL
 
 
 def numeric_name_digits(file_name: str | None, maximum: int = 6) -> int | None:

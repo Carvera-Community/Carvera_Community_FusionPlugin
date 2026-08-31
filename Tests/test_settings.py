@@ -81,6 +81,19 @@ def test_save_default_excludes_session_only_settings():
     assert Constants.CLEAR_FOLDER not in saved
 
 
+def test_save_document_does_not_implicitly_replace_global_defaults(tmp_path):
+    Settings._items = dict(Settings._default_settings)
+    Settings.set(Constants.LANGUAGE, "sv")
+    attributes = FakeAttributes()
+
+    Settings.save_document(attributes)
+
+    saved = json.loads(attributes.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
+    assert saved[Constants.LANGUAGE] == "sv"
+    assert not Path(Settings._path).exists()
+    assert Settings._must_save
+
+
 def test_load_reads_persisted_defaults_and_fills_missing_keys():
     persisted = {
         Constants.VERSION: Settings._default_settings[Constants.VERSION],

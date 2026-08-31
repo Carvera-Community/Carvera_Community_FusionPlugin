@@ -38,6 +38,15 @@ def test_extract_translation_separates_metadata():
     assert translations == {"Hello": "Hej"}
 
 
+def test_file_version_supports_current_and_legacy_metadata_keys():
+    reset_strings()
+    Strings._meta = {"fileVersion": "2.0"}
+    assert Strings.file_version == "2.0"
+
+    Strings._meta = {"file_version": "1.0"}
+    assert Strings.file_version == "1.0"
+
+
 def test_get_returns_translation_fallback_and_formatting():
     reset_strings()
     Strings._current = {"Hello {name}": "Hej {name}"}

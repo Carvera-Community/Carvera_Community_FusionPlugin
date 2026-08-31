@@ -22,7 +22,7 @@ from ...strings import Strings
 
 from ..constants import Constants
 from ..event_registry import EventRegistry
-from .setup_table import SELECTED, apply_row_state, get_row_state
+from .setup_table import ENABLED, SELECTED, apply_row_state, get_row_state
 
 class InputTab(Constants):
 
@@ -237,6 +237,7 @@ class InputTab(Constants):
         validProgram = Programs.Current is not None and Programs.Current.has_machine
 
         firstSetup: Setup | None = None
+        allSelectableSelected = True
         for setup in ctx.valid:
             rotation = 0 if firstSetup is None else round(setup.rotation_relative_to_degrees(firstSetup), 3)
             rowState = get_row_state(
@@ -251,8 +252,15 @@ class InputTab(Constants):
             )
 
             apply_row_state(inputs, rowState)
+            if rowState[ENABLED] and not rowState[SELECTED]:
+                allSelectableSelected = False
             
             setup.select(rowState[SELECTED]) # Update the setup's selected state based on the value in the table, which may have been changed if the setup became ineligible for selection
 
             if firstSetup is None and setup.is_selected:
                 firstSetup = setup
+
+        selectAll = BoolValueCommandInput.cast(inputs.itemById(cls.SELECT_ALL_SETUPS_ID))
+        if selectAll is not None and selectAll.value != allSelectableSelected:
+            EventRegistry.setValue(cls.SELECT_ALL_SETUPS_ID, allSelectableSelected)
+            selectAll.value = allSelectableSelected

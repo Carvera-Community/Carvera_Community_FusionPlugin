@@ -84,7 +84,7 @@ class Strings(metaclass=_StringsMeta):
 
     @classproperty
     def file_version(cls) -> str | None:
-        return cls._meta.get('file_version')
+        return cls._meta.get('fileVersion', cls._meta.get('file_version'))
         
 
     @classmethod

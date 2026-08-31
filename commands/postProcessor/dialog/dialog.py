@@ -193,6 +193,7 @@ class PostDialog(PostDialogLayout):
 
         #region Hook up events
         Events.add(command.execute, cls.commandExecute, local_handlers = cls._local_handlers)
+        Events.add(command.destroy, cls.commandDestroy, local_handlers = cls._local_handlers)
         Events.add(command.inputChanged, cls.commandInputChanged, local_handlers = cls._local_handlers)
         Events.add(command.validateInputs, cls.commandValidateInput, local_handlers = cls._local_handlers)
         #endregion
@@ -200,6 +201,13 @@ class PostDialog(PostDialogLayout):
     @classmethod
     def commandInputChanged(cls, args):
         EventRegistry.handle(args)
+
+    @classmethod
+    def commandDestroy(cls, _args: CommandEventArgs):
+        """Keep dialog changes with the document when the command closes."""
+        document = Application.get().activeDocument
+        if document is not None:
+            Settings.save_document(document.attributes)
 
     # This event handler is called when the user clicks the OK button in the command dialog or 
     # is immediately called after the created event not command inputs were created for the dialog.
