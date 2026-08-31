@@ -8,12 +8,14 @@ source files on the selected branch.
 
 1. Open **Actions** in GitHub.
 2. Select **Create Fusion Plugin Release**.
-3. Select **Run workflow** and choose the source branch.
-4. Enter a SemVer version without a leading `v`, such as `0.9.2-beta.1`.
-5. Leave **Build and validate artifacts without creating a tag or release**
+3. Select **Run workflow**.
+4. Enter the branch, tag, or commit to package in **source ref**. The default
+   is `dev`.
+5. Enter a SemVer version without a leading `v`, such as `0.9.2-beta.1`.
+6. Leave **Build and validate artifacts without creating a tag or release**
    enabled.
-6. Run the workflow.
-7. Download the dry-run artifact from the completed workflow run and inspect
+7. Run the workflow.
+8. Download the dry-run artifact from the completed workflow run and inspect
    the zip and checksum.
 
 A dry run creates neither a Git tag nor a GitHub release. Its artifact is kept

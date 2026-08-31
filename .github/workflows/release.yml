@@ -2,7 +2,7 @@ name: Create Fusion Plugin Release
 
 run-name: >-
   ${{ inputs.dry_run && 'Dry run' || 'Release' }}
-  v${{ inputs.version }} from ${{ github.ref_name }}
+  v${{ inputs.version }} from ${{ inputs.source_ref }}
 
 on:
   workflow_dispatch:
@@ -10,6 +10,11 @@ on:
       version:
         description: SemVer without a leading v, for example 0.9.2-beta.1
         required: true
+        type: string
+      source_ref:
+        description: Branch, tag, or commit to package
+        required: true
+        default: dev
         type: string
       dry_run:
         description: Build and validate artifacts without creating a tag or release
@@ -38,6 +43,15 @@ jobs:
     steps:
       - name: Check out selected source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+
+      - name: Record selected source
+        id: source
+        shell: bash
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "Building source ${{ inputs.source_ref }} at $(git rev-parse HEAD)"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -54,18 +68,18 @@ jobs:
         run: |
           python scripts/build_release.py --version "$VERSION" --output dist
 
-          policy_args=(--version "$VERSION" --ref "$GITHUB_REF_NAME")
+          policy_args=(--version "$VERSION" --ref "${{ inputs.source_ref }}")
           if [[ "${{ inputs.publish_stable_from_non_main }}" == "true" ]]; then
             policy_args+=(--publish-stable-from-non-main)
           fi
           prerelease="$(python -m scripts.release_policy "${policy_args[@]}")"
 
-          if [[ "$prerelease" == "false" && "$GITHUB_REF_NAME" != "main" ]]; then
-            echo "::warning::Publishing a stable release from non-main ref $GITHUB_REF_NAME"
+          if [[ "$prerelease" == "false" && "${{ inputs.source_ref }}" != "main" ]]; then
+            echo "::warning::Publishing a stable release from non-main ref ${{ inputs.source_ref }}"
           fi
 
           echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
-          echo "Release policy: ref=$GITHUB_REF_NAME prerelease=$prerelease dry_run=${{ inputs.dry_run }}"
+          echo "Release policy: ref=${{ inputs.source_ref }} prerelease=$prerelease dry_run=${{ inputs.dry_run }}"
 
       - name: Run host tests
         run: pytest --cov=commands --cov-report=term
@@ -128,7 +142,7 @@ jobs:
             release create "v$VERSION"
             "dist/$ASSET_NAME"
             "dist/$ASSET_NAME.sha256"
-            --target "$GITHUB_SHA"
+            --target "${{ steps.source.outputs.sha }}"
             --title "Makera Community Fusion Plugin v$VERSION"
             --generate-notes
           )
