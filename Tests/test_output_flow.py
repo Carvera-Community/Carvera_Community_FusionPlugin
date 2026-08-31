@@ -48,6 +48,8 @@ class StreamingOperation:
             "G21\n"
             f"(BODY {name})\n"
             "G92.4 A0 R0\n"
+            "M9\n"
+            "G92.4 A0 R0\n"
             "M5\n"
             "M30\n",
             encoding="utf-8",

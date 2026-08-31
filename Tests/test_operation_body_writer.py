@@ -103,20 +103,19 @@ def test_write_body_streams_to_eof_when_no_tail_was_detected(tmp_path):
     assert output == "G1 X10\nG1 X20\n"
 
 
-def test_write_body_removes_shrink_from_nonfinal_operation(tmp_path):
+def test_write_body_removes_shrink_from_operation_body(tmp_path):
     output = write_operation_body(
         tmp_path,
         "T1 M6\nG92.4 A0 R0\nG1 X10\nM30\n",
         body_start=0,
         tail_start=3,
         shrinkLine=1,
-        isLastOp=False,
     )
 
     assert output == "T1 M6\nG1 X10\n"
 
 
-def test_write_body_preserves_shrink_in_final_operation(tmp_path):
+def test_write_body_removes_shrink_even_when_operation_was_marked_final(tmp_path):
     output = write_operation_body(
         tmp_path,
         "T1 M6\nG92.4 A0 R0\nG1 X10\nM30\n",
@@ -126,7 +125,7 @@ def test_write_body_preserves_shrink_in_final_operation(tmp_path):
         isLastOp=True,
     )
 
-    assert output == "T1 M6\nG92.4 A0 R0\nG1 X10\n"
+    assert output == "T1 M6\nG1 X10\n"
 
 
 def test_write_body_replaces_rotation_with_safe_retraction(tmp_path):

@@ -59,9 +59,12 @@ def write_body(
                             # operations are always generated one by one
                             return row != analysis.rotation_line or _handle_rotation()
                         elif float(gCode) == 92.4:
-                            if lineMatch.group("R") is not None and not ctx.isLastOp:
-                                # Strip out all shrink A-axis commands unless it is the last operation in the file
-                                return row == analysis.shrink_line
+                            if lineMatch.group("R") is not None:
+                                # The post processor puts the program shrink in the
+                                # tail. Since the shared tail is written once per
+                                # result file, every shrink found in an operation
+                                # body must be stripped.
+                                return True
         return False
 
     def _handle_rotation() -> bool:
