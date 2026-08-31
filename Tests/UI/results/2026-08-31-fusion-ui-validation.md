@@ -8,7 +8,7 @@
 - Post-processor version: Community Post v1.4.6
 - Fixture: Test model with NCProgram18; Setup1 and Setup2
 - Output artifact: `/Users/moinois/NC Programs/ui-validation-shrink-tail-reloaded.cnc`
-- Result: PASS WITH OPEN QUESTION
+- Result: PASS
 
 ## Observations
 
@@ -41,10 +41,11 @@
 - `UI-MISC-001`: PASS for language selection, persistence, and compact Swedish
   tab labels. The translation-version key is covered by host tests; the UI
   automation API does not provide a pointer-hover action for tooltip rendering.
-- `UI-MISC-002`: PASS WITH OPEN QUESTION. All-setup and selected-only literal
+- `UI-MISC-002`: PASS. All-setup and selected-only literal
   renaming passed. A bounded selected-only regex renamed `Setup1` to `Regex1`
-  and was restored. Invalid regex input caused no rename and no visible error;
-  see `UIQ-005`.
+  and was restored. After implementing the resolved `UIQ-005` requirement, an
+  invalid `[` expression displayed Fusion's red inline error indicator when
+  focus left the field, and Search and replace left `Setup1` unchanged.
 - `UI-DIALOG-001`: PASS. Process enablement, Close without output, Process with
   output, document persistence, and Save as default were exercised. The
   default file changed to the harmless test value and was restored to its
@@ -57,11 +58,11 @@ the final pass was therefore performed after a full Fusion restart.
 
 ```text
 UI catalog valid: 11 scenarios, 32 active controls
-200 passed
+201 passed
 Total coverage: 92%
 git diff --check: clean
 ```
 
 ## Open questions or failures
 
-- `UIQ-005`: decide how an invalid regular expression should be reported.
+None from this acceptance pass.

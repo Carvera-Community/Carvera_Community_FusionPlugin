@@ -48,12 +48,13 @@ is not added to the current dialog layout, so its controls are excluded from the
 active UI acceptance inventory. Add its controls and scenarios when the feature
 is activated.
 
-## UIQ-005: Invalid regular-expression feedback
+## UIQ-005: Invalid regular-expression feedback — resolved
 
-Entering an invalid Python regular expression currently leaves the dialog open
-and performs no rename, but it gives the user no visible error indication. The
-expected feedback mechanism has not been decided: an inline field error, a
-message box, or another Fusion-supported notification would all make the
-failure understandable.
+When Python regular expressions are enabled, an invalid search expression must
+mark the search field as invalid when its edit is committed, normally when focus
+leaves the field. The rename action must not run while the expression is
+invalid. Fusion's standard `isValueError` presentation provides the red inline
+error indicator; a message box is the fallback only if that presentation is not
+available in the active Fusion version.
 
 Related controls: `use_regex`, `find_string`, `replace`.

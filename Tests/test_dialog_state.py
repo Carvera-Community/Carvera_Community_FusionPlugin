@@ -42,6 +42,12 @@ def test_combine_tools_is_only_available_for_setup_and_tool_grouping():
     assert available == [groupings.SETUP_AND_TOOL]
 
 
+def test_find_pattern_validation_only_compiles_regex_input():
+    assert state.is_find_pattern_valid("[", use_regex=False)
+    assert state.is_find_pattern_valid(r"^Setup([0-9]+)$", use_regex=True)
+    assert not state.is_find_pattern_valid("[", use_regex=True)
+
+
 def test_first_setup_is_selectable_without_reference_program():
     assert state.is_setup_selectable(
         has_reference=False,

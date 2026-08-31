@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from typing import Any
 
 
@@ -12,6 +13,16 @@ def is_output_folder_valid(folder: str) -> bool:
 
 def can_combine_tools(grouping: Any, operations_groupings: Any) -> bool:
     return grouping == operations_groupings.SETUP_AND_TOOL
+
+
+def is_find_pattern_valid(pattern: str, use_regex: bool) -> bool:
+    if not use_regex:
+        return True
+    try:
+        re.compile(pattern)
+    except re.error:
+        return False
+    return True
 
 
 def numeric_name_digits(file_name: str | None, maximum: int = 6) -> int | None:

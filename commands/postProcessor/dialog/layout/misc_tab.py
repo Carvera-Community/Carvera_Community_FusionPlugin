@@ -15,6 +15,7 @@ from ...setups.setups_context import SetupsContext
 
 from ..event_registry import EventRegistry
 from ..constants import Constants
+from ..state import is_find_pattern_valid
 
 from .input_tab import InputTab
 
@@ -76,6 +77,16 @@ class MiscTab(Constants):
         EventRegistry.register(cls.REPLACE_ONLY_SELECTED_ID, lambda input: Settings.set(Settings.REPLACE_ONLY_SELECTED, input.value))
         #endregion
 
+        def validateFindPattern(input: CommandInput):
+            values = input.parentCommand.commandInputs
+            findInput = StringValueCommandInput.cast(values.itemById(cls.FIND_STRING_ID))
+            regexInput = BoolValueCommandInput.cast(values.itemById(cls.USE_REGEX_ID))
+            findInput.isValueError = not is_find_pattern_valid(findInput.value, regexInput.value)
+
+        EventRegistry.register(cls.FIND_STRING_ID, validateFindPattern)
+        EventRegistry.register(cls.USE_REGEX_ID, validateFindPattern)
+        validateFindPattern(findText)
+
         #region Replace button
         replaceButton = group.children.addBoolValueInput(cls.REPLACE_ID, "   " + Strings("Search and replace") + "   ", False) #l-/rjust() to widen the button some
         replaceButton.isFullWidth = True
@@ -85,10 +96,16 @@ class MiscTab(Constants):
         def replaceButtonHandler(input: BoolValueCommandInput):
             values = input.parentCommand.commandInputs
             if input.value:
+                find = StringValueCommandInput.cast(values.itemById(cls.FIND_STRING_ID)).value
+                useRegex = BoolValueCommandInput.cast(values.itemById(cls.USE_REGEX_ID)).value
+                if not is_find_pattern_valid(find, useRegex):
+                    validateFindPattern(input)
+                    input.value = False
+                    return
                 ctx.rename_setups(
-                    StringValueCommandInput.cast(values.itemById(cls.FIND_STRING_ID)).value, 
+                    find,
                     StringValueCommandInput.cast(values.itemById(cls.REPLACE_STRING_ID)).value, 
-                    BoolValueCommandInput.cast(values.itemById(cls.USE_REGEX_ID)).value, 
+                    useRegex,
                     BoolValueCommandInput.cast(values.itemById(cls.REPLACE_ONLY_SELECTED_ID)).value
                 )
                 input.value = False # reset button state after operation
