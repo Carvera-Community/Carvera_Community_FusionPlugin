@@ -10,10 +10,15 @@ import re
 import shutil
 import zipfile
 from pathlib import Path
+from urllib.parse import quote
 
 
 ADDIN_FOLDER = "Makera Community"
 ARCHIVE_PREFIX = "Makera-Community-Fusion-Plugin-v"
+RAW_CONTENT_ROOT = (
+    "https://raw.githubusercontent.com/"
+    "Carvera-Community/Carvera_Community_FusionPlugin"
+)
 SEMVER = re.compile(
     r"^(?:0|[1-9][0-9]*)\."
     r"(?:0|[1-9][0-9]*)\."
@@ -118,6 +123,28 @@ def read_stamped_versions(addin_dir: Path) -> tuple[str, str]:
     return manifest["version"], match.group("version")
 
 
+def rewrite_readme_images(path: Path, source_revision: str) -> int:
+    if not source_revision or any(character.isspace() for character in source_revision):
+        raise ValueError("source revision must be non-empty and contain no whitespace")
+    source = path.read_text(encoding="utf-8")
+    base = f"{RAW_CONTENT_ROOT}/{quote(source_revision, safe='')}/resources/"
+    rewritten, replacements = re.subn(
+        r"(?P<prefix><img\s+[^>]*src=['\"])resources/(?P<path>[^'\"]+)(?P<suffix>['\"])",
+        lambda match: (
+            match.group("prefix")
+            + base
+            + quote(match.group("path"), safe="/")
+            + match.group("suffix")
+        ),
+        source,
+        flags=re.IGNORECASE,
+    )
+    if replacements == 0:
+        raise ValueError(f"{path}: no relative README image links were found")
+    path.write_text(rewritten, encoding="utf-8")
+    return replacements
+
+
 def copy_runtime_files(project_root: Path, addin_dir: Path) -> None:
     for relative in ROOT_FILES:
         source = project_root / relative
@@ -154,7 +181,12 @@ def write_reproducible_zip(addin_dir: Path, archive: Path) -> None:
             output.writestr(info, source.read_bytes())
 
 
-def build_release(project_root: Path, output_dir: Path, version: str) -> Path:
+def build_release(
+    project_root: Path,
+    output_dir: Path,
+    version: str,
+    source_revision: str = "main",
+) -> Path:
     version = validate_version(version)
     staging_root = output_dir / "staging"
     addin_dir = staging_root / ADDIN_FOLDER
@@ -165,6 +197,7 @@ def build_release(project_root: Path, output_dir: Path, version: str) -> Path:
     copy_runtime_files(project_root, addin_dir)
     stamp_manifest(addin_dir / "Makera Community.manifest", version)
     stamp_config(addin_dir / "config.py", version)
+    rewrite_readme_images(addin_dir / "README.md", source_revision)
 
     manifest_version, config_version = read_stamped_versions(addin_dir)
     if manifest_version != version or config_version != version:
@@ -189,6 +222,11 @@ def main() -> int:
     parser.add_argument("--version", required=True)
     parser.add_argument("--output", type=Path, default=Path("dist"))
     parser.add_argument(
+        "--source-revision",
+        default="main",
+        help="immutable Git revision used for packaged README image URLs",
+    )
+    parser.add_argument(
         "--project-root",
         type=Path,
         default=Path(__file__).resolve().parent.parent,
@@ -200,6 +238,7 @@ def main() -> int:
         args.project_root.resolve(),
         args.output.resolve(),
         args.version,
+        args.source_revision,
     )
     print(archive)
     return 0

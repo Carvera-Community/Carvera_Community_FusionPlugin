@@ -50,5 +50,9 @@ The release builder stamps exactly these packaged values:
 It also forces packaged builds to `DEBUG = False` and excludes local
 `settings.settings` files, bytecode, tests, and development-only files.
 
+Relative README image links are rewritten in the package to absolute GitHub
+raw-content URLs pinned to the exact source commit. Images therefore work when
+the packaged README is opened locally and remain tied to the released source.
+
 It does not change `SETTINGS_VERSION`, translation `fileVersion` values, UI
 catalog schema versions, or referenced post-processor versions.

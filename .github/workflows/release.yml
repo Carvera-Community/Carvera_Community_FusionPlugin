@@ -85,7 +85,10 @@ jobs:
         id: policy
         shell: bash
         run: |
-          python scripts/build_release.py --version "$VERSION" --output dist
+          python scripts/build_release.py \
+            --version "$VERSION" \
+            --source-revision "${{ steps.source.outputs.sha }}" \
+            --output dist
 
           policy_args=(--version "$VERSION" --ref "${{ inputs.source_ref }}")
           if [[ "${{ inputs.publish_stable_from_non_main }}" == "true" ]]; then
@@ -117,10 +120,13 @@ jobs:
               names = package.namelist()
               manifest = json.loads(package.read("Makera Community/Makera Community.manifest"))
               config = package.read("Makera Community/config.py").decode()
+              readme = package.read("Makera Community/README.md").decode()
 
           assert manifest["version"] == expected
           assert f"PLUGIN_VERSION = '{expected}'" in config
           assert "DEBUG = False" in config
+          assert 'src="resources/' not in readme
+          assert "raw.githubusercontent.com" in readme
           assert not any(
               "Tests/" in name
               or "__pycache__" in name

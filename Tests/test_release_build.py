@@ -53,7 +53,12 @@ def test_build_release_stamps_only_packaged_plugin_versions(tmp_path):
     source_manifest = (ROOT / "Makera Community.manifest").read_bytes()
     source_config = (ROOT / "config.py").read_bytes()
 
-    archive = builder.build_release(ROOT, output, "2.3.4-beta.5")
+    archive = builder.build_release(
+        ROOT,
+        output,
+        "2.3.4-beta.5",
+        source_revision="0123456789abcdef",
+    )
 
     assert archive.name == "Makera-Community-Fusion-Plugin-v2.3.4-beta.5.zip"
     with zipfile.ZipFile(archive) as package:
@@ -62,10 +67,17 @@ def test_build_release_stamps_only_packaged_plugin_versions(tmp_path):
             package.read("Makera Community/Makera Community.manifest")
         )
         config = package.read("Makera Community/config.py").decode()
+        readme = package.read("Makera Community/README.md").decode()
 
     assert manifest["version"] == "2.3.4-beta.5"
     assert "PLUGIN_VERSION = '2.3.4-beta.5'" in config
     assert "DEBUG = False" in config
+    assert 'src="resources/' not in readme
+    assert (
+        "https://raw.githubusercontent.com/Carvera-Community/"
+        "Carvera_Community_FusionPlugin/0123456789abcdef/"
+        "resources/readme/installation/step1.png"
+    ) in readme
     assert "Makera Community/Makera Community.py" in names
     assert any(name.startswith("Makera Community/commands/") for name in names)
     assert any(name.startswith("Makera Community/lib/") for name in names)
@@ -74,6 +86,7 @@ def test_build_release_stamps_only_packaged_plugin_versions(tmp_path):
     assert not any(name.endswith("settings.settings") for name in names)
     assert (ROOT / "Makera Community.manifest").read_bytes() == source_manifest
     assert (ROOT / "config.py").read_bytes() == source_config
+    assert 'src="resources/' in (ROOT / "README.md").read_text()
 
     checksum = archive.with_suffix(".zip.sha256").read_text().split()[0]
     assert checksum == hashlib.sha256(archive.read_bytes()).hexdigest()
@@ -84,6 +97,14 @@ def test_build_release_is_reproducible(tmp_path):
     second = builder.build_release(ROOT, tmp_path / "second", "1.2.3")
 
     assert first.read_bytes() == second.read_bytes()
+
+
+def test_readme_rewrite_rejects_an_invalid_source_revision(tmp_path):
+    readme = tmp_path / "README.md"
+    readme.write_text('<img src="resources/image.png">', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="source revision"):
+        builder.rewrite_readme_images(readme, "invalid revision")
 
 
 @pytest.mark.parametrize(
