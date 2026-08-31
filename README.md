@@ -24,7 +24,9 @@ This plugin was heavily inspired by Tim Patersons [PostProcessAll](https://githu
 Install a published release rather than cloning the development repository:
 
 1. Open the [latest release](https://github.com/Carvera-Community/Carvera_Community_FusionPlugin/releases/latest).
-2. Download `Source code (zip)` from the release's **Assets** section.
+2. Download `Makera-Community-Fusion-Plugin-vX.Y.Z.zip` from the release's
+   **Assets** section. Do not download GitHub's automatically generated source
+   archive.
 3. Extract the archive to a permanent folder. Do not run the add-in directly
    from the downloaded archive or a temporary extraction directory.
 4. Confirm that the extracted add-in folder contains

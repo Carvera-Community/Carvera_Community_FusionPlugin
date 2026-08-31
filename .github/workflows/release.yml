@@ -1,0 +1,140 @@
+name: Create Fusion Plugin Release
+
+run-name: >-
+  ${{ inputs.dry_run && 'Dry run' || 'Release' }}
+  v${{ inputs.version }} from ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: SemVer without a leading v, for example 0.9.2-beta.1
+        required: true
+        type: string
+      dry_run:
+        description: Build and validate artifacts without creating a tag or release
+        required: true
+        default: true
+        type: boolean
+      publish_stable_from_non_main:
+        description: Explicitly allow a stable release when the selected ref is not main
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      ASSET_NAME: Makera-Community-Fusion-Plugin-v${{ inputs.version }}.zip
+    steps:
+      - name: Check out selected source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Validate release policy
+        id: policy
+        shell: bash
+        run: |
+          python scripts/build_release.py --version "$VERSION" --output dist
+
+          policy_args=(--version "$VERSION" --ref "$GITHUB_REF_NAME")
+          if [[ "${{ inputs.publish_stable_from_non_main }}" == "true" ]]; then
+            policy_args+=(--publish-stable-from-non-main)
+          fi
+          prerelease="$(python -m scripts.release_policy "${policy_args[@]}")"
+
+          if [[ "$prerelease" == "false" && "$GITHUB_REF_NAME" != "main" ]]; then
+            echo "::warning::Publishing a stable release from non-main ref $GITHUB_REF_NAME"
+          fi
+
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          echo "Release policy: ref=$GITHUB_REF_NAME prerelease=$prerelease dry_run=${{ inputs.dry_run }}"
+
+      - name: Run host tests
+        run: pytest --cov=commands --cov-report=term
+
+      - name: Verify packaged versions and contents
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import zipfile
+
+          archive = "dist/" + os.environ["ASSET_NAME"]
+          expected = os.environ["VERSION"]
+          with zipfile.ZipFile(archive) as package:
+              names = package.namelist()
+              manifest = json.loads(package.read("Makera Community/Makera Community.manifest"))
+              config = package.read("Makera Community/config.py").decode()
+
+          assert manifest["version"] == expected
+          assert f"PLUGIN_VERSION = '{expected}'" in config
+          assert "DEBUG = False" in config
+          assert not any(
+              "Tests/" in name
+              or "__pycache__" in name
+              or name.endswith("settings.settings")
+              for name in names
+          )
+          PY
+          (cd dist && sha256sum --check "$ASSET_NAME.sha256")
+
+      - name: Upload dry-run artifacts
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Makera-Community-Fusion-Plugin-v${{ inputs.version }}-dry-run
+          path: |
+            dist/${{ env.ASSET_NAME }}
+            dist/${{ env.ASSET_NAME }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Refuse to overwrite an existing tag
+        if: ${{ inputs.dry_run == false }}
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists" >&2
+            exit 1
+          fi
+
+      - name: Create GitHub release
+        if: ${{ inputs.dry_run == false }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.policy.outputs.prerelease }}
+        shell: bash
+        run: |
+          args=(
+            release create "v$VERSION"
+            "dist/$ASSET_NAME"
+            "dist/$ASSET_NAME.sha256"
+            --target "$GITHUB_SHA"
+            --title "Makera Community Fusion Plugin v$VERSION"
+            --generate-notes
+          )
+          if [[ "$PRERELEASE" == "true" ]]; then
+            args+=(--prerelease --latest=false)
+          else
+            args+=(--latest)
+          fi
+          gh "${args[@]}"
