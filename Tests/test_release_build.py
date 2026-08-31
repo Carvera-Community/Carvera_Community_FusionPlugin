@@ -26,11 +26,26 @@ def test_validate_version_accepts_supported_semver(version):
 
 @pytest.mark.parametrize(
     "version",
-    ["v1.0.0", "1.0", "01.0.0", "1.0.0-beta..1", "1.0.0-beta.01"],
+    [
+        "v1.0.0",
+        "V1.0.0",
+        "release-1.0.0",
+        " 1.0.0",
+        "1.0.0 ",
+        "1.0",
+        "01.0.0",
+        "1.0.0-beta..1",
+        "1.0.0-beta.01",
+    ],
 )
 def test_validate_version_rejects_unsupported_versions(version):
-    with pytest.raises(ValueError, match="SemVer"):
+    with pytest.raises(ValueError):
         builder.validate_version(version)
+
+
+def test_validate_version_explains_that_leading_v_is_not_allowed():
+    with pytest.raises(ValueError, match="must not start with 'v'"):
+        builder.validate_version("v1.2.3")
 
 
 def test_build_release_stamps_only_packaged_plugin_versions(tmp_path):

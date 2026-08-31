@@ -53,6 +53,24 @@ jobs:
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "Building source ${{ inputs.source_ref }} at $(git rev-parse HEAD)"
 
+      - name: Validate version and tag availability
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from scripts.build_release import validate_version
+
+          try:
+              validate_version(os.environ["VERSION"])
+          except ValueError as error:
+              raise SystemExit(f"Invalid release version: {error}")
+          PY
+
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Release tag v$VERSION already exists. Choose a new version."
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -121,15 +139,6 @@ jobs:
             dist/${{ env.ASSET_NAME }}.sha256
           if-no-files-found: error
           retention-days: 7
-
-      - name: Refuse to overwrite an existing tag
-        if: ${{ inputs.dry_run == false }}
-        shell: bash
-        run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
-            echo "Tag v$VERSION already exists" >&2
-            exit 1
-          fi
 
       - name: Create GitHub release
         if: ${{ inputs.dry_run == false }}

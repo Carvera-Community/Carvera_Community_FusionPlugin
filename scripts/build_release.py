@@ -33,6 +33,12 @@ IGNORED_NAMES = {".DS_Store", "__pycache__"}
 
 
 def validate_version(version: str) -> str:
+    if version != version.strip():
+        raise ValueError("version must not contain leading or trailing whitespace")
+    if version.startswith(("v", "V")):
+        raise ValueError("version must not start with 'v'; enter for example 0.9.2")
+    if not version or not version[0].isdigit():
+        raise ValueError("version must start with a digit")
     if not SEMVER.fullmatch(version):
         raise ValueError(
             "version must be SemVer without a leading 'v', for example "
