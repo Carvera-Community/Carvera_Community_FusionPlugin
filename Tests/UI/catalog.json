@@ -8,7 +8,7 @@
   },
   "scenarios": [
     {"id": "UI-INPUT-001", "title": "Program and setup selection", "file": "scenarios/UI-INPUT-001-program-and-setups.md"},
-    {"id": "UI-GCODE-001", "title": "A-axis rotation dependencies", "file": "scenarios/UI-GCODE-001-a-axis-options.md"},
+    {"id": "UI-GCODE-001", "title": "A-axis rotation dependencies", "file": "scenarios/UI-GCODE-001-a-axis-options.md", "verifier": "a_axis_y_retraction"},
     {"id": "UI-GCODE-002", "title": "Rapid restoration inputs", "file": "scenarios/UI-GCODE-002-rapid-restoration.md"},
     {"id": "UI-GCODE-003", "title": "G-code block anchors", "file": "scenarios/UI-GCODE-003-block-anchors.md"},
     {"id": "UI-OUTPUT-001", "title": "Single-file shrink handling", "file": "scenarios/UI-OUTPUT-001-single-file-shrink.md", "verifier": "single_file_shrink"},

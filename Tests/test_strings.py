@@ -101,3 +101,18 @@ def test_available_languages_uses_metadata_and_filename_fallback(tmp_path, monke
 
     assert languages == {"plain": "plain", "sv": "Svenska (Swedish)"}
     assert Strings.language_setting("Svenska (Swedish)") == "sv"
+
+
+def test_language_tooltip_is_complete_in_bundled_languages():
+    reset_strings()
+
+    for language in ("en", "sv"):
+        Strings.set_language(language)
+
+        assert Strings("TOOLTIP: Language") != "TOOLTIP: Language"
+        description = Strings(
+            "TOOLTIP TEXT: Language {fileVersion}",
+            fileVersion=Strings.file_version,
+        )
+        assert "TOOLTIP TEXT: Language" not in description
+        assert str(Strings.file_version) in description

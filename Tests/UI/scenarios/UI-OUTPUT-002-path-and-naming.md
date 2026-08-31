@@ -10,3 +10,7 @@
 6. Disable numeric naming, enable Prepend sequence number, and exercise digit values 1 through 6.
 7. Disable Prepend sequence number and confirm Number of digits becomes disabled.
 8. Process one safe case and confirm the result is created in the selected directory with the expected filename.
+
+Record both temporary paths in the result report. The second path must come
+from the native folder picker; typing it into the text field does not cover the
+browse button.

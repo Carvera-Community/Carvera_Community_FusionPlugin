@@ -114,7 +114,50 @@ def verify_single_file_shrink(path: Path) -> dict:
     }
 
 
-VERIFIERS = {"single_file_shrink": verify_single_file_shrink}
+def verify_a_axis_y_retraction(path: Path) -> dict:
+    expected = re.compile(
+        r"^G90\s+G53\s+G0\s+Z-3(?:\.0*)?\s+Y-90(?:\.0*)?(?:\s|$)",
+        re.IGNORECASE,
+    )
+    rotation = re.compile(r"^G0\s+A-?[0-9]+(?:\.[0-9]*)?(?:\s|$)", re.IGNORECASE)
+    retraction_lines: list[int] = []
+    rotation_lines: list[int] = []
+
+    with path.open(encoding="utf-8", errors="replace") as source:
+        for line_number, line in enumerate(source, start=1):
+            stripped = line.strip()
+            if expected.match(stripped):
+                retraction_lines.append(line_number)
+            if rotation.match(stripped):
+                rotation_lines.append(line_number)
+
+    failures: list[str] = []
+    if not retraction_lines:
+        failures.append("expected at least one G90 G53 G0 Z-3 Y-90 retraction")
+    if not rotation_lines:
+        failures.append("expected at least one A-axis rotation move")
+    if retraction_lines and rotation_lines and not any(
+        retraction < rotation
+        for retraction in retraction_lines
+        for rotation in rotation_lines
+    ):
+        failures.append("no Y-retraction precedes an A-axis rotation move")
+
+    return {
+        "passed": not failures,
+        "artifact": str(path),
+        "retraction_count": len(retraction_lines),
+        "retraction_lines": retraction_lines,
+        "rotation_count": len(rotation_lines),
+        "rotation_lines": rotation_lines,
+        "failures": failures,
+    }
+
+
+VERIFIERS = {
+    "a_axis_y_retraction": verify_a_axis_y_retraction,
+    "single_file_shrink": verify_single_file_shrink,
+}
 
 
 def main(argv: list[str] | None = None) -> int:

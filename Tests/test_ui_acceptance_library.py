@@ -41,6 +41,33 @@ def test_single_file_shrink_verifier_rejects_body_and_tail_shrink(tmp_path):
     assert result["shrink_count"] == 2
 
 
+def test_a_axis_y_retraction_verifier_accepts_retraction_before_rotation(tmp_path):
+    artifact = tmp_path / "valid.cnc"
+    artifact.write_text(
+        "G90 G53 G0 Z-3 Y-90\nG0 A90\n",
+        encoding="utf-8",
+    )
+
+    result = runner.verify_a_axis_y_retraction(artifact)
+
+    assert result["passed"]
+    assert result["retraction_lines"] == [1]
+    assert result["rotation_lines"] == [2]
+
+
+def test_a_axis_y_retraction_verifier_rejects_wrong_coordinate(tmp_path):
+    artifact = tmp_path / "invalid.cnc"
+    artifact.write_text(
+        "G90 G53 G0 Z-3 Y-100\nG0 A90\n",
+        encoding="utf-8",
+    )
+
+    result = runner.verify_a_axis_y_retraction(artifact)
+
+    assert not result["passed"]
+    assert result["retraction_count"] == 0
+
+
 def test_catalog_json_remains_plain_json():
     parsed = json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))
 
