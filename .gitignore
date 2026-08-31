@@ -7,4 +7,5 @@ Tests/*.f3d
 __pycache__
 .coverage
 htmlcov/
+dist/
 TODO.md
