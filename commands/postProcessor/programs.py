@@ -1,14 +1,11 @@
 from __future__ import annotations
-import time
-from typing import TYPE_CHECKING, ClassVar, Optional
-
-from adsk import cam
-from adsk.cam import Setup as adskSetup
+from typing import Any, Callable, ClassVar, TYPE_CHECKING
 
 from .program import Program
-from .setups.setups_context import SetupsContext
-from .settings.settings import Settings
-from ...lib.fusionAddInUtils.general_utils import classproperty
+from .toolpath_generation import ensure_toolpath_generated
+
+if TYPE_CHECKING:
+    from .setups.setups_context import SetupsContext
 
 class _ProgramsMeta(type):
     # Just to help Pylance to understand the code.
@@ -37,28 +34,36 @@ class _ProgramsMeta(type):
 class Programs(metaclass=_ProgramsMeta):
     _current: Program | None = None
     _items: list[Program] = []
-    _cam: cam.CAM | None = None
+    _cam: Any | None = None
 
     @classmethod
-    def Load(cls, ctx: SetupsContext, cam: cam.CAM):
+    def load(
+        cls,
+        ctx: "SetupsContext",
+        camSource: Any,
+        programFactory: Callable[[Any], Program] = Program,
+        selectedProgramName: str | None = None,
+    ):
         """Loads all NCPrograms from the current document."""
-        cls._cam = cam
-        cls._items = [Program(program) for program in cam.ncPrograms]
+        cls._cam = camSource
+        cls._items = [programFactory(program) for program in camSource.ncPrograms]
 
         cls._current = None
-        if Settings(Settings.NC_PROGRAM) is not None:
+        if selectedProgramName is not None:
             # Try to set the current program to the one specified in settings
             for program in cls._items:
-                if program.name == Settings(Settings.NC_PROGRAM):
+                if program.name == selectedProgramName:
                     cls.Current = program
                     break
 
-        ctx.load(cam.setups)
+        ctx.load(camSource.setups)
 
     @classmethod
-    def CheckAndGenerateToolpath(cls, setup: adskSetup):
+    def check_and_generate_toolpath(cls, setup):
         """Ensure that the toolpath for the given setup is generated."""
-        if cls._cam is not None and not cls._cam.checkToolpath(setup):
-            genStat = cls._cam.generateToolpath(setup)
-            while not genStat.isGenerationCompleted:
-                time.sleep(.1)
+        if cls._cam is not None:
+            ensure_toolpath_generated(
+                setup,
+                cls._cam.checkToolpath,
+                cls._cam.generateToolpath,
+            )

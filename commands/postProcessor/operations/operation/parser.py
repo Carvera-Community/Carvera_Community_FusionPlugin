@@ -1,12 +1,34 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 from .operation_context import OperationContext
+from .analysis import ParsedOperation
 
 from .rapidsParser import RapidsParser
 
-from ...settings.settings import Settings
+@dataclass(frozen=True)
+class ParserSettings:
+    headerEndCodes: str
+    endCodes: str
+    restoreRapidMoves: bool
+    rapidMovesMinimumDistance: float
+    rapidMovesMaxSteps: int
 
-def parseFile(ctx: OperationContext):
+    @classmethod
+    def from_processing_settings(cls, settings) -> "ParserSettings":
+        return cls(
+            headerEndCodes=settings.headerEndCodes,
+            endCodes=settings.endCodes,
+            restoreRapidMoves=settings.restoreRapidMoves,
+            rapidMovesMinimumDistance=settings.rapidMovesMinimumDistance,
+            rapidMovesMaxSteps=settings.rapidMovesMaxSteps,
+        )
+
+def parse_file(ctx: OperationContext, settings: ParserSettings | None = None):
+    if settings is None:
+        if ctx.processingSettings is None:
+            raise ValueError("Parser settings are required")
+        settings = ParserSettings.from_processing_settings(ctx.processingSettings)
     #region Header example
     # Find the start of the header and body in the generated file
 
@@ -33,7 +55,7 @@ def parseFile(ctx: OperationContext):
     # The tail is stripped until the last operation is done.
     #endregion
 
-    def _parseHeaderLine(line: str, lineNumber: int, inHeader: bool) -> tuple[bool, bool]:
+    def _parse_header_line(line: str, lineNumber: int, inHeader: bool) -> tuple[bool, bool]:
         toolComment = ctx.lineWriter._TOOL_COMMENT_REG.search(line)
         if toolComment: # We have found the tool comment line
             ctx.toolCommentLine = lineNumber
@@ -44,7 +66,7 @@ def parseFile(ctx: OperationContext):
                 if headerMatch.group("G") is not None:
                     # Found a g-code, check if it is in the list of
                     # header end codes
-                    if f"G{headerMatch.group('G')}" in Settings.Get(Settings.HEADER_END_CODES):
+                    if f"G{headerMatch.group('G')}" in settings.headerEndCodes:
                         # Found the end of the header
                         ctx.headerEndLine = lineNumber
                         return (True, True)
@@ -55,7 +77,7 @@ def parseFile(ctx: OperationContext):
                 if headerMatch.group("M") is not None:
                     # Found an m-code, check if it is in the list of
                     # header end codes
-                    if f"M{headerMatch.group('M')}" in Settings.Get(Settings.HEADER_END_CODES):
+                    if f"M{headerMatch.group('M')}" in settings.headerEndCodes:
                         # Found the end of the header
                         ctx.headerEndLine = lineNumber
                         return (True, True)
@@ -81,7 +103,7 @@ def parseFile(ctx: OperationContext):
                 
             return (not inHeader, inHeader)
 
-    def _parseBodyLine(line: str, lineNumber: int):
+    def _parse_body_line(line: str, lineNumber: int):
         bodyMatch = ctx.lineWriter._BODY_RE.match(line)
         if bodyMatch:
             if bodyMatch.group("G") is not None:
@@ -94,14 +116,14 @@ def parseFile(ctx: OperationContext):
 
                         if gCode == 0:
                             # We're only interested in the first rotation move
-                            if not ctx.hasRotation:
+                            if not ctx.has_rotation:
                                 aCode = float(lineMatch.group("A"))
                                 if aCode == 0.0:
                                     # Found A-axis rotation move
                                     ctx.rotationLine = lineNumber
                         elif gCode == 92.4:
                             # Find out if this is a shrink line (G92.4 A0 R0)
-                            if not ctx.hasShrink \
+                            if not ctx.has_shrink \
                                 and lineMatch.group("R") is not None:
                                 ctx.shrinkLine = lineNumber
                         
@@ -110,25 +132,23 @@ def parseFile(ctx: OperationContext):
                 ctx.bodyStartLine = lineNumber
             elif bodyMatch.group("M") is not None:
                 mCode = int(bodyMatch.group("M"))
-                if f"M{mCode}" in Settings.Get(Settings.END_CODES):
+                if f"M{mCode}" in settings.endCodes:
                     # found tail start
                     ctx.tailStartLine = lineNumber
                     return True # File analysis complete
         return False
 
-    if Settings(Settings.RESTORE_RAPID_MOVES):
-        minDist = Settings(Settings.RAPID_MOVES_MINIMUM_DISTANCE)
-        if minDist is None:
-            minDist = 20
-
-        maxStepsInbetween = Settings(Settings.RAPID_MOVES_MAX_STEPS)
-        if maxStepsInbetween is None:
-            maxStepsInbetween = 3
-
+    if settings.restoreRapidMoves:
         ctx.rapidsAnalysis = {seg["startLine"]: { 
             "endLine": seg["endLine"], 
             "startHasFeed": seg["startHasFeed"]}
-                for seg in RapidsParser().analyze(RapidsParser().parseFile(ctx.tempFilePath, maxStepsInbetween = maxStepsInbetween), minDist = minDist)
+                for seg in RapidsParser().analyze(
+                    RapidsParser().parse_file(
+                        ctx.tempFilePath,
+                        maxStepsInbetween=settings.rapidMovesMaxSteps,
+                    ),
+                    minDist=settings.rapidMovesMinimumDistance,
+                )
                 if seg.get("isValid") and "startLine" in seg and "endLine" in seg}
     
     with ctx.tempFilePath.open("r") as operationFile:
@@ -145,10 +165,11 @@ def parseFile(ctx: OperationContext):
                 ctx.allowBlankLines = True
 
             if processHeader:
-                processHeader, inHeader = _parseHeaderLine(line, lineNumber, inHeader)
+                processHeader, inHeader = _parse_header_line(line, lineNumber, inHeader)
                 processBody = not processHeader
             elif processBody:
-                if _parseBodyLine(line, lineNumber):
-                    return
+                if _parse_body_line(line, lineNumber):
+                    break
             line = operationFile.readline()
-    return # No tail found, so possibly a handmade operation
+    ctx.analysis = ParsedOperation.from_context(ctx)
+    return ctx.analysis

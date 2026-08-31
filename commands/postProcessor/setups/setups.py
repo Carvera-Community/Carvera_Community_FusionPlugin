@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from ....lib.fusionAddInUtils.general_utils import Utils
 from .setups_context import SetupsContext
 
-def getWCSAlignmentIssues(ctx: SetupsContext) -> tuple[bool, list[str], list[str]]:
+
+def _log(message: str) -> None:
+    from ....lib.fusionAddInUtils.general_utils import Utils
+
+    Utils.log(message)
+
+def get_wcs_alignment_issues(ctx: SetupsContext) -> tuple[bool, list[str], list[str]]:
     misalignedOrigin = []
     misalignedXAxis = []
     first = None
@@ -13,19 +18,19 @@ def getWCSAlignmentIssues(ctx: SetupsContext) -> tuple[bool, list[str], list[str
         else:
             if not first.origin.isEqualTo(setup.origin):
                 misalignedOrigin.append(setup.name)
-            if not first.xNormal.isParallelTo(setup.xNormal):
+            if not first.x_normal.isParallelTo(setup.x_normal):
                 misalignedXAxis.append(setup.name)
     return (len(misalignedOrigin) + len(misalignedXAxis) == 0, misalignedOrigin, misalignedXAxis)
 
-def aAxisRotationRequired(ctx: SetupsContext) -> tuple[bool, list[tuple[str, float]]]:
+def a_axis_rotation_required(ctx: SetupsContext) -> tuple[bool, list[tuple[str, float]]]:
     needsRotation = []
     first = None
     for setup in ctx.selected:
         if first is None:
             first = setup
         else:
-            signed_angle = round(first.GetRotationAroundXAxisRelativeToDeg(setup), 3)
+            signed_angle = round(first.rotation_relative_to_degrees(setup), 3)
             if signed_angle != 0:
                 needsRotation.append((setup.name, signed_angle))
-                Utils.log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")
+                _log(f"Setups: WCS needs rotation: {signed_angle} degrees difference.")
     return (len(needsRotation) != 0, needsRotation)

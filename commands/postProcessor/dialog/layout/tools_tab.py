@@ -63,7 +63,7 @@ class ToolsTab(Constants):
             ),row, 2, 0, 2)
         row += 1
 
-        def _getToolNumber(tool: Tool) -> int:
+        def _get_tool_number(tool: Tool) -> int:
             return castCAMParam.ToInt(tool.parameters.itemByName("tool_number"))
 
         def _requiresManualToolChange(tool: Tool) -> bool:
@@ -73,10 +73,10 @@ class ToolsTab(Constants):
             return castCAMParam.ToStr(tool.parameters.itemByName('tool_description'))
 
         for tool in ctx.tools:
-            toolNumber = _getToolNumber(tool)
+            toolNumber = _get_tool_number(tool)
             dropdown = DropDownCommandInput.cast(inputs.addDropDownCommandInput(f"toolDropdown_{row}", '', cast(DropDownStyles, DropDownStyles.TextListDropDownStyle)))
-            if Programs.Current is not None and Programs.Current.machineHasATC and not _requiresManualToolChange(tool):
-                for i in range(1, Programs.Current.machineToolSlots + 1):
+            if Programs.Current is not None and Programs.Current.machine_has_atc and not _requiresManualToolChange(tool):
+                for i in range(1, Programs.Current.machine_tool_slots + 1):
                     dropdown.listItems.add(str(i), toolNumber == i)
             dropdown.isEnabled = True
 

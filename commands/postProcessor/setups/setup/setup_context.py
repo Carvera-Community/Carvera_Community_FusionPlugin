@@ -1,41 +1,33 @@
-from typing import Optional
-from adsk.core import Point3D
-from adsk.cam import Setup as adskSetup
+from dataclasses import dataclass
+from typing import Any, TYPE_CHECKING
 
-from ...operations.operations import Operations
+if TYPE_CHECKING:
+    from ...operations.operations import Operations
+    from ...processing_settings import ProcessingSettings
 
+@dataclass
 class SetupContext:
     index: int = -1
-    setup: adskSetup
-    isSelected: bool = False
-    operations: Optional[Operations] = None
-    rotationAngle: float | None = None
-    preserveRotation: bool = False
-    origin: Optional[Point3D] = None
+    setup: Any = None
+    is_selected: bool = False
+    operations: "Operations | None" = None
+    processingSettings: "ProcessingSettings | None" = None
 
     @property
-    def isValid(self) -> bool:
-        return not (self.isSuppressed or self.hasError)
+    def is_valid(self) -> bool:
+        return not (self.is_suppressed or self.has_error)
 
     @property
-    def isSuppressed(self) -> bool:
+    def is_suppressed(self) -> bool:
         return self.setup is not None and self.setup.isSuppressed
     
     @property
-    def hasError(self) -> bool:
+    def has_error(self) -> bool:
         return self.setup is not None and self.setup.hasError
     
     @property
-    def hasWarning(self) -> bool:
+    def has_warning(self) -> bool:
         return self.setup is not None and self.setup.hasWarning
-
-    @property
-    def hasHeader(self) -> bool:
-        return False if self.operations is None else self.operations.hasHeader
-
-    @property
-    def hasTail(self) -> bool:
-        return False if self.operations is None else self.operations.hasTail
 
     @property
     def name(self) -> str:
@@ -43,6 +35,6 @@ class SetupContext:
             raise ValueError("SetupContext.setup is not set.")
         return self.setup.name
 
-    def SetFileName(self, fileName: str):
+    def set_file_name(self, fileName: str):
         if self.operations is not None:
-            self.operations.SetFileName(fileName)
+            self.operations.set_file_name(fileName)

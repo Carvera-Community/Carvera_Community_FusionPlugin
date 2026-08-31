@@ -2,12 +2,14 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, overload
 
-from adsk.core import Attributes as adskAttributes
+if TYPE_CHECKING:
+    from adsk.core import Attributes as adskAttributes
+else:
+    adskAttributes = Any
 
 from .. import config
 from ..const import *
 from ....config import PLUGIN_VERSION as GLOBAL_PLUGIN_VERSION
-from ....lib.fusionAddInUtils.general_utils import *
 
 from .constants import Constants
 
@@ -19,8 +21,8 @@ class _SettingsMeta(type):
 
     # Just to help Pylance to understand the code.
     if TYPE_CHECKING:
-        def Get(cls, key: str) -> Any: ...
-        def Set(cls, key: str, value: Any) -> None: ...
+        def get(cls, key: str) -> Any: ...
+        def set(cls, key: str, value: Any) -> None: ...
     
     def __iter__(cls):
         return iter(cls._items)
@@ -33,27 +35,27 @@ class _SettingsMeta(type):
 
     def __call__(cls, key, /, value = _UNSET):
         if value is _UNSET:
-            return cls.Get(key)
-        cls.Set(key, value)
-        return cls.Get(key)
+            return cls.get(key)
+        cls.set(key, value)
+        return cls.get(key)
 
 class Settings(Constants, metaclass=_SettingsMeta):
     """Manages the user settings for the Post Processor Add-In."""
 
-    _sessionOnlySettings = frozenset({
+    _session_only_settings = frozenset({
         Constants.OVERWRITE_FILES,
         Constants.CLEAR_FOLDER,
     })
 
     _default = None
     _path = None
-    _fMustSave = False
+    _must_save = False
     _inputs = None
     _items: dict[str, Any] = {}
 
     #region Initial default values of settings
     # See constants.py for details
-    _defaultSettings = {
+    _default_settings = {
         Constants.END_CODES:                    "M5\nM9\nM30",
         Constants.OVERWRITE_FILES:              False,
         Constants.CLEAR_FOLDER:                 False,
@@ -86,12 +88,12 @@ class Settings(Constants, metaclass=_SettingsMeta):
     #endregion
 
     @classmethod
-    def Load(cls, attr: Optional[adskAttributes] = None):
+    def load(cls, attr: Optional[adskAttributes] = None):
         if attr and attr.count > 0:
             try:
                 cls._items = json.loads(attr.itemByName(Const.ATTR_GROUP, Const.ATTR_NAME).value)
                 if cls._items.get(Constants.VERSION) is not None and cls._items[Constants.VERSION] == config.SETTINGS_VERSION:
-                    cls._resetSessionOnlySettings()
+                    cls._reset_session_only_settings()
                     return  # settings are valid for this version
             except Exception:
                 pass
@@ -100,64 +102,67 @@ class Settings(Constants, metaclass=_SettingsMeta):
         if not cls._default:
             # Haven't read the settings file yet
             file = None
-            path = cls._getPath()
-            if path.exists and path.is_file():
-                    with open(path) as file:
-                        cls._default = json.load(file)
-                    if cls._default[Constants.VERSION] != config.SETTINGS_VERSION:
-                        cls.Update(Settings._defaultSettings, cls._default)
+            path = cls._settings_path()
+            if path.exists() and path.is_file():
+                with path.open() as file:
+                    cls._default = json.load(file)
+                cls.update(Settings._default_settings, cls._default)
             else:
-                cls._default = dict(Settings._defaultSettings)
-                cls._fMustSave = True
+                cls._default = dict(Settings._default_settings)
+                cls._must_save = True
         
         if not cls._items:
             cls._items = dict(cls._default)
         else:
-            cls.Update(cls._default, cls._items)
+            cls.update(cls._default, cls._items)
 
-        cls._resetSessionOnlySettings()
+        cls._reset_session_only_settings()
 
     @classmethod
-    def SaveDefault(cls):
-        cls._fMustSave = False
-        persistentItems = cls._getPersistentItems()
+    def save_default(cls):
+        cls._must_save = False
+        persistentItems = cls._persistent_items()
         cls._default = dict(persistentItems)
         try:
             strSettings = json.dumps(persistentItems, indent=4, sort_keys=True)
-            file = open(cls._getPath(), "w")
-            file.write(strSettings)
-            file.close()
+            with cls._settings_path().open("w") as file:
+                file.write(strSettings)
         except Exception:
             pass
 
     @classmethod
-    def Save(cls, attr: adskAttributes):
-        if cls._fMustSave:
-            cls.SaveDefault()
-        attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._getPersistentItems()))
+    def save(cls, attr: adskAttributes):
+        if cls._must_save:
+            cls.save_default()
+        cls.save_document(attr)
 
     @classmethod
-    def _getPersistentItems(cls) -> dict[str, Any]:
+    def save_document(cls, attr: adskAttributes) -> None:
+        """Persist current settings to a Fusion document only."""
+        attr.add(Const.ATTR_GROUP, Const.ATTR_NAME, json.dumps(cls._persistent_items()))
+
+    @classmethod
+    def _persistent_items(cls) -> dict[str, Any]:
         return {
             key: value
             for key, value in cls._items.items()
-            if key not in cls._sessionOnlySettings
+            if key not in cls._session_only_settings
         }
 
     @classmethod
-    def _resetSessionOnlySettings(cls) -> None:
-        for key in cls._sessionOnlySettings:
+    def _reset_session_only_settings(cls) -> None:
+        for key in cls._session_only_settings:
             cls._items[key] = False
             
     @classmethod
-    def Update(cls, src, dst):
+    def update(cls, src, dst):
         for item in src:
             if not (item in dst):
                 dst[item] = src[item]
         dst[Constants.VERSION] = src[Constants.VERSION]
 
     @classmethod
-    def _getPath(cls) -> Path:
+    def _settings_path(cls) -> Path:
         if not cls._path:
             pos = __file__.rfind(".")
             if pos == -1:
@@ -166,10 +171,10 @@ class Settings(Constants, metaclass=_SettingsMeta):
         return Path(cls._path)
     
     @classmethod
-    def Get(cls, key) -> Any:
+    def get(cls, key) -> Any:
         return cls._items.get(key, None)
     
     @classmethod
-    def Set(cls, key: str, value: Any):
+    def set(cls, key: str, value: Any):
         cls._items[key] = value
-        cls._fMustSave = True
+        cls._must_save = True

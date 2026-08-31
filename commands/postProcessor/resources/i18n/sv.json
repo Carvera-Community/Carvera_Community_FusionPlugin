@@ -40,7 +40,7 @@
       "__meta__": {
             "description": "Translations for the Input tab."
           },
-      "Input Selection": "Inmatningsval",
+      "Input Selection": "Indata",
       "NC Program": "NC-program",
       "TOOLTIP: NC Program to Use": "Välj NC-program att använda",
       "TOOLTIP TEXT: NC Program to Use": "Post Process Utility använder inställningarna från det valda NC-programmet.",
@@ -74,7 +74,7 @@
       "__meta__": {
             "description": "Translations for the G-code tab."
           },
-      "G-code Options": "Inställningar för G-kod",
+      "G-code Options": "G-kodinställningar",
       "Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
       "TOOLTIP: Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
       "TOOLTIP TEXT: Rotate A-Axis between setups": "När aktiverat roteras A-axeln till nödvändig position mellan setups med olika A-orientering. Endast tillgängligt om maskinen har en A-axel.",
@@ -126,7 +126,7 @@
       "__meta__": {
             "description": "Translations for the Output tab."
           },
-      "Output Options": "Resultatinställningar",
+      "Output Options": "Utdata",
 
       "Output folder": "Resultatsökväg",
       "TOOLTIP: Output folder": "Mapp för utdata",
@@ -182,7 +182,7 @@
       "__meta__": {
             "description": "Translations for the Misc tab."
           },
-      "Misc": "Misc",
+      "Misc": "Övrigt",
       "Rename Setups": "Byt namn på Setups",
       "Language": "Språk",
       "TOOLTIP: Language": "Språkval",

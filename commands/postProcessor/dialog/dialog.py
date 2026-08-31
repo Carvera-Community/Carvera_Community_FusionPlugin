@@ -20,8 +20,8 @@ import os
 
 
 from ..setups.setups import (
-    aAxisRotationRequired,
-    getWCSAlignmentIssues
+    a_axis_rotation_required,
+    get_wcs_alignment_issues
 )
 from ..programs import Programs
 from ..settings.settings import Settings
@@ -35,6 +35,7 @@ from ..setups.setups_context import SetupsContext
 
 from .layout.layout import PostDialogLayout
 from .event_registry import EventRegistry
+from .state import can_process
 
 class PostDialog(PostDialogLayout):
 
@@ -146,7 +147,7 @@ class PostDialog(PostDialogLayout):
         ui = app.userInterface
 
         doc: Document = app.activeDocument
-        Settings.Save(doc.attributes)  # Save settings for the current document
+        Settings.save(doc.attributes)  # Save settings for the current document
 
         workspace = ui.workspaces.itemById(Const.CAM_WORKSPACE_ID)
         panel = workspace.toolbarPanels.itemById(Const.CAM_ACTIONS_PANEL_ID)
@@ -178,9 +179,13 @@ class PostDialog(PostDialogLayout):
         doc: Document = app.activeDocument
         cam = CAM.cast(app.activeDocument.products.itemByProductType(Const.CAM_PRODUCT_ID))
 
-        Settings.Load(doc.attributes) # Load settings from the document
+        Settings.load(doc.attributes) # Load settings from the document
         Strings.set_language(Settings(Settings.LANGUAGE))  # Load language
-        Programs.Load(cls._ctx, cam) # Get the list of NCPrograms in the current document
+        Programs.load(
+            cls._ctx,
+            cam,
+            selectedProgramName=Settings(Settings.NC_PROGRAM),
+        ) # Get the list of NCPrograms in the current document
 
         command = args.command
 
@@ -188,6 +193,7 @@ class PostDialog(PostDialogLayout):
 
         #region Hook up events
         Events.add(command.execute, cls.commandExecute, local_handlers = cls._local_handlers)
+        Events.add(command.destroy, cls.commandDestroy, local_handlers = cls._local_handlers)
         Events.add(command.inputChanged, cls.commandInputChanged, local_handlers = cls._local_handlers)
         Events.add(command.validateInputs, cls.commandValidateInput, local_handlers = cls._local_handlers)
         #endregion
@@ -195,6 +201,13 @@ class PostDialog(PostDialogLayout):
     @classmethod
     def commandInputChanged(cls, args):
         EventRegistry.handle(args)
+
+    @classmethod
+    def commandDestroy(cls, _args: CommandEventArgs):
+        """Keep dialog changes with the document when the command closes."""
+        document = Application.get().activeDocument
+        if document is not None:
+            Settings.save_document(document.attributes)
 
     # This event handler is called when the user clicks the OK button in the command dialog or 
     # is immediately called after the created event not command inputs were created for the dialog.
@@ -206,7 +219,7 @@ class PostDialog(PostDialogLayout):
         ui = app.userInterface
         command = args.command
 
-        alignedWCS, badOrigins, badXAxes = getWCSAlignmentIssues(cls._ctx)
+        alignedWCS, badOrigins, badXAxes = get_wcs_alignment_issues(cls._ctx)
         if not alignedWCS:
             Utils.log(f'PostDialog: WCS are not aligned for setups: {badOrigins}', LogLevels.ErrorLogLevel)
             msg = '<i><u>Warning:</u></i><p>'
@@ -225,12 +238,12 @@ class PostDialog(PostDialogLayout):
                 return
 
 
-        if Programs.Current is not None and not Programs.Current.machineHasAAxis:
-            needAAxisRotation, setups = aAxisRotationRequired(cls._ctx)
+        if Programs.Current is not None and not Programs.Current.machine_has_a_axis:
+            needAAxisRotation, setups = a_axis_rotation_required(cls._ctx)
             if needAAxisRotation:
-                Utils.log(f'PostDialog: Machine {Programs.Current.machineName} does not support A axis but setups {setups} require A axis rotation.', LogLevels.WarningLogLevel)
+                Utils.log(f'PostDialog: Machine {Programs.Current.machine_name} does not support A axis but setups {setups} require A axis rotation.', LogLevels.WarningLogLevel)
                 msg = '<i><u>Warning:</u></i><p>'
-                msg += f"The selected machine '{Programs.Current.machineName}' does not support A axis rotation, but the following setups require A axis rotation:<p>"
+                msg += f"The selected machine '{Programs.Current.machine_name}' does not support A axis rotation, but the following setups require A axis rotation:<p>"
                 for setupName, angle in setups:
                     msg += f"{setupName} ({angle}°)<p>"
                 msg += "Using 4th axis rotation while the machine doesn't support it may result in unexpected results, including damage to property and person.<p>"
@@ -248,11 +261,10 @@ class PostDialog(PostDialogLayout):
             # Create a temporary folder to prepare all files in
             if Programs.Current is not None:
                 with tempfile.TemporaryDirectory() as tmpdir:
-                    Programs.Current.Process(cls._ctx, Path(tmpdir))
-                    Programs.Current.WriteOutput(cls._ctx)
+                    Programs.Current.process(cls._ctx, Path(tmpdir))
+                    Programs.Current.write_output(cls._ctx)
         except FileExistsError as e:
             Utils.log(f'PostDialog: {str(e)}', LogLevels.ErrorLogLevel)
-            ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
             ui.messageBox(str(e), "File already exists!", cast(MessageBoxButtonTypes, MessageBoxButtonTypes.OKButtonType), cast(MessageBoxIconTypes, MessageBoxIconTypes.CriticalIconType))
         except Exception as e:
             Utils.log(f'PostDialog: An error occurred during post processing: {str(e)}', LogLevels.ErrorLogLevel)
@@ -264,17 +276,4 @@ class PostDialog(PostDialogLayout):
     def commandValidateInput(cls, args: ValidateInputsEventArgs):
         # General logging for debug.
 
-        args.areInputsValid = (Programs.Current is not None 
-            and Programs.Current.hasMachine 
-            and cls._ctx.hasSelected 
-            and all(not setup.ctx.hasError for setup in cls._ctx.selected) 
-            and (Programs.Current.machineHasAAxis or not aAxisRotationRequired(cls._ctx)[0]))
-
-        # TODO: Set up so that the Process button is only enabled when things are set up properly
-
-        # # Verify the validity of the input values. This controls if the OK button is enabled or not.
-        # valueInput = inputs.itemById('value_input')
-        # if valueInput.value >= 0:
-        #     args.areInputsValid = True
-        # else:
-        #     args.areInputsValid = False
+        args.areInputsValid = can_process(Programs.Current, cls._ctx)

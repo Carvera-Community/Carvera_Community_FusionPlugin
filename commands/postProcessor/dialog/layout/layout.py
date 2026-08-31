@@ -39,15 +39,13 @@ class PostDialogLayout(Constants):
         InputTab._updateSetups(inputs.itemById(cls.PROGRAM_DROPDOWN_ID), ctx) # initialize table state based on current program selection
 
         #region Save as default button
-        #separator = inputs.addSeparatorCommandInput('')
-
         saveButton = inputs.addBoolValueInput(cls.SAVE_ID, "   " + Strings("Save as default settings") + "   ", False)
         saveButton.tooltip = Strings("TOOLTIP: Save as default settings")
         saveButton.tooltipDescription = Strings("TOOLTIP TEXT: Save as default settings")
         saveButton.isFullWidth = True
         saveButton.isEnabled = False
 
-        EventRegistry.register(cls.SAVE_ID, lambda input: Settings.SaveDefault())
+        EventRegistry.register(cls.SAVE_ID, lambda input: Settings.save_default())
 
         def setSaveButtonEnabled(input: CommandInput):
             input.parentCommand.commandInputs.itemById(cls.SAVE_ID).isEnabled = Programs.Current is not None
