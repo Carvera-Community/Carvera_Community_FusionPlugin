@@ -2,10 +2,7 @@
 .env
 .assistant_rules.*
 **/settings.settings
-Tests/**
-!Tests/*.py
-!Tests/UI/
-!Tests/UI/**
+Tests/*.f3d
 .vscode/**
 __pycache__
 .coverage
