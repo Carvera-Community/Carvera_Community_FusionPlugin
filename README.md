@@ -21,20 +21,16 @@ This plugin was heavily inspired by Tim Patersons [PostProcessAll](https://githu
 - [Makera post-processor](https://github.com/Carvera-Community/Carvera_Community_Profiles/tree/main/CAM_Post_Processors) (or a post-processor for your CNC-machine)
 
 ## Installation
-This plugin follows the normal plugin-installation procedure of a local add-in for Fusion.
-1. Clone the repository:
+Install a published release rather than cloning the development repository:
 
-Using a git client you start by downloading this repository into a folder of your choice:
+1. Open the [latest release](https://github.com/Carvera-Community/Carvera_Community_FusionPlugin/releases/latest).
+2. Download `Source code (zip)` from the release's **Assets** section.
+3. Extract the archive to a permanent folder. Do not run the add-in directly
+   from the downloaded archive or a temporary extraction directory.
+4. Confirm that the extracted add-in folder contains
+   `Makera Community.manifest`.
 
-```bash
-# SSH (recommended if you have SSH keys configured):
-git clone git@github.com:Carvera-Community/CarveraCommunity_FusionPlugin.git "Makera Community"
-
-# OR HTTPS:
-git clone https://github.com/Carvera-Community/CarveraCommunity_FusionPlugin.git "Makera Community"
-
-```
-Follow the generic instructions to install add-ins into Fusion 360:
+Then follow Fusion's normal procedure for installing a local add-in:
 
 <img src="resources/readme/installation/step1.png">
 
@@ -47,7 +43,8 @@ Follow the generic instructions to install add-ins into Fusion 360:
 
 <img src="resources/readme/installation/step4.png">
 
-4. Choose 'Script or add-in from device' and select the folder that you just cloned the repo to (the folder with the Makera Community.manifest file)
+4. Choose 'Script or add-in from device' and select the extracted folder that
+   contains the `Makera Community.manifest` file.
 
 <img src="resources/readme/installation/step5.png">
 
