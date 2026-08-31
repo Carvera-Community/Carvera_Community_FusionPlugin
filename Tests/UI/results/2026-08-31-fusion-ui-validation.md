@@ -7,7 +7,7 @@
 - Add-in commit: Working tree on `refactoring-testability`
 - Post-processor version: Community Post v1.4.6
 - Fixture: Test model with NCProgram18; Setup1 and Setup2
-- Output artifact: `/Users/moinois/NC Programs/ui-validation-shrink-tail-reloaded.cnc`
+- Output artifact: `~/NC Programs/ui-validation-shrink-tail-reloaded.cnc`
 - Result: PASS
 
 ## Observations
