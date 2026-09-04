@@ -1,22 +1,41 @@
 from __future__ import annotations
-import os
-import shutil
-import adsk
-import adsk.cam
 from pathlib import Path
+from typing import Any, Protocol, TYPE_CHECKING
 
 from .strings import Strings
 from .attributes import Attributes
-from .setups.setups import Setups
-from .settings.settings import Settings
+
 from .parameters import Parameters
+from .program_workflow import render_program_output
+
+if TYPE_CHECKING:
+    from .setups.setups_context import SetupsContext
+
+
+class ProgramFusionAdapter(Protocol):
+    def machine_has_atc(self, program) -> bool: ...
+    def machine_tool_slots(self, program) -> int: ...
+    def machine_has_a_axis(self, program) -> bool: ...
+    def post_process(self, program) -> bool: ...
 
 class Program():
-    def __init__(self, program: adsk.cam.NCProgram):
-        self._program: adsk.cam.NCProgram = program
-        self._outputFolder: Path = None
+    def __init__(
+        self,
+        program: Any,
+        fusionAdapter: ProgramFusionAdapter | None = None,
+        parameterValueAdapter=None,
+    ):
+        if fusionAdapter is None:
+            from .fusion_adapters.program import FusionProgramAdapter
+
+            fusionAdapter = FusionProgramAdapter()
+        self._fusionAdapter = fusionAdapter
+        self._program = program
         self._attributes: Attributes = Attributes(program.attributes)
-        self._parameters: Parameters = Parameters(program.parameters)
+        self._parameters: Parameters = Parameters(
+            program.parameters,
+            parameterValueAdapter,
+        )
 
     @property
     def name(self):
@@ -24,27 +43,27 @@ class Program():
         return self._program.name
     
     @property
-    def hasError(self):
+    def has_error(self):
         """Returns whether the NCProgram has an error."""
         return self._program.hasError
     
     @property
-    def isSelected(self):
+    def is_selected(self):
         """Returns whether the NCProgram is selected."""
         return self._program.isSelected
 
     @property
-    def isEmpty(self):
+    def is_empty(self):
         """Returns whether the NCProgram is empty (has no operations)."""
         return len(self._program.operations) == 0
     
     @property
-    def isSuppressed(self):
+    def is_suppressed(self):
         """Returns whether the NCProgram is suppressed."""
         return self._program.isSuppressed
     
     @property
-    def hasWarning(self):
+    def has_warning(self):
         """Returns whether the NCProgram has a warning."""
         return self._program.hasWarning
     
@@ -54,7 +73,7 @@ class Program():
         return self._program.warning
 
     @property
-    def Parameters(self):
+    def parameters(self):
         return self._parameters
     
     @property
@@ -62,150 +81,115 @@ class Program():
         return self._attributes
     
     @property
-    def hasMachine(self):
+    def has_machine(self):
         """Returns whether the NCProgram has a machine."""
         return self._program.machine is not None
 
     @property
-    def machineName(self) -> str:
+    def machine_name(self) -> str:
         """Returns the machine of the NCProgram."""
-        return self._program.machine.model if self.hasMachine else Strings("<no machine selected>")
+        return self._program.machine.model if self.has_machine else Strings("<no machine selected>")
 
     @property
-    def machineHasATC(self):
+    def machine_has_atc(self):
         """Returns whether the machine of the NCProgram has an ATC."""
-        return self._program.machine.elements.itemById('tooling','default').isToolChangerAutomatic if self.hasMachine else False
+        return self._fusionAdapter.machine_has_atc(self._program)
     
     @property
-    def machineToolSlots(self):
+    def machine_tool_slots(self):
         """Returns the number of ATC slots of the machine of the NCProgram."""
-        return self._program.machine.elements.itemById('tooling','default').maxToolCount if self.machineHasATC else 1
+        return self._fusionAdapter.machine_tool_slots(self._program)
 
     @property
-    def machineATCSlots(self) -> int:
-        return self._program
-
-    @property
-    def machineHasAAxis(self):
+    def machine_has_a_axis(self):
         """Returns whether the machine has A axis."""
-        return self._program.machine.elements.defaultItemByType('controller').axisConfigurations.itemById('U') is not None \
-            if self._program.machine is not None \
-            else False
+
+        return self._fusionAdapter.machine_has_a_axis(self._program)
     
     @property
-    def hasPostProcessor(self):
+    def has_post_processor(self):
         """Returns whether the NCProgram has a post processor."""
         return self._program.postConfiguration is not None
 
     @property
-    def postProcessorDescription(self):
+    def post_processor_description(self):
         """Returns the post processor of the current NCProgram."""
-        return self._program.postConfiguration.description if self.hasPostProcessor else Strings("<no post processor selected>")
+        return self._program.postConfiguration.description if self.has_post_processor else Strings("<no post processor selected>")
     
     @property
-    def fileName(self):
+    def file_name(self):
         """Returns the file name of the NCProgram."""
-        return self.Parameters.Get(Parameters.FILE_NAME)
+        return self.parameters.get(Parameters.FILE_NAME, str)
 
-    def SetFileName(self, fileName: str):
+    def set_file_name(self, file_name: str):
         """Sets the file name of the NCProgram."""
-        self.Parameters.Set(Parameters.FILE_NAME, fileName)
+        self.parameters.set(Parameters.FILE_NAME, file_name)
 
     @property
-    def fileExtension(self):
+    def file_extension(self):
         """Returns the file extension of the NCProgram."""
         return self._program.postConfiguration.extension if self._program.postConfiguration else None
 
-    def Process(self, tmpPath: Path):
+    def process(self, ctx: "SetupsContext", tmpPath: Path):
         """Generate the initial G-code files from the Fusion NCProgram using the Post Processor 
             and gather information for generation of final files."""
-        oldOutputFolder = self.GetOutputFolder()
+        oldOutputFolder = self.get_output_folder()
+        ctx.capture_processing_settings()
 
-        # TODO: Start showing progress here
-        #endregion
-
-        outputFolder = self.GetOutputFolder()
-        fileName = self.fileName
-        name = self.Parameters.Get(Parameters.NAME)
+        outputFolder = self.get_output_folder()
+        fileName = self.file_name
+        name = self.parameters.get(Parameters.NAME, str)
 
         try:
-            Setups.Parse(tmpPath)
+            ctx.parse(tmpPath)
         finally:
-            self.SetOutputFolder(outputFolder)
-            self.Parameters.Set(Parameters.FILE_NAME, fileName)
-            self.Parameters.Set(Parameters.NAME, name)
+            self.set_output_folder(outputFolder)
+            if fileName is not None:
+                self.parameters.set(Parameters.FILE_NAME, fileName)
+            if name is not None:
+                self.parameters.set(Parameters.NAME, name)
 
         # Restore the output folder in the NC Program parameters
-        self.SetOutputFolder(oldOutputFolder)
+        self.set_output_folder(oldOutputFolder)
 
-    def Generate(self):
-        """Generate the final G-code files from the results of the post processing."""
-        initialPath = self.GetOutputFolder()
-        initialFileName = self.fileName
-        programName = self.Parameters.Get(Parameters.NAME)
+    def write_output(self, ctx: "SetupsContext"):
+        """Write the final G-code files from the results of the post processing."""
+        initialPath = self.get_output_folder()
+        initialFileName = self.file_name
+        programName = self.parameters.get(Parameters.NAME, str)
 
         try:
-            if initialPath.exists() and not initialPath.is_dir():
-                return # Need to notify the user about this.
-
-            if Settings(Settings.CLEAR_FOLDER) and initialPath.exists() and initialPath.is_dir():
-                for child in initialPath.iterdir():
-                    try:
-                        if child.is_dir() and not child.is_symlink():
-                            shutil.rmtree(child)
-                        else:
-                            child.unlink()
-                    except Exception:
-                        return # File/folder could not be deleted, likely due to permissions. Need to notify the user about this.
-            
-            # Setting the base parameters for the output.
-            Setups.SetFileExtension(self._program.postConfiguration.extension)
-            if Settings(Settings.OPERATIONS_GROUPING) == Settings.OperationsGroupings.SINGLE_FILE \
-                or Settings(Settings.FLAT_FILE_STRUCTURE) \
-                or (Settings(Settings.NUMERIC_NAME) \
-                    and initialFileName.isnumeric()): # numeric name is a special case where we want to keep a single file name and just increment it, so we treat it like single file grouping even if the user has selected otherwise
-                # Flat file structure or single file
-                Setups.SetPath(initialPath)
-                Setups.SetFileName(initialFileName)
-            else:
-                Setups.SetPath(initialPath / initialFileName)
-
-            Setups.SetLineNumber(0)
-            Setups.WriteHeader()
-
-            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
-                Setups.SetFileName(initialFileName) # Reset the numeric name
-            Setups.WriteBody()
-
-            if Settings(Settings.NUMERIC_NAME) and initialFileName.isnumeric():
-                Setups.SetFileName(initialFileName) # Reset the numeric name
-            Setups.WriteTail()
-
-        except Exception as exc:
-            raise exc
+            return render_program_output(
+                ctx,
+                initialPath,
+                initialFileName,
+                self.file_extension,
+            )
         finally:
-            self.SetOutputFolder(initialPath)
-            self.Parameters.Set(Parameters.FILE_NAME, initialFileName)
-            self.Parameters.Set(Parameters.NAME, programName)
+            self.set_output_folder(initialPath)
+            if initialFileName is not None:
+                self.parameters.set(Parameters.FILE_NAME, initialFileName)
+            if programName is not None:
+                self.parameters.set(Parameters.NAME, programName)
 
-    def DisableOpenInEditor(self):
+    def disable_open_in_editor(self):
         """Convenience method for disabling "Open in Editor" option"""
-        self.Parameters.Set(Parameters.OPEN_IN_EDITOR, False)
+        self.parameters.set(Parameters.OPEN_IN_EDITOR, False)
 
-    def PostProcess(self, operations):
+    def post_process(self, operations):
         if len(operations) == 0:
             return False # Nothing to process
         self._program.operations = operations
-        return self._program.postProcess(adsk.cam.NCProgramPostProcessOptions.create())
+        return self._fusionAdapter.post_process(self._program)
 
-    def SetOutputFolder(self, folder: Path):
+    def set_output_folder(self, folder: Path):
         """Convenience method to set and verify output folder"""
-        self.Parameters.Set(Parameters.OUTPUT_FOLDER, folder.as_posix())
-        result = self.GetOutputFolder()
-        if result != folder and folder[0:2] == "\\\\":
-            self.Parameters.Set(Parameters.OUTPUT_FOLDER, "\\\\" + folder)    # double up leading "\"
+        self.parameters.set(Parameters.OUTPUT_FOLDER, folder.as_posix())
+        result = self.get_output_folder()
+        if result != folder and str(folder)[0:2] == "\\\\":
+            self.parameters.set(Parameters.OUTPUT_FOLDER, "\\\\" + str(folder))    # double up leading "\"
         return None
 
-    def GetOutputFolder(self) -> Path:
+    def get_output_folder(self) -> Path:
         """Convenience method to get output folder"""
-        return Path(self.Parameters.Get(Parameters.OUTPUT_FOLDER))
+        return Path(str(self.parameters.get(Parameters.OUTPUT_FOLDER, str)))

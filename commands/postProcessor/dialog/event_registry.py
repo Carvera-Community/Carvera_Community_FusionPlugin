@@ -1,8 +1,10 @@
-# ...existing code...
 from collections import defaultdict
 from typing import Callable, Any, List, Union
 
-import adsk
+from adsk.core import (
+    CommandInput,
+    InputChangedEventArgs
+)
 
 class EventRegistry:
 
@@ -10,21 +12,16 @@ class EventRegistry:
     _last_values: dict[str, object] = {}
 
     @classmethod
-    def register(cls, inputOrId: Union[adsk.core.CommandInput, str], callback: Callable[..., Any]):
+    def register(cls, id: str, callback: Callable[..., Any]):
         """Register a callback for an input object or input id.
         Callback signature: callback(input_obj, args) or callback(args)."""
-        if isinstance(inputOrId, adsk.core.CommandInput):
-            cls._registry[inputOrId.id].append(callback)
-        else:
-            cls._registry[inputOrId].append(callback)
+        cls._registry[id].append(callback)
 
     @classmethod
-    def registerWithOnlyChange(cls, inputOrId: Union[adsk.core.CommandInput, str], callback: Callable[..., Any]):
+    def registerWithOnlyChange(cls, id: str, callback: Callable[..., Any]):
         """Register callback but ignore duplicate ValueChanged events that don't 
         change .value by creating a wrapper that tracks the last known value for the input."""
         # try to seed initial value if we have the object
-        if isinstance(inputOrId, adsk.core.CommandInput):
-            cls._last_values[inputOrId.id] = inputOrId.value
 
         def _wrapped(input):
             current = input.value
@@ -34,42 +31,31 @@ class EventRegistry:
             cls._last_values[input.id] = current
             callback(input)
 
-        cls.register(inputOrId, _wrapped)
+        cls.register(id, _wrapped)
 
     @classmethod
-    def setValue(cls, inputOrId: Union[adsk.core.CommandInput, str], value):
+    def setValue(cls, id: str, value):
         """Set the value of an input and update the registry's last known value to prevent false duplicate events."""
-        if isinstance(inputOrId, adsk.core.CommandInput):
-            input_id = inputOrId.id
-            cls._last_values[input_id] = value
-            inputOrId.value = value
-        else:
-            input_id = inputOrId
-            cls._last_values[input_id] = value
+        cls._last_values[id] = value
 
     @classmethod
-    def unregister(cls, inputOrId: Union[adsk.core.CommandInput, str], callback = None):
+    def unregister(cls, id: str, callback = None):
         """Unregister a callback for an input object or input id. If callback is None, unregister all callbacks for the input."""
-        if isinstance(inputOrId, adsk.core.CommandInput):
-            input_id = inputOrId.id
-        else:
-            input_id = inputOrId
-
         if callback is None:
-            cls._registry.pop(input_id, None)
+            cls._registry.pop(id, None)
         else:
-            lst = cls._registry.get(input_id)
+            lst = cls._registry.get(id)
             if lst and callback in lst:
                 lst.remove(callback)
                 if not lst:
-                    cls._registry.pop(input_id, None)
+                    cls._registry.pop(id, None)
 
     @classmethod
     def handle(cls, args):
         """Call from your global commandInputChanged handler."""
-        if not isinstance(args, adsk.core.InputChangedEventArgs):
+        if not isinstance(args, InputChangedEventArgs):
             return
-        input: adsk.core.CommandInput = args.input
+        input: CommandInput = args.input
         for callback in list(cls._registry.get(input.id, [])):
             try:
                 try:

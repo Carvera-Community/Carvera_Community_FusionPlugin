@@ -1,120 +1,114 @@
 from __future__ import annotations
+
 import math
 from pathlib import Path
 import re
-from typing import Optional, TextIO, Union, overload
 
-import adsk.cam
+from typing import (
+    Any,
+    Callable,
+    Optional, 
+    Protocol,
+    Union,
+)
 
-from ...file_modes import FileModes
-from ...settings.settings import Settings
+from .setup_context import SetupContext
+
 from ...operations.operations import Operations
-from .....lib.fusionAddInUtils.general_utils import Utils
 
-from .header import SetupHeader
-from .body import SetupBody
-from .tail import SetupTail
+from .vector_rotation import get_signed_rotation_around_axis
+from .setup_processing import process_setup
 
-class Setup(SetupHeader, SetupBody, SetupTail):
-    def __init__(self, setup: adsk.cam.Setup, index: int, markSelected: bool = False):
-        self._setup: adsk.cam.Setup = setup
-        self._index: int = index
-        self._isSelected: bool = markSelected or self._setup.isSelected
-        self._operations: Optional[Operations] = None
-        self._origin: Optional[adsk.core.Point3D] = None
-        self._lineNumber: int = 0
 
-    @property
-    def hasError(self) -> bool:
-        return self._setup is None or self._setup.hasError
-    
+class SetupFusionAdapter(Protocol):
+    def origin(self, setup): ...
+    def normal(self, setup, direction: tuple[float, float, float]): ...
+    def global_vector(self, direction: tuple[float, float, float]): ...
+    def cast_operation(self, value): ...
+
+class Setup():
+    def __init__(
+        self,
+        ctx: SetupContext,
+        setup: Any,
+        index: int,
+        isDefaultSelected: bool = False,
+        fusionAdapter: SetupFusionAdapter | None = None,
+        operationsFactory: Callable = Operations,
+        programRegistry=None,
+    ):
+        if fusionAdapter is None:
+            from ...fusion_adapters.setup import FusionSetupAdapter
+
+            fusionAdapter = FusionSetupAdapter()
+        self._fusionAdapter = fusionAdapter
+        self._operationsFactory = operationsFactory
+        self._programRegistry = programRegistry
+        self.ctx = ctx
+        ctx.setup = (
+            fusionAdapter.snapshot_setup(setup)
+            if hasattr(fusionAdapter, "snapshot_setup")
+            else setup
+        )
+        ctx.index = index
+        ctx.is_selected = isDefaultSelected
+
     @property
     def index(self) -> int:
-        return self._index
-
-    @property
-    def isSuppressed(self) -> bool:
-        return self._setup is None or self._setup.isSuppressed
+        return self.ctx.index
     
     @property
-    def lineNumber(self) -> int:
-        return self._lineNumber
-    
-    def SetLineNumber(self, lineNumber: int):
-        self._lineNumber = lineNumber
+    def is_selected(self) -> bool:
+        return self.ctx.is_selected
 
-    @property
-    def isSelected(self) -> bool:
-        return self._isSelected
-
-    def Select(self, value: bool):
-        self._isSelected = value
+    def select(self, value: bool):
+        self.ctx.is_selected = value
 
     @property
     def name(self) -> str:
-        return self._setup.name
-    
-    @property 
-    def hasOperationWithTail(self) -> bool:
-        return self._operations.hasTail if self._operations is not None else False
-
-    @property
-    def hasOperationWithHeader(self) -> bool:
-        return self._operations.hasHeader if self._operations is not None else False
-
-    @property
-    def origin(self) -> adsk.core.Point3D:
-        origin = adsk.core.Point3D.create(0,0,0)
-        origin.transformBy(self._setup.workCoordinateSystem)
-        return origin
-
-    @property
-    def zNormal(self) -> adsk.core.Vector3D:
-        zAxis = adsk.core.Vector3D.create(0,0,1)
-        zAxis.transformBy(self._setup.workCoordinateSystem)
-        zAxis.normalize()
-        return zAxis
+        return self.ctx.setup.name
     
     @property
-    def xNormal(self) -> adsk.core.Vector3D:
-        xAxis = adsk.core.Vector3D.create(1,0,0)
-        xAxis.transformBy(self._setup.workCoordinateSystem)
-        xAxis.normalize()
-        return xAxis
+    def origin(self):
+        return self._fusionAdapter.origin(self.ctx.setup)
 
     @property
-    def yNormal(self) -> adsk.core.Vector3D:
-        yAxis = adsk.core.Vector3D.create(0,1,0)
-        yAxis.transformBy(self._setup.workCoordinateSystem)
-        yAxis.normalize()
-        return yAxis
+    def z_normal(self):
+        return self._fusionAdapter.normal(self.ctx.setup, (0, 0, 1))
+    
+    @property
+    def x_normal(self):
+        return self._fusionAdapter.normal(self.ctx.setup, (1, 0, 0))
 
     @property
-    def hasMachine(self) -> bool:
-        return self._setup.machine is not None
+    def y_normal(self):
+        return self._fusionAdapter.normal(self.ctx.setup, (0, 1, 0))
 
     @property
-    def tools(self) -> list[adsk.cam.Tool]:
-        return self._operations.tools if self._operations is not None else []
+    def has_machine(self) -> bool:
+        return self.ctx.setup.machine is not None
 
-    def SetOutputPath(self, path: Path):
+    @property
+    def tools(self) -> list[Any]:
+        return self.ctx.operations.tools if self.ctx.operations is not None else []
+
+    def set_output_path(self, path: Path):
         path.mkdir(parents=True, exist_ok=True)
-        self._operations.SetOutputPath(path)
+        if self.ctx.operations is not None:
+            self.ctx.operations.set_output_path(path)
 
-    def SetFileName(self, fileName: str):
-        self._operations.SetFileName(fileName)
-
-    def SetFileExtension(self, fileExtension: str):
-        self._operations.SetFileExtension(fileExtension)
+    def set_file_extension(self, fileExtension: str):
+        if self.ctx.operations is not None:
+            self.ctx.operations.set_file_extension(fileExtension)
 
     # Compute signed rotation around the setup's X axis.
     #
     # Behavior:
-    # - `GetAbsoluteRotationAroundXAxis()` returns the signed rotation (radians)
+    # - `absolute_rotation()` returns the signed rotation (radians)
     #   that aligns the setup's local Z with the global Z, measured around the
     #   setup's local X axis. It is a thin wrapper that calls
-    #   `GetRotationAroundXAxisRelativeTo(zNormal, yNormal)` with global Z/Y.
-    # - `GetRotationAroundXAxisRelativeTo(zNormal, yNormal)` computes the
+    #   `rotation_relative_to(zNormal, yNormal)` with global Z/Y.
+    # - `rotation_relative_to(zNormal, yNormal)` computes the
     #   signed rotation around this setup's X axis that rotates this setup's
     #   Z into the supplied `zNormal`, using `yNormal` as a secondary
     #   reference when Z projection degenerates.
@@ -137,18 +131,18 @@ class Setup(SetupHeader, SetupBody, SetupTail):
     # - The implementation works with supplied normal vectors and does not
     #   depend on a precomputed global rotation value; the absolute wrapper
     #   simply supplies global axes.
-    def GetAbsoluteRotationAroundXAxis(self) -> float:
-        gZNormal = adsk.core.Vector3D.create(0, 0, 1)
-        gYNormal = adsk.core.Vector3D.create(0, 1, 0)
-        return self.GetRotationAroundXAxisRelativeTo(gZNormal, gYNormal)
+    def absolute_rotation(self) -> float:
+        gZNormal = self._fusionAdapter.global_vector((0, 0, 1))
+        gYNormal = self._fusionAdapter.global_vector((0, 1, 0))
+        return self.rotation_relative_to(gZNormal, gYNormal)
     
-    def GetAbsoluteRotationAroundXAxisDeg(self) -> float:
-        return math.degrees(self.GetAbsoluteRotationAroundXAxis())
+    def absolute_rotation_degrees(self) -> float:
+        return math.degrees(self.absolute_rotation())
     
-    @overload
-    def GetRotationAroundXAxisRelativeTo(self, otherSetup: Setup) -> float: ...
+    def rotation_relative_to_setup(self, otherSetup: Setup) -> float:
+        return self.rotation_relative_to(otherSetup)
     
-    def GetRotationAroundXAxisRelativeTo(self, zNormalOrSetup: Union[adsk.core.Vector3D, Setup], yNormal = None) -> float:
+    def rotation_relative_to(self, zNormalOrSetup, yNormal=None) -> float:
         # Compute the signed rotation around this setup's X axis that
         # transforms this setup's local Z into the other setup's local Z.
         #
@@ -160,78 +154,57 @@ class Setup(SetupHeader, SetupBody, SetupTail):
         # - If projection degenerates (vectors near-parallel to X), fall
         #   back to project the Y normals instead.
 
-        xNormal = self.xNormal
-
+        xNormal = self.x_normal
+        zNormal = None
         if isinstance(zNormalOrSetup, Setup) and yNormal is None: # unwrap if a Setup is given
-            yNormal = zNormalOrSetup.yNormal
-            zNormal = zNormalOrSetup.zNormal
-        else:
+            yNormal = zNormalOrSetup.y_normal
+            zNormal = zNormalOrSetup.z_normal
+        elif all(hasattr(zNormalOrSetup, coordinate) for coordinate in ("x", "y", "z")):
             zNormal = zNormalOrSetup
+            if yNormal is None:
+                raise ValueError("yNormal can not be None")
+        else:
+            raise TypeError("Expected Setup or Vector3D")
 
-        def project(v: adsk.core.Vector3D, n: adsk.core.Vector3D) -> adsk.core.Vector3D:
-            d = n.dotProduct(v)
-            return adsk.core.Vector3D.create(v.x - n.x * d, v.y - n.y * d, v.z - n.z * d)
+        def coordinates(vector) -> tuple[float, float, float]:
+            return (vector.x, vector.y, vector.z)
 
-        p1 = project(self.zNormal, xNormal)
-        p2 = project(zNormal, xNormal)
-
-        # If projection is degenerate, fall back to using the y-axis instead.
-        if p1.length < 1e-6 or p2.length < 1e-6:
-                p1y = project(self.yNormal, xNormal)
-                p2y = project(yNormal, xNormal)
-                p1y.normalize()
-                p2y.normalize()
-                cross = p1y.crossProduct(p2y)
-                sign = xNormal.dotProduct(cross)
-                dot = p1y.dotProduct(p2y)
-                return math.atan2(sign, dot)
-
-        p1.normalize()
-        p2.normalize()
-        cross = p1.crossProduct(p2)
-        sign = xNormal.dotProduct(cross)
-        dot = p1.dotProduct(p2)
-        return math.atan2(sign, dot)
+        return get_signed_rotation_around_axis(
+            sourceDirection=coordinates(self.z_normal),
+            targetDirection=coordinates(zNormal),
+            rotationAxis=coordinates(xNormal),
+            sourceFallback=coordinates(self.y_normal),
+            targetFallback=coordinates(yNormal),
+        )
     
-    def GetRotationAroundXAxisRelativeToDeg(self, otherSetup) -> float:
-        return math.degrees(self.GetRotationAroundXAxisRelativeTo(otherSetup.zNormal, otherSetup.yNormal))
+    def rotation_relative_to_degrees(self, otherSetup) -> float:
+        return math.degrees(self.rotation_relative_to(otherSetup.z_normal, otherSetup.y_normal))
     
-    def Rename(self, find, replace, isRegex):
+    def rename(self, find, replace, isRegex):
         if isRegex:
-            newName = re.sub(find, replace, self._setup.name)
+            newName = re.sub(find, replace, self.ctx.setup.name)
         else:
             if find == "":
                 # special case, prepend
-                newName = replace + self._setup.name
+                newName = replace + self.ctx.setup.name
             else:
-                newName = self._setup.name.replace(find, replace)
+                newName = self.ctx.setup.name.replace(find, replace)
 
-        if self._setup.name != newName:
-            self._setup.name = newName
+        if self.ctx.setup.name != newName:
+            if hasattr(self._fusionAdapter, "rename_setup"):
+                self._fusionAdapter.rename_setup(self.ctx.setup, newName)
+            else:
+                self.ctx.setup.name = newName
     
-    def Parse(self, tmpPath: Path):
-        from ...programs import Programs
+    def parse(self, tmpPath: Path):
+        if self._programRegistry is None:
+            from ...programs import Programs
 
-        # JIT parsing of operations to make sure that if settings are 
-        # changed while the dialog is open, they are applied to all 
-        # setups and operations. 
-        # Also, avoids parsing operations for setups that are not 
-        # selected or are suppressed, which can speed up processing 
-        # and avoid creating temporary files for those setups.
-        self._operations = None if \
-                self.isSuppressed \
-                and not self.hasError \
-                and not self.isSelected \
-            else Operations(list(operation for operation in self._setup.allOperations))
-
-
-        if self._operations is None:
-            return # Don't process this setup.
-
-        # Don't spam the user with temporary files that will be deleted anyway
-        Programs.Current.DisableOpenInEditor()
-
-        # Make sure that the setup has all its toolpaths generated
-        Programs.CheckAndGenerateToolpath(self._setup)
-
-        self._operations.Parse(tmpPath)
+            self._programRegistry = Programs
+        process_setup(
+            self.ctx,
+            tmpPath,
+            self._fusionAdapter,
+            self._operationsFactory,
+            self._programRegistry,
+        )

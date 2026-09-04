@@ -2,5 +2,10 @@
 .env
 .assistant_rules.*
 **/settings.settings
-Tests/**
+Tests/*.f3d
 .vscode/**
+__pycache__
+.coverage
+htmlcov/
+dist/
+TODO.md
