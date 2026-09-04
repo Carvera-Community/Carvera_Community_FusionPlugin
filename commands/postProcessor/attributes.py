@@ -1,11 +1,21 @@
-import adsk.core
+from typing import Protocol
+
+
+class AttributeCollection(Protocol):
+    count: int
+
+    def __iter__(self): ...
+    def itemByName(self, group: str, name: str): ...
+    def add(self, group: str, name: str, value: str): ...
 
 class _AttributesMeta(type):
+    _attributes: AttributeCollection
+    
     def __iter__(cls):
         return iter(cls._attributes)
 
 class Attributes(metaclass=_AttributesMeta):
-    def __init__(self, attributes: adsk.core.Attributes):
+    def __init__(self, attributes: AttributeCollection):
         self._attributes = attributes
 
     def add(self, group, name, value):

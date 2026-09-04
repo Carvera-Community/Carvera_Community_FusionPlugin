@@ -5,7 +5,7 @@ from ...config import ADDIN_NAME, COMPANY_NAME
 # It contains global variables that can be accessed throughout the add-in.
 #
 
-SETTINGS_VERSION = 8
+SETTINGS_VERSION = 9
 
 #palettes
 POST_PROCESSOR_PALETTE_ID = f'{COMPANY_NAME}_{ADDIN_NAME}_post_processor_palette_id'

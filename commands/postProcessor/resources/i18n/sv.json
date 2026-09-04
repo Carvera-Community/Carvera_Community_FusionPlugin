@@ -40,7 +40,7 @@
       "__meta__": {
             "description": "Translations for the Input tab."
           },
-      "Input Selection": "Inmatningsval",
+      "Input Selection": "Indata",
       "NC Program": "NC-program",
       "TOOLTIP: NC Program to Use": "Välj NC-program att använda",
       "TOOLTIP TEXT: NC Program to Use": "Post Process Utility använder inställningarna från det valda NC-programmet.",
@@ -74,7 +74,7 @@
       "__meta__": {
             "description": "Translations for the G-code tab."
           },
-      "G-code Options": "Inställningar för G-kod",
+      "G-code Options": "G-kodinställningar",
       "Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
       "TOOLTIP: Rotate A-Axis between setups": "Rotera A-axeln mellan setups",
       "TOOLTIP TEXT: Rotate A-Axis between setups": "När aktiverat roteras A-axeln till nödvändig position mellan setups med olika A-orientering. Endast tillgängligt om maskinen har en A-axel.",
@@ -103,6 +103,10 @@
       "TOOLTIP: Restore rapid moves": "Återställ snabba förflyttningar",
       "TOOLTIP TEXT: Restore rapid moves": "Återställ snabba (rapid) förflyttningar där det är lämpligt under efterbearbetningen.",
 
+      "Max steps for rapid moves": "Maximalt antal steg för rapid-rörelse",
+      "TOOLTIP: Max steps for rapid moves": "Maximalt antal programsteg som får räknas som en rapid-rörelse",
+      "TOOLTIP TEXT: Max steps for rapid moves": "För att begränsa omfattningen av sökningen efter en kandidat som kan bytas till en rapid-rörelse kan du nu ange det maximala antalet programsteg som ska genomsökas för att hitta slutet på rapid-rörelsen.<p>Detta kan vara användbart om du använder alternativet kortaste väg vid val av typ av rapid-rörelser, eftersom dessa kan bestå av flera steg - ibland ganska många.<p>Om du märker att rapid-rörelserna inte fungerar överallt och du använder kortaste väg som strategi, kan du prova att öka detta värde.",
+
       "Minimum rapid move distance (mm)": "Minsta snabbförflyttningsavstånd (mm)",
       "TOOLTIP: Minimum rapid move distance (mm)": "Minsta avstånd för snabbförflyttning",
       "TOOLTIP TEXT: Minimum rapid move distance (mm)": "Det minsta förflyttningsavståndet för att använda snabbförflyttning. För att minska ryckighet kan du sätta en gräns för kortaste sträcka där rörelsen ändras från skärrörelse (<i>G1</i>) till snabbförflyttning (<i>G0</i>).",
@@ -122,7 +126,7 @@
       "__meta__": {
             "description": "Translations for the Output tab."
           },
-      "Output Options": "Resultatinställningar",
+      "Output Options": "Utdata",
 
       "Output folder": "Resultatsökväg",
       "TOOLTIP: Output folder": "Mapp för utdata",
@@ -178,7 +182,7 @@
       "__meta__": {
             "description": "Translations for the Misc tab."
           },
-      "Misc": "Misc",
+      "Misc": "Övrigt",
       "Rename Setups": "Byt namn på Setups",
       "Language": "Språk",
       "TOOLTIP: Language": "Språkval",

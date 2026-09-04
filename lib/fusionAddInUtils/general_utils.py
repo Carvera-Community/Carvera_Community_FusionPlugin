@@ -1,11 +1,14 @@
 import traceback
-import adsk.core
+from typing import Optional, cast
+from adsk.core import Application
+from adsk.core import LogLevels
+from adsk.core import LogTypes
 
 class Utils():
     """A class containing general utility functions.
     """
 
-    _app = adsk.core.Application.get()
+    _app = Application.get()
     _ui = _app.userInterface
 
     # Attempt to read DEBUG flag from parent config.
@@ -16,7 +19,7 @@ class Utils():
         DEBUG = False
 
     @staticmethod
-    def log(message: str, level: adsk.core.LogLevels = adsk.core.LogLevels.InfoLogLevel, force_console: bool = False):
+    def log(message: str, level: int = LogLevels.InfoLogLevel, force_console: bool = False):
         """Utility function to easily handle logging in your app.
 
         Arguments:
@@ -28,14 +31,12 @@ class Utils():
         print(message)  
 
         # Log all errors to Fusion log file.
-        if level == adsk.core.LogLevels.ErrorLogLevel:
-            log_type = adsk.core.LogTypes.FileLogType
-            Utils._app.log(message, level, log_type)
+        if level == LogLevels.ErrorLogLevel:
+            Utils._app.log(message, cast(LogLevels, level), cast(LogTypes, LogTypes.FileLogType))
 
         # If config.DEBUG is True write all log messages to the console.
         if Utils.DEBUG or force_console:
-            log_type = adsk.core.LogTypes.ConsoleLogType
-            Utils._app.log(message, level, log_type)
+            Utils._app.log(message, cast(LogLevels, level), cast(LogTypes, LogTypes.ConsoleLogType))
 
     @staticmethod
     def handleError(name: str, show_message_box: bool = False):
@@ -48,16 +49,15 @@ class Utils():
                             and logged to the log file.                        
         """    
 
-        Utils.log('===== Error =====', adsk.core.LogLevels.ErrorLogLevel)
-        Utils.log(f'{name}\n{traceback.format_exc()}', adsk.core.LogLevels.ErrorLogLevel)
+        Utils.log('===== Error =====\n', LogLevels.ErrorLogLevel)
+        Utils.log(f'{name}\n{traceback.format_exc()}', LogLevels.ErrorLogLevel)
 
         # If desired you could show an error as a message box.
         if show_message_box:
             Utils._ui.messageBox(f'{name}\n{traceback.format_exc()}')
 
-
     @staticmethod
-    def sanitizeVariableName(s: str, *, allow_unicode: bool = True, max_length: int | None = None) -> str:
+    def sanitizeVariableName(s: str, *, allow_unicode: bool = True, max_length: Optional[int] = None) -> str:
         import keyword
         import re
         import unicodedata
@@ -99,12 +99,13 @@ class Utils():
 
         return s
 
+    @staticmethod
     def sanitizeFilename(name: str,
                         replacement: str = "_",
                         allowUnicode: bool = True,
-                        maxLength: int | None = None,
+                        maxLength: Optional[int] = None,
                         preserveExtension: bool = True,
-                        *, platformPolicy: str | None = None) -> str:
+                        *, platformPolicy: Optional[str] = None) -> str:
         """Return a safe filename derived from `name`.
 
         platformPolicy:
@@ -180,6 +181,7 @@ class Utils():
 
         return s + ext
     
+    @staticmethod
     def maxFilenameLength(path: str = ".") -> int:
         import os
         if os.name == "nt":
@@ -213,3 +215,4 @@ class classproperty:
         return self
     def __set_name__(self, owner, name):
         self.name = name
+

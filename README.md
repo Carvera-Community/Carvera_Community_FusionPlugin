@@ -21,20 +21,18 @@ This plugin was heavily inspired by Tim Patersons [PostProcessAll](https://githu
 - [Makera post-processor](https://github.com/Carvera-Community/Carvera_Community_Profiles/tree/main/CAM_Post_Processors) (or a post-processor for your CNC-machine)
 
 ## Installation
-This plugin follows the normal plugin-installation procedure of a local add-in for Fusion.
-1. Clone the repository:
+Install a published release rather than cloning the development repository:
 
-Using a git client you start by downloading this repository into a folder of your choice:
+1. Open the [latest release](https://github.com/Carvera-Community/Carvera_Community_FusionPlugin/releases/latest).
+2. Download `Makera-Community-Fusion-Plugin-vX.Y.Z.zip` from the release's
+   **Assets** section. Do not download GitHub's automatically generated source
+   archive.
+3. Extract the archive to a permanent folder. Do not run the add-in directly
+   from the downloaded archive or a temporary extraction directory.
+4. Confirm that the extracted add-in folder contains
+   `Makera Community.manifest`.
 
-```bash
-# SSH (recommended if you have SSH keys configured):
-git clone git@github.com:Carvera-Community/CarveraCommunity_FusionPlugin.git "Makera Community"
-
-# OR HTTPS:
-git clone https://github.com/Carvera-Community/CarveraCommunity_FusionPlugin.git "Makera Community"
-
-```
-Follow the generic instructions to install add-ins into Fusion 360:
+Then follow Fusion's normal procedure for installing a local add-in:
 
 <img src="resources/readme/installation/step1.png">
 
@@ -47,7 +45,8 @@ Follow the generic instructions to install add-ins into Fusion 360:
 
 <img src="resources/readme/installation/step4.png">
 
-4. Choose 'Script or add-in from device' and select the folder that you just cloned the repo to (the folder with the Makera Community.manifest file)
+4. Choose 'Script or add-in from device' and select the extracted folder that
+   contains the `Makera Community.manifest` file.
 
 <img src="resources/readme/installation/step5.png">
 
@@ -96,11 +95,11 @@ The top most Setup that is selected is marked as `(reference)` in these columns 
 
 In the `G-code Options` tab you find all that is related to g-code manipulation and detection. `Rotate A-Axis between setups` (1) has to be checked to allow the A-axis to rotate between setups, and if it is deselected and there are Setups that are already selected that requires a rotation a warning will be displayed showing which Setups that will be deselected and the `Input Selection` tab will be focused so that you can see the change after it is done. It also controls if rotated Setups can be selected in the `Input Selection` tab, so if they are greyed out then this is the first thing to check. A companion setting to the `Rotate A-Axis between setups` is the `Retract Y on A-axis rotation` (2) and it will enable the possibility to have the retraction of the spindle not just with the Z-axis but also with the Y-axis. This is useful if the stock isn't round and there is a risk that the Z-retraction isn't enough to clear the mill during the rotation. How much the Y-axis should retract is in `Save Y-retraction coordinate (mm)` (3) and it is in Machine Coordinate System (MCS) G53, so it is an absolute number. Default is -100 and it is calculated from the position furthest back of the work area. If the machine doesn't have an A-axis then these two settings are disabled.
 
-`Restore rapid moves` (4) will do just that. In Fusion for personal use there is this slow down for no good reason, this setting tries to remedy that. It analyzes the g-code and when it sees that a retraction is made (Z-only movement) and within 5 g-code moves it will plunge (Z-only) once again it is condidered a rapid movement. It will then introduce a G0 code instead of G1 to use the machines rapid movement speed. Currently it measures the full distance of the alleged rapid movement and if it is at least `Minimum rapid move distance (mm)` (5) long it will replace the G1 to a G0. 
+`Restore rapid moves` (4) will do just that. In Fusion for personal use there is this slow down for no good reason, this setting tries to remedy that. It analyzes the g-code and when it sees that a retraction is made (Z-only movement) and within 5 g-code moves it will plunge (Z-only) once again it is condidered a rapid movement. It will then introduce a G0 code instead of G1 to use the machines rapid movement speed. Currently it measures the full distance of the alleged rapid movement and if it is at least `Minimum rapid move distance (mm)` (6) long it will replace the G1 to, or add, a G0.
+
+Depeding on what policy you use when it comes to rapid moves they may consist of several movements and by default the analysis is fairly conservative allowing up to 3 movements between the start and the end of a rapid movement to detect it. If you notice that there are rapid movements that isn't sped up as expected, this could be a reason and by increasing `Max steps for rapid move` (5) you might improve the detection of rapid moves.
 
 It should be noted that this is experimental and it is advised to validate the g-code with a g-code analyzer (like [NCViewer.com](https://ncviewer.com)) to be sure that it has produced the correct codes. If you're in any way uncertain, don't use it. It should work and it is programmed defensively but it needs to be validated to work in every situation.
-
-If you want line numbers added to the g-code you can do so by checking the `Add line numbers` checkbox. It will open up `Number of digits` slider (7) as well as the `Numbering interval` slider (8) where you can choose with what interval the line numbers should have between each line. It could be useful if you want to add lines manually later.
 
 `G-code blocks` is normally collapsed as it is not something that is changed that frequently, but it is still useful to be able to change them if needed without having to make code changes. `Tool change code` (9) lets you inject g-code right before a tool change is going to happen. Maybe you have a cooling system that should be turned off that needs its own g-code call?
 
@@ -146,6 +145,42 @@ There is a possibility to change the language of the dialog if you want to do so
 You can choose to `Use Python regular expressions` (2) if you want to do some advanced search and replace. Otherwise you just type in whatever you want to replace in `Search for this string`(3) and in `Replace with this string` (4) you enter what you want to have there instead. Rather simple, really. As an extra boon you can also limit the replacement to `Only selected Setups` (5) so that you don't have to do it to all. Once you're happy with your replacement parameters, just press `Search and replace` (6) and Presto! your wish has been granted. An extra little feature is that if you leave the `Search for this string` empty it will actually prepend the names with the string entered in `Replace with this string`. Magic. 
 
 ## Development
+
+### Host tests
+
+The host-side regression suite uses `pytest` and does not require
+Fusion 360:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+python3 -m pytest
+```
+
+The test command prints a coverage summary for the currently testable host-side
+modules and writes a browsable report to `htmlcov/index.html`.
+
+The post-processing core is host-importable and covered without the Fusion
+runtime. Direct `adsk` access is restricted to `fusion_adapters/` and the
+dialog/UI layer; architecture tests enforce that boundary. Host tests do not
+replace validation inside Fusion for NC Program interaction, post processing,
+UI events, or generated machine behavior.
+
+The processing flow is split into explicit stages:
+
+1. Fusion adapters snapshot program, setup, and operation inputs.
+2. Temporary post output is analyzed as a stream and retained as bounded,
+   immutable metadata.
+3. `ResultFilePlan` defines each file's path, header, ordered bodies, tail, and
+   final operation.
+4. One streaming renderer writes each complete result file without loading the
+   source G-code files into memory.
+
+Rapid-move detection is implemented by a bounded streaming scanner behind the
+legacy `RapidsParser` facade. Dialog construction is divided into focused
+layout sections, while setup eligibility and other decision rules remain
+host-testable. Architecture tests protect the Fusion boundary, streaming
+contract, stable command IDs, and size limits for the refactored facades.
+
 - Create a development branch:
 
 ```bash

@@ -1,9 +1,14 @@
 import sys
-from typing import Callable
+from typing import Callable, Protocol, Any, runtime_checkable
 
-import adsk.core
+from adsk.core import Event
 from .general_utils import Utils
 
+
+@runtime_checkable
+class EventSupportingAdd(Protocol):
+    __module__: str
+    def add(self, handler: Any) -> bool: ...
 
 class Events():
     """A class for managing event handlers.
@@ -13,11 +18,11 @@ class Events():
     @classmethod
     def add(
             cls,
-            event: adsk.core.Event,
+            event: EventSupportingAdd,
             callback: Callable,
             *,
-            name: str = None,
-            local_handlers: list = None
+            name: str | None = None,
+            local_handlers: list | None = None
     ):
         """Adds an event handler to the specified event.
 
@@ -55,16 +60,16 @@ class Events():
             cls,
             handler_type,
             callback: Callable,
-            event: adsk.core.Event,
-            name: str = None,
-            local_handlers: list = None
+            event: EventSupportingAdd,
+            name: str | None = None,
+            local_handlers: list | None = None
     ):
         handler = cls._defineHandler(handler_type, callback, name)()
         (local_handlers if local_handlers is not None else cls._handlers).append(handler)
         return handler
 
     @classmethod
-    def _defineHandler(cls, handler_type, callback, name: str = None):
+    def _defineHandler(cls, handler_type, callback, name: str | None = None):
         name = name or handler_type.__name__
 
         class Handler(handler_type):
@@ -75,6 +80,6 @@ class Events():
                 try:
                     callback(args)
                 except:
-                    Utils.handleError(name)
+                    Utils.handleError(name or '')
 
         return Handler

@@ -2,25 +2,24 @@
 import re
 from typing import Final, TextIO
 
-from .settings.settings import Settings
-
 class Line():
 
     _BODY_RE: Final = re.compile(r""
         r"(?P<N>N[0-9]+ *)?" # line number
         r"(?P<line>"         # line w/o number
         r"(M(?P<M>[0-9]+) *)?" # M-code
-        r"(G(?P<G>[0-9]+) *)?" # G-code
+        r"(G(?P<G>[0-9]+(?:\.[0-9]*)?) *)?" # G-code
         r"(T(?P<T>[0-9]+))?" # Tool
         r".+)",              # to end of line
         re.IGNORECASE | re.DOTALL)
 
     _PARSE_LINE_RE: Final = re.compile(r""
-            r"(G(?P<G>[0-9]+(\.[0-9]*)?)[^XYZFA]*)?"
-            r"(?P<XY>((X-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?((Y-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?)"
-            r"(A(?P<A>-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?"
-            r"(Z(?P<Z>-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?"
-            r"(F(?P<F>-?[0-9]+(\.[0-9]*)?)[^XYZFA]*)?",
+            r"(G(?P<G>[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(?P<XY>((X-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?((Y-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?)"
+            r"(A(?P<A>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(R(?P<R>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(Z(?P<Z>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?"
+            r"(F(?P<F>-?[0-9]+(\.[0-9]*)?)[^XYZFAR]*)?",
             re.IGNORECASE)
     
     _GCODES_RE: Final = re.compile(r"G([0-9]+(?:\.[0-9]*)?)")
@@ -29,47 +28,23 @@ class Line():
 
     _COMMENT_REG: Final = re.compile(r"^(?:\s*)\((.*)\)(?:\s*)$")
 
-    @classmethod
-    def _writeLine(cls, fileHandler: TextIO, line: str, lineNumber: int) -> int:
-        """
-        Writes the line to the fileHandler and terminates it with a newline (\\n), adding line numbers if needed and returns the new line number
-        
-        :param cls: Description
-        :param fileHandler: Description
-        :type fileHandler: TextIO
-        :param line: Description
-        :type line: str
-        :param lineNumber: Description
-        :type lineNumber: int
-        :return: Description
-        :rtype: int
-        """
-        return cls._write(fileHandler, line + "\n", lineNumber)
+    _RE_FEED = re.compile(r'(^|\s)F[+-]?\d+(?:\.\d*)?(?=\s|$)', re.IGNORECASE)
 
     @classmethod
-    def _write(cls, fileHandler: TextIO, line: str, lineNumber: int) -> int:
-        """
-        Writes the line to the fileHandler, adding line numbers if needed and returns the new line number
-        
-        :param cls: Description
-        :param fileHandler: Description
-        :type fileHandler: TextIO
-        :param line: Description
-        :type line: str
-        :param lineNumber: Description
-        :type lineNumber: int
-        :return: Description
-        :rtype: int
-        """
+    def write_line(cls, fileHandler: TextIO, line: str) -> None:
+        """Write one line, removing an input line number when present."""
+        return cls.write(fileHandler, line + "\n")
+
+    @classmethod
+    def write(cls, fileHandler: TextIO, line: str) -> None:
+        """Write text after removing an input line number when present."""
         # Check if the line is numbered
-        addLineNumbers = Settings(Settings.LINE_SEQUENCE) 
-        digits = Settings(Settings.LINE_SEQUENCE_DIGITS) if addLineNumbers else 0
         match = cls._BODY_RE.match(line)
         if match and match.group("N") is not None: # line is numbered
-            # Replace or remove the line number            
-            line = re.sub(r"^N[0-9]+", f"N{str(lineNumber).rjust(digits, '0')}" if addLineNumbers else "", line, count=1)
-        elif addLineNumbers: # Line is not numbered, add it
-            lineNumber += Settings(Settings.LINE_SEQUENCE_INTERVAL)
-            line = f"N{str(lineNumber).rjust(digits, '0')} " + line
+            # Remove the line number            
+            line = re.sub(r"^N[0-9]+", "", line, count=1)
         fileHandler.write(line)
-        return lineNumber
+
+    @classmethod
+    def remove_feed_from_line(cls, line: str) -> str:
+        return cls._RE_FEED.sub(r'\1', line).strip()
