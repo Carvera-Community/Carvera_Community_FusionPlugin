@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import TextIO
 
@@ -5,6 +6,13 @@ from .operation_context import OperationContext
 from .analysis import parsed_operation
 
 from ...file_modes import FileModes
+
+_A_WORD_RE = re.compile(r"(?<![A-Za-z])A(-?\d+(?:\.\d*)?)", re.IGNORECASE)
+
+def _find_a_word(line: str) -> re.Match[str] | None:
+    """Find the A word in the code part of a line, wherever it sits among the other words."""
+    return _A_WORD_RE.search(line.split("(", 1)[0])
+
 @dataclass(frozen=True)
 class BodyWriterSettings:
     safeYRetraction: bool
@@ -55,8 +63,8 @@ def write_body(
                     if float(aCode) == 0.0:
                         if float(gCode) == 0.0:
                             # Special handling of A-axis rotation moves.
-                            # The rotation should always be 0 as the 
-                            # operations are always generated one by one
+                            # Operations are generated one by one, so the generated
+                            # rotation is always to the setup angle (A0).
                             return row != analysis.rotation_line or _handle_rotation()
                         elif float(gCode) == 92.4:
                             if lineMatch.group("R") is not None:
@@ -67,21 +75,24 @@ def write_body(
                                 return True
         return False
 
+    def _write_rotation(angle: float) -> None:
+        ctx.write_line(fileHandle, "(Rotating a-axis between setups)")
+        # Using G53 for absolute machine coordinates for safe retraction
+        if settings.safeYRetraction:
+            ctx.write_line(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = settings.yRetractionCoordinate))
+        else:
+            ctx.write_line(fileHandle, "G90 G53 G0 Z-3")
+        ctx.write_line(fileHandle, "G90 G54 G0 A{angle}".format(angle = f"{angle:.3f}".rstrip("0").rstrip(".")))
+        ctx.aAngle = 0.0 # The generated moves treat the setup angle as A0
+
     def _handle_rotation() -> bool:
-        if ctx.rotationAngle is None: # No rotation provided, do not preserve the line as it will rotate to 0 which we don't want.
-            return not ctx.preserveRotation
-        else: # Write our own rotation code based on the provided rotation angle
-            if ctx.preserveRotation: # We will use the already generated gcode.
-                return False
-            # Adding our own rotation gcodes
-            ctx.write_line(fileHandle, "(Rotating a-axis between setups)")
-            # Using G53 for absolute machine coordinates for safe retraction
-            if settings.safeYRetraction:
-                ctx.write_line(fileHandle, "G90 G53 G0 Z-3 Y{yRetraction}".format(yRetraction = settings.yRetractionCoordinate))
-            else:
-                ctx.write_line(fileHandle, "G90 G53 G0 Z-3")
-            ctx.write_line(fileHandle, "G90 G54 G0 A{angle}".format(angle = f"{ctx.rotationAngle:.3f}".rstrip("0").rstrip(".")))
-            return True
+        if ctx.preserveRotation: # We will use the already generated gcode.
+            return False
+        if ctx.rotationAngle is not None: # Write our own rotation code based on the provided rotation angle
+            _write_rotation(ctx.rotationAngle)
+        elif ctx.aAngle % 360 != 0.0: # An earlier operation left the A axis away from the setup angle (e.g. a pattern), so rotate back.
+            _write_rotation(ctx.setupAngle)
+        return True
 
     if analysis.body is None:
         return
@@ -127,6 +138,12 @@ def write_body(
                     readNextLine = True
                     continue
 
+                aWord = _find_a_word(line)
+                if aWord:
+                    ctx.aAngle = float(aWord.group(1))
+                    if ctx.setupAngle != 0.0: # The generated A moves are relative to the setup angle, so shift them onto it.
+                        start, end = aWord.span(1)
+                        line = line[:start] + f"{ctx.aAngle + ctx.setupAngle:.3f}".rstrip("0") + line[end:]
                 ctx.write(fileHandle, line)
 
             line = operationFile.readline()

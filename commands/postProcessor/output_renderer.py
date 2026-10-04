@@ -24,11 +24,18 @@ def render_output_files(
                     operation.write_tool_comment(output)
                 plan.header_source.write_header_end(output)
 
+            a_angle = 0.0
+            setup_angle = 0.0
             for body in plan.bodies:
+                if body.rotation_angle is not None:
+                    setup_angle = body.rotation_angle
+                body.operation.ctx.setupAngle = setup_angle
+                body.operation.ctx.aAngle = a_angle
                 body.operation.ctx.rotationAngle = body.rotation_angle
                 body.operation.ctx.preserveRotation = body.preserve_rotation
                 body.operation.ctx.isLastOp = body.is_final
                 body.operation.write_body(output)
+                a_angle = body.operation.ctx.aAngle
 
             if plan.tail_source is not None:
                 plan.tail_source.write_tail(output)

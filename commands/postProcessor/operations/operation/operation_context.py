@@ -25,6 +25,8 @@ class OperationContext:
     rotationLine: int = -1
     rotationAngle: float | None = None
     preserveRotation: bool = False
+    setupAngle: float = 0.0  # Machine A angle of the current setup
+    aAngle: float = 0.0  # A position in the generated moves' own frame (0 = setup angle), carried between operations
     rapidsAnalysis: dict[int, dict[str, Any]] | None = None
     shrinkLine: int = -1
     isLastOp: bool = False

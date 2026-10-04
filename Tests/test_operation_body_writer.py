@@ -128,6 +128,73 @@ def test_write_body_removes_shrink_even_when_operation_was_marked_final(tmp_path
     assert output == "T1 M6\nG1 X10\n"
 
 
+def test_write_body_retracts_and_rotates_back_when_a_axis_is_not_at_setup_angle(tmp_path):
+    output = write_operation_body(
+        tmp_path,
+        "T1 M6\nG0 A0\nG1 X10\nM30\n",
+        body_start=0,
+        tail_start=3,
+        rotationLine=1,
+        aAngle=334.286,
+        setupAngle=55.714,
+    )
+
+    assert output == (
+        "T1 M6\n"
+        "(Rotating a-axis between setups)\n"
+        "G90 G53 G0 Z-3 Y-100\n"
+        "G90 G54 G0 A55.714\n"
+        "G1 X10\n"
+    )
+
+
+def test_write_body_offsets_pattern_angles_by_setup_angle(tmp_path):
+    output = write_operation_body(
+        tmp_path,
+        "T1 M6\nG92.4 A120 R0 (shrink)\nG0 A120.\nG1 X10 Z3 A11 F300\nM30\n",
+        body_start=0,
+        tail_start=4,
+        setupAngle=55.714,
+    )
+
+    assert output == (
+        "T1 M6\nG92.4 A175.714 R0 (shrink)\nG0 A175.714\nG1 X10 Z3 A66.714 F300\n"
+    )
+
+
+def test_write_body_strips_rotation_when_a_axis_is_a_whole_number_of_turns_away(tmp_path):
+    output = write_operation_body(
+        tmp_path,
+        "T1 M6\nG0 A0\nG1 X10\nM30\n",
+        body_start=0,
+        tail_start=3,
+        rotationLine=1,
+        aAngle=720.0,
+    )
+
+    assert output == "T1 M6\nG1 X10\n"
+
+
+def test_write_body_strips_rotation_in_later_operation_of_rotated_setup(tmp_path):
+    source = tmp_path / "operation.nc"
+    source.write_text("T1 M6\nG0 A0\nG1 X10\nM30\n", encoding="utf-8")
+    first = OperationContext(0)
+    second = OperationContext(1)
+    for context in (first, second):
+        context.tempFilePath = source
+        context.bodyStartLine = 0
+        context.tailStartLine = 3
+        context.rotationLine = 1
+    first.rotationAngle = 30.0
+    write_body(first, StringIO(), writer_settings())
+    second.aAngle = first.aAngle
+
+    output = StringIO()
+    write_body(second, output, writer_settings())
+
+    assert output.getvalue() == "T1 M6\nG1 X10\n"
+
+
 def test_write_body_replaces_rotation_with_safe_retraction(tmp_path):
     output = write_operation_body(
         tmp_path,

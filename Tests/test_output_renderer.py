@@ -68,6 +68,29 @@ def test_renderer_writes_one_complete_file_from_the_plan(tmp_path):
     )
 
 
+def test_renderer_carries_a_angle_and_setup_angle_to_later_operations(tmp_path):
+    class PatternOperation(FakeOperation):
+        def write_body(self, output):
+            self.ctx.aAngle = 334.286
+
+    first = PatternOperation("first")
+    second = FakeOperation("second")
+    plan = ResultFilePlan(
+        (0,),
+        (),
+        (first, second),
+        tmp_path / "job.nc",
+        bodies=(
+            PlannedBody(first, 55.714, False, False),
+            PlannedBody(second, None, False, True),
+        ),
+    )
+
+    renderer.render_output_files((plan,), overwrite_files=False)
+
+    assert (second.ctx.aAngle, second.ctx.setupAngle) == (334.286, 55.714)
+
+
 def test_renderer_refuses_to_overwrite_before_writing(tmp_path):
     path = tmp_path / "job.nc"
     path.write_text("existing")

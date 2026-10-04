@@ -200,6 +200,9 @@ Sources:
 - **MCB-104 — Source-observed:** A qualifying native rotation line is the first `G0` line with `A0` detected in the operation body.
 - **MCB-105 — Source-observed:** When a new rotation must be emitted, the writer inserts a comment, a `G90 G53 G0 Z-3` retraction optionally including the configured machine-coordinate Y value, and `G90 G54 G0 A<angle>`.
 - **MCB-106 — Source-observed:** Emitted angles are formatted to three decimal places with trailing zeroes and a trailing decimal point removed.
+- **MCB-107 — Source-observed:** The writer tracks the A position each operation leaves behind in the generated moves' own frame, where A0 is the setup angle. The tracked position is carried from one operation to the next within a result file, starts at 0 for each result file, and returns to 0 when the writer emits its own setup rotation.
+- **MCB-108 — Confirmed intent:** An operation's first native `G0 A0` is removed only when the tracked A position is a whole number of turns from 0. Otherwise (for example after a pattern ends at its last angle) the line is replaced by the MCB-105 comment and retraction followed by `G90 G54 G0 A<setup angle>`, so every operation starts at the setup angle. A native line kept under MCB-102 is never replaced.
+- **MCB-109 — Source-observed; direction awaiting verification with an asymmetric pattern:** In a setup rotated by the writer, the setup angle is added to every A word in the operation body, including `G0 A` and `G92.4 A… R…` lines, because both address work-coordinate angles. Angles above 360 are written unwrapped; the Carvera community firmware wraps `G92.4 A… R…` itself. Setups at A0 are written unchanged.
 
 ### Shrink
 
@@ -260,6 +263,8 @@ The following items describe current source behavior that should not silently be
 - **MCB-D11 — Handled in the current working tree; covered by a host regression test — Rapid effective distance:** `AnalysisSegment.getEffectiveLength()` previously returned doubled combined Z travel and ignored XY travel. It now returns the greater of total XY travel and combined Z travel, matching the documented analyzer rule.
 - **MCB-D12 — Handled in the current working tree; covered by complete-output host tests — Tool-run planning:** `SETUP_AND_TOOL` initially planned one file per internal operation. It now groups consecutive equal-tool operations and starts a new run when a tool returns after an intervening tool.
 - **MCB-D13 — Handled in the current working tree; covered by complete-output host tests — Multi-line header scan:** Body streaming previously stopped before reaching bodies whose start row followed more than one header row. The writer now scans to the body start before applying its end-of-range stop condition.
+- **MCB-D14 — Handled in the current working tree; verified by a Fusion 360 machining run with symmetric patterns — Pattern left A away from the setup angle:** The first native `G0 A0` of every later operation was removed on the assumption that A is already 0, but a pattern ends at its last angle and the reset in the shared tail is not written between operations. A following operation therefore cut its first instance at the previous operation's last angle, so a 14-instance pattern machined 13 positions and cut the last one twice. Patterns inside a rotated setup also used unshifted angles. See MCB-107 to MCB-109.
+- **MCB-D15 — Unresolved by source reading — A handling outside the covered cases:** Every native `G0 A0` after the first in an operation is still removed. With per-operation or per-tool result files, the setup angle and tracked A position restart for each file, so only the first operation of a rotated setup receives the setup angle. Neither case has been exercised in Fusion 360.
 - **MCB-D14 — Handled in the current working tree; covered by settings host tests — Sparse current-version defaults:** A local defaults file carrying the current version but missing newer keys was previously accepted without schema completion. Every defaults file is now merged with the current built-in schema before use.
 
 ## 14. Maintainability boundaries
@@ -316,6 +321,7 @@ The host-testable architecture now has the following enforced runtime boundaries
 | Numeric and sequence naming | Pure naming tests and temporary directories | NC Program parameter interaction |
 | Rotation mathematics | Vector-adapter/pure-math tests | Machine configuration and safe G-code review |
 | Shrink retention | Per-result-file unit tests | Generated operation files containing shrink |
+| A reset and pattern offset | Writer and renderer unit tests | Multi-tool pattern in an unrotated and a rotated setup |
 | Rapid restoration | Parser/transformer regression fixtures | G-code visualization and machine-safe review |
 | Settings persistence | Fake attribute store tests | Document reopen/reload behavior |
 | Error handling | Temporary filesystem failure tests | Fusion dialogs and logging |
